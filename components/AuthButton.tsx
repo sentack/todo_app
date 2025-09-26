@@ -6,9 +6,12 @@ import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
+import type { User } from "@supabase/supabase-js"
+
 interface AuthButtonProps {
-  user: any
+  user: User | null
 }
+
 
 export default function AuthButton({ user }: AuthButtonProps) {
   const [loading, setLoading] = useState(false)
@@ -44,12 +47,17 @@ export default function AuthButton({ user }: AuthButtonProps) {
         if (error) throw error
         router.refresh()
       }
-    } catch (error: any) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError("An unknown error occurred")
+      }
     }
-  }
+    finally {
+          setLoading(false)
+        }
+      }
 
   const handleSignOut = async () => {
     setLoading(true)

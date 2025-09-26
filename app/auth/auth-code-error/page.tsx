@@ -1,3 +1,8 @@
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @next/next/no-html-link-for-pages */
+
+import Link from "next/link";
+
 export default function AuthCodeError() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -7,12 +12,12 @@ export default function AuthCodeError() {
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             Sorry, we couldn't sign you in. Please try again.
           </p>
-          <a
+          <Link
             href="/"
             className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus-ring"
           >
             Go back to home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

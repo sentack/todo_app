@@ -45,7 +45,7 @@ export default function TodoList() {
 
   useEffect(() => {
     fetchTodos()
-  }, [])
+  }, [fetchTodos])
 
   const filteredTodos = todos.filter((todo) => {
     if (filter === "pending") return !todo.completed
