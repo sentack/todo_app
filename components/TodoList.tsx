@@ -13,6 +13,7 @@ interface Todo {
   status: string
   completed: boolean
   created_at: string
+  status_id: number 
 }
 
 export default function TodoList() {
