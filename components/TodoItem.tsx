@@ -9,7 +9,7 @@ interface Todo {
   title: string
   description: string | null
   notes: string | null
-  status_id: number // Updated to match database schema
+  status_id: number 
   completed: boolean
   created_at: string
 }
