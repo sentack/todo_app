@@ -106,18 +106,21 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
     switch (statusId) {
       case 3:
         return {
-          name: "completed",
-          color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+          name: "Completed",
+          color: "status-completed",
+          icon: "✅",
         }
       case 2:
         return {
-          name: "in-progress",
-          color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+          name: "In Progress",
+          color: "status-progress",
+          icon: "⚡",
         }
       default:
         return {
-          name: "pending",
-          color: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
+          name: "Pending",
+          color: "status-pending",
+          icon: "📋",
         }
     }
   }
@@ -127,20 +130,24 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
   return (
     <>
       <div
-        className={`p-4 border rounded-lg ${todo.completed ? "bg-gray-50 dark:bg-gray-800 opacity-75" : "bg-white dark:bg-gray-700"} border-gray-200 dark:border-gray-600`}
+        className={`p-6 border rounded-2xl transition-all duration-300 hover:shadow-lg ${
+          todo.completed 
+            ? "bg-gray-50 dark:bg-gray-950 opacity-75 border-gray-200 dark:border-gray-800" 
+            : "bg-white dark:bg-black border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700"
+        }`}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           <button
             onClick={toggleCompleted}
             disabled={loading}
-            className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center focus-ring ${
+            className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center focus-ring transition-all duration-200 btn-hover ${
               todo.completed
-                ? "bg-green-500 border-green-500 text-white"
-                : "border-gray-300 dark:border-gray-600 hover:border-green-500"
+                ? "bg-green-500 border-green-500 text-white shadow-lg"
+                : "border-gray-300 dark:border-gray-600 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950"
             }`}
           >
             {todo.completed && (
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -151,25 +158,34 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           </button>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <h3 className={`font-medium ${todo.completed ? "line-through text-gray-500 dark:text-gray-400" : ""}`}>
+            <div className="flex items-start justify-between gap-3">
+              <h3 className={`font-semibold text-lg ${
+                todo.completed 
+                  ? "line-through text-gray-500 dark:text-gray-400" 
+                  : "text-black dark:text-white"
+              }`}>
                 {todo.title}
               </h3>
-              <div className="flex items-center gap-2">
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusInfo.color}`}>
-                  {statusInfo.name}
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1 ${statusInfo.color}`}>
+                  <span>{statusInfo.icon}</span>
+                  <span>{statusInfo.name}</span>
                 </span>
                 <button
                   onClick={() => setShowDeleteModal(true)}
                   disabled={loading}
-                  className="text-red-500 hover:text-red-700 focus-ring p-1 rounded"
+                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 focus-ring p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200 btn-hover"
                   aria-label="Delete todo"
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd" />
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"
+                      clipRule="evenodd"
+                    />
+                    <path
+                      fillRule="evenodd"
+                      d="M10 5a1 1 0 011 1v6a1 1 0 11-2 0V6a1 1 0 011-1zM6 10a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z"
                       clipRule="evenodd"
                     />
                   </svg>
@@ -178,24 +194,33 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
             </div>
 
             {todo.description && (
-              <p
-                className={`text-sm mt-1 ${todo.completed ? "text-gray-400 dark:text-gray-500" : "text-gray-600 dark:text-gray-300"}`}
-              >
+              <p className={`text-sm mt-2 ${
+                todo.completed 
+                  ? "text-gray-400 dark:text-gray-500" 
+                  : "text-gray-600 dark:text-gray-300"
+              }`}>
                 {todo.description}
               </p>
             )}
 
             {todo.notes && (
-              <div className="mt-2">
+              <div className="mt-3">
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline focus-ring"
+                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus-ring px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200 flex items-center gap-1"
                 >
+                  <svg className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
                   {isExpanded ? "Hide notes" : "Show notes"}
                 </button>
                 {isExpanded && (
                   <div
-                    className={`mt-2 p-3 rounded bg-gray-50 dark:bg-gray-800 text-sm ${todo.completed ? "text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-300"}`}
+                    className={`mt-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-950 text-sm border border-gray-200 dark:border-gray-800 animate-slide-in-down ${
+                      todo.completed 
+                        ? "text-gray-400 dark:text-gray-500" 
+                        : "text-gray-700 dark:text-gray-300"
+                    }`}
                   >
                     <pre className="whitespace-pre-wrap font-sans">{todo.notes}</pre>
                   </div>
@@ -203,20 +228,23 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
               </div>
             )}
 
-            <div className="flex items-center gap-2 mt-3">
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-gray-900">
               <select
                 value={todo.status_id}
                 onChange={(e) => updateStatus(Number.parseInt(e.target.value))}
                 disabled={loading}
-                className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-600 focus-ring"
+                className="text-sm px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-black text-black dark:text-white focus-ring transition-all duration-200"
               >
-                <option value={1}>Pending</option>
-                <option value={2}>In Progress</option>
-                <option value={3}>Completed</option>
+                <option value={1}>📋 Pending</option>
+                <option value={2}>⚡ In Progress</option>
+                <option value={3}>✅ Completed</option>
               </select>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {new Date(todo.created_at).toLocaleDateString()}
-              </span>
+              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <span>{new Date(todo.created_at).toLocaleDateString()}</span>
+              </div>
             </div>
           </div>
         </div>
