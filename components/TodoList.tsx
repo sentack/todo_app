@@ -16,9 +16,13 @@ interface Todo {
   status_id: number 
 }
 
-export default function TodoList() {
+interface TodoListProps {
+  loading: boolean 
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+const TodoList: React.FC<TodoListProps>= ({ loading, setLoading }) => {
   const [todos, setTodos] = useState<Todo[]>([])
-  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("all")
   const supabase = createBrowserSupabaseClient()
 
@@ -155,3 +159,6 @@ export default function TodoList() {
     </div>
   )
 }
+
+
+export default TodoList;
