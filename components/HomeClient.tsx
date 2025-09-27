@@ -5,8 +5,10 @@ import TodoList from "./TodoList";
 import LoginForm from "./LoginForm";
 import Footer from "./Footer";
 
+import { User } from "@supabase/supabase-js";
+
 interface HomeClientProps {
-  user: any
+  user: User | null;
 }
 
 
