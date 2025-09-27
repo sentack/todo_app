@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -35,9 +37,7 @@ export default function StatsPage() {
   const router = useRouter()
 
   useEffect(() => {    
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     checkAuthAndFetchStats()    
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const checkAuthAndFetchStats = async () => {
