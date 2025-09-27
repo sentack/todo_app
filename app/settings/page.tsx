@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { useRouter } from "next/navigation"
 import ClearDataModal from "@/components/ClearDataModal"
+import Link from "next/link"
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
@@ -106,9 +107,9 @@ export default function SettingsPage() {
             <h1 className="text-3xl font-bold text-black dark:text-white">Settings</h1>
           </div>
 
-          <a  href="/" className="text-xl font-bold text-black dark:text-white">
+          <Link  href="/" className="text-xl font-bold text-black dark:text-white">
             Back
-          </a>
+          </Link>
           </div>
 
           <div className="space-y-8">

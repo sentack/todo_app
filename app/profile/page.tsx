@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 interface UserProfile {
   id: string
@@ -125,9 +126,9 @@ export default function ProfilePage() {
             <h1 className="text-3xl font-bold text-black dark:text-white">Profile</h1>
           </div>
 
-          <a  href="/" className="text-xl font-bold text-black dark:text-white">
+          <Link  href="/" className="text-xl font-bold text-black dark:text-white">
             Back
-          </a>
+          </Link>
           </div>
 
           <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-xl">

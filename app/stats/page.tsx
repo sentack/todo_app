@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 interface TodoStats {
   period: string
@@ -198,9 +199,9 @@ export default function StatsPage() {
             <h1 className="text-3xl font-bold text-black dark:text-white">Statistics</h1>
           </div>
 
-          <a  href="/" className="text-xl font-bold text-black dark:text-white">
+          <Link  href="/" className="text-xl font-bold text-black dark:text-white">
             Back
-          </a>
+          </Link>
           </div>
 
           <div className="space-y-8">
