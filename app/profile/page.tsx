@@ -115,13 +115,19 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-white dark:bg-black">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="animate-slide-in-down">
-          <div className="flex items-center gap-3 mb-8">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-black dark:bg-white rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
               </svg>
             </div>
             <h1 className="text-3xl font-bold text-black dark:text-white">Profile</h1>
+          </div>
+
+          <a  href="/" className="text-xl font-bold text-black dark:text-white">
+            Back
+          </a>
           </div>
 
           <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-xl">
