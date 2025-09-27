@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 interface ConfirmModalProps {
   isOpen: boolean
@@ -11,6 +11,7 @@ interface ConfirmModalProps {
   confirmText?: string
   cancelText?: string
   isLoading?: boolean
+  confirmationText?: string
 }
 
 export default function ConfirmModal({
@@ -22,7 +23,11 @@ export default function ConfirmModal({
   confirmText = "Delete",
   cancelText = "Cancel",
   isLoading = false,
+  confirmationText,
 }: ConfirmModalProps) {
+  const [inputValue, setInputValue] = useState("")
+  const [canConfirm, setCanConfirm] = useState(!confirmationText)
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden"
@@ -35,7 +40,27 @@ export default function ConfirmModal({
     }
   }, [isOpen])
 
+  useEffect(() => {
+    if (confirmationText) {
+      setCanConfirm(inputValue === confirmationText)
+    }
+  }, [inputValue, confirmationText])
+
+  useEffect(() => {
+    if (isOpen) {
+      setInputValue("")
+      setCanConfirm(!confirmationText)
+    }
+  }, [isOpen, confirmationText])
+
   if (!isOpen) return null
+
+  const handleConfirm = () => {
+    if (confirmationText && inputValue !== confirmationText) {
+      return
+    }
+    onConfirm()
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in">
@@ -70,6 +95,22 @@ export default function ConfirmModal({
 
         <p className="text-gray-600 dark:text-gray-300 mb-8 text-sm leading-relaxed">{message}</p>
 
+        {confirmationText && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-black dark:text-white mb-2">
+              Type <span className="font-mono bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded text-red-600 dark:text-red-400">{confirmationText}</span> to confirm:
+            </label>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              placeholder={`Type "${confirmationText}" here`}
+              disabled={isLoading}
+            />
+          </div>
+        )}
+
         <div className="flex gap-3 justify-end">
           <button
             onClick={onClose}
@@ -79,8 +120,8 @@ export default function ConfirmModal({
             {cancelText}
           </button>
           <button
-            onClick={onConfirm}
-            disabled={isLoading}
+            onClick={handleConfirm}
+            disabled={isLoading || !canConfirm}
             className="px-6 py-3 text-sm font-semibold text-white dark:text-black bg-red-600 dark:bg-red-500 hover:bg-red-700 dark:hover:bg-red-600 rounded-xl focus-ring disabled:opacity-50 flex items-center gap-2 transition-all duration-200 btn-hover"
           >
             {isLoading && (

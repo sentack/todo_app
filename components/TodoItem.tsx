@@ -259,6 +259,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
         confirmText="Delete"
         cancelText="Cancel"
         isLoading={loading}
+        confirmationText="DELETE"
       />
     </>
   )
