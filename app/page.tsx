@@ -3,6 +3,7 @@ import LoginForm from "@/components/LoginForm"
 import ThemeToggle from "@/components/ThemeToggle"
 import TodoList from "@/components/TodoList"
 import "./globals.css"
+import SignOutButton from "@/components/SignOutButton";
 
 export default async function Home() {
   const supabase = await createServerSupabaseClient()
@@ -25,16 +26,9 @@ export default async function Home() {
             </div>
             <div className="flex items-center gap-4">
               <ThemeToggle />
-              {user && (
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-black dark:bg-white flex items-center justify-center">
-                    <span className="text-sm font-bold text-white dark:text-black">
-                      {user.email?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="text-sm font-medium hidden sm:block">{user.email}</span>
-                </div>
-              )}
+              {user && 
+              <SignOutButton user={user} />
+              }
             </div>
           </div>
         </div>
