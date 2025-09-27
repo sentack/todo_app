@@ -34,8 +34,10 @@ export default function StatsPage() {
   const supabase = createBrowserSupabaseClient()
   const router = useRouter()
 
-  useEffect(() => {
-    checkAuthAndFetchStats()
+  useEffect(() => {    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    checkAuthAndFetchStats()    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const checkAuthAndFetchStats = async () => {
