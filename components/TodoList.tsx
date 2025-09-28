@@ -27,26 +27,33 @@ const TodoList: React.FC<TodoListProps>= ({ loading, setLoading }) => {
   const supabase = createBrowserSupabaseClient()
 
   const fetchTodos = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return
 
-      const { data, error } = await supabase
-        .from("todos")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
+    const { data, error } = await supabase
+      .from("todos")
+      .select(`
+        *,
+        subtasks (
+          *
+        )
+      `)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
 
-      if (error) throw error
-      setTodos(data || [])
-    } catch (error) {
-      console.error("Error fetching todos:", error)
-    } finally {
-      setLoading(false)
-    }
+    if (error) throw error
+
+    setTodos(data || [])
+  } catch (error) {
+    console.error("Error fetching todos:", error)
+  } finally {
+    setLoading(false)
   }
+}
+
 
   useEffect(() => {
     fetchTodos()
