@@ -5,6 +5,14 @@ import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser";
 import TodoItem from "./TodoItem"
 import TodoForm from "./TodoForm"
 
+interface Subtask {
+  id: string
+  title: string
+  completed: boolean
+  weight: number
+  created_at: string
+}
+
 interface Todo {
   id: string
   title: string
@@ -13,7 +21,8 @@ interface Todo {
   status: string
   completed: boolean
   created_at: string
-  status_id: number 
+  status_id: number
+  subtasks?: Subtask[]
 }
 
 interface TodoListProps {
@@ -24,6 +33,7 @@ interface TodoListProps {
 const TodoList: React.FC<TodoListProps>= ({ loading, setLoading }) => {
   const [todos, setTodos] = useState<Todo[]>([])
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("all")
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null)
   const supabase = createBrowserSupabaseClient()
 
   const fetchTodos = async () => {
@@ -38,7 +48,11 @@ const TodoList: React.FC<TodoListProps>= ({ loading, setLoading }) => {
       .select(`
         *,
         subtasks (
-          *
+          id,
+          title,
+          completed,
+          weight,
+          created_at
         )
       `)
       .eq("user_id", user.id)
@@ -54,6 +68,14 @@ const TodoList: React.FC<TodoListProps>= ({ loading, setLoading }) => {
   }
 }
 
+  const handleEditTodo = (todo: Todo) => {
+    setEditingTodo(todo)
+  }
+
+  const handleEditComplete = () => {
+    setEditingTodo(null)
+    fetchTodos()
+  }
 
   useEffect(() => {
     fetchTodos()
@@ -100,7 +122,11 @@ const TodoList: React.FC<TodoListProps>= ({ loading, setLoading }) => {
   return (
     <div className="space-y-6">
       <div className="animate-slide-in-down">
-        <TodoForm onTodoAdded={fetchTodos} />
+        <TodoForm 
+          onTodoAdded={fetchTodos} 
+          editingTodo={editingTodo}
+          onEditComplete={handleEditComplete}
+        />
       </div>
 
       <div className="flex items-center justify-between animate-fade-in">
@@ -158,7 +184,11 @@ const TodoList: React.FC<TodoListProps>= ({ loading, setLoading }) => {
               className="animate-slide-in-up"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <TodoItem todo={todo} onTodoUpdated={fetchTodos} />
+              <TodoItem 
+                todo={todo} 
+                onTodoUpdated={fetchTodos} 
+                onEditTodo={handleEditTodo}
+              />
             </div>
           ))
         )}

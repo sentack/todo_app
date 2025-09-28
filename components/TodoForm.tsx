@@ -2,24 +2,97 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+
+interface Subtask {
+  id?: string
+  title: string
+  weight: number
+  completed?: boolean
+}
+
+interface Todo {
+  id: string
+  title: string
+  description: string | null
+  notes: string | null
+  status_id: number
+  completed: boolean
+  subtasks?: Subtask[]
+}
 
 interface TodoFormProps {
   onTodoAdded: () => void
+  editingTodo?: Todo | null
+  onEditComplete?: () => void
 }
 
-export default function TodoForm({ onTodoAdded }: TodoFormProps) {
+export default function TodoForm({ onTodoAdded, editingTodo, onEditComplete }: TodoFormProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     notes: "",
-    status_id: 1, // Changed from status string to status_id number
+    status_id: 1,
   })
+  const [subtasks, setSubtasks] = useState<Subtask[]>([])
 
   const supabase = createBrowserSupabaseClient()
+
+  // Load editing todo data
+  useEffect(() => {
+    if (editingTodo) {
+      setFormData({
+        title: editingTodo.title,
+        description: editingTodo.description || "",
+        notes: editingTodo.notes || "",
+        status_id: editingTodo.status_id,
+      })
+      setSubtasks(editingTodo.subtasks || [])
+      setIsOpen(true)
+    }
+  }, [editingTodo])
+
+  const addSubtask = () => {
+    setSubtasks([...subtasks, { title: "", weight: 1 }])
+  }
+
+  const updateSubtask = (index: number, field: keyof Subtask, value: string | number) => {
+    const newSubtasks = [...subtasks]
+    if (field === 'title' && typeof value === 'string') {
+      newSubtasks[index].title = value
+      // If title is cleared, remove the subtask
+      if (value === '') {
+        newSubtasks.splice(index, 1)
+      }
+    } else if (field === 'weight' && typeof value === 'number') {
+      newSubtasks[index].weight = Math.max(1, Math.min(5, value))
+    }
+    setSubtasks(newSubtasks)
+  }
+
+  const handleSubtaskTitleChange = (index: number, value: string) => {
+    const newSubtasks = [...subtasks]
+    
+    if (index >= newSubtasks.length) {
+      // Adding new subtask
+      if (value.trim()) {
+        newSubtasks.push({ title: value, weight: 1 })
+      }
+    } else {
+      // Updating existing subtask
+      if (value === '') {
+        // Remove subtask if title is cleared
+        newSubtasks.splice(index, 1)
+      } else {
+        newSubtasks[index].title = value
+      }
+    }
+    
+    setSubtasks(newSubtasks)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,15 +100,12 @@ export default function TodoForm({ onTodoAdded }: TodoFormProps) {
 
     setLoading(true)
     try {
-      console.log("[v0] Starting todo submission...")
+      console.log(editingTodo ? "[v0] Starting todo update..." : "[v0] Starting todo submission...")
 
       const {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser()
-
-      console.log("[v0] User data:", user)
-      console.log("[v0] User error:", userError)
 
       if (userError) {
         console.error("[v0] Auth error:", userError)
@@ -47,35 +117,102 @@ export default function TodoForm({ onTodoAdded }: TodoFormProps) {
         throw new Error("Not authenticated")
       }
 
+      // Filter out subtasks with empty titles
+      const validSubtasks = subtasks.filter(subtask => subtask.title.trim() !== '')
+
       const todoData = {
-        user_id: user.id,
         title: formData.title.trim(),
         description: formData.description.trim() || null,
         notes: formData.notes.trim() || null,
-        status_id: formData.status_id, // Using status_id instead of status
-        completed: formData.status_id === 3, // Set completed based on status_id
+        status_id: formData.status_id,
+        completed: formData.status_id === 3,
+        updated_at: new Date().toISOString(),
       }
 
-      console.log("[v0] Inserting todo data:", todoData)
+      let todoId: string
 
-      const { data, error } = await supabase.from("todos").insert([todoData]).select()
+      if (editingTodo) {
+        // Update existing todo
+        const { data, error } = await supabase
+          .from("todos")
+          .update(todoData)
+          .eq("id", editingTodo.id)
+          .select()
+          .single()
 
-      console.log("[v0] Insert result:", { data, error })
+        if (error) {
+          console.error("[v0] Database error:", error)
+          throw new Error(`Database error: ${error.message}`)
+        }
 
-      if (error) {
-        console.error("[v0] Database error:", error)
-        throw new Error(`Database error: ${error.message}`)
+        todoId = editingTodo.id
+
+        // Delete existing subtasks
+        await supabase
+          .from("subtasks")
+          .delete()
+          .eq("todo_id", todoId)
+      } else {
+        // Create new todo
+        const { data, error } = await supabase
+          .from("todos")
+          .insert([{ ...todoData, user_id: user.id }])
+          .select()
+          .single()
+
+        if (error) {
+          console.error("[v0] Database error:", error)
+          throw new Error(`Database error: ${error.message}`)
+        }
+
+        todoId = data.id
       }
 
-      setFormData({ title: "", description: "", notes: "", status_id: 1 }) // Reset to status_id: 1
+      // Insert subtasks if any
+      if (validSubtasks.length > 0) {
+        const subtaskData = validSubtasks.map(subtask => ({
+          todo_id: todoId,
+          title: subtask.title.trim(),
+          weight: subtask.weight,
+          completed: subtask.completed || false,
+        }))
+
+        const { error: subtaskError } = await supabase
+          .from("subtasks")
+          .insert(subtaskData)
+
+        if (subtaskError) {
+          console.error("[v0] Subtask error:", subtaskError)
+          throw new Error(`Subtask error: ${subtaskError.message}`)
+        }
+      }
+
+      // Reset form
+      setFormData({ title: "", description: "", notes: "", status_id: 1 })
+      setSubtasks([])
       setIsOpen(false)
-      onTodoAdded()
-      console.log("[v0] Todo added successfully")
+      
+      if (editingTodo && onEditComplete) {
+        onEditComplete()
+      } else {
+        onTodoAdded()
+      }
+      
+      console.log(editingTodo ? "[v0] Todo updated successfully" : "[v0] Todo added successfully")
     } catch (error) {
-      console.error("Error adding todo:", error)
-      alert(`Failed to add todo: ${error instanceof Error ? error.message : "Unknown error"}`)
+      console.error(editingTodo ? "Error updating todo:" : "Error adding todo:", error)
+      alert(`Failed to ${editingTodo ? 'update' : 'add'} todo: ${error instanceof Error ? error.message : "Unknown error"}`)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCancel = () => {
+    setIsOpen(false)
+    setFormData({ title: "", description: "", notes: "", status_id: 1 })
+    setSubtasks([])
+    if (editingTodo && onEditComplete) {
+      onEditComplete()
     }
   }
 
@@ -108,10 +245,16 @@ export default function TodoForm({ onTodoAdded }: TodoFormProps) {
         <div className="flex items-center gap-3 mb-4">
           <div className="w-8 h-8 rounded-lg bg-black dark:bg-white flex items-center justify-center">
             <svg className="w-4 h-4 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+              {editingTodo ? (
+                <path fillRule="evenodd" d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" clipRule="evenodd" />
+              ) : (
+                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+              )}
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-black dark:text-white">Create New Todo</h3>
+          <h3 className="text-lg font-semibold text-black dark:text-white">
+            {editingTodo ? 'Edit Todo' : 'Create New Todo'}
+          </h3>
         </div>
 
         <div>
@@ -149,6 +292,74 @@ export default function TodoForm({ onTodoAdded }: TodoFormProps) {
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all duration-200"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-black dark:text-white mb-2">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+              Subtasks ({subtasks.length + 1})
+            </div>
+          </label>
+          <div className="space-y-3">
+            {subtasks.map((subtask, index) => (
+              <div key={index} className="flex gap-3 items-center">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Subtask title"
+                    value={subtask.title}
+                    onChange={(e) => handleSubtaskTitleChange(index, e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all duration-200"
+                  />
+                </div>
+                <div className="w-20">
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    value={subtask.weight}
+                    onChange={(e) => updateSubtask(index, 'weight', parseInt(e.target.value) || 1)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all duration-200 text-center"
+                  />
+                </div>
+              </div>
+            ))}
+            {/* Always show one empty input for new subtask */}
+            <div className="flex gap-3 items-center">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder="Add new subtask..."
+                  value=""
+                  onChange={(e) => handleSubtaskTitleChange(subtasks.length, e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all duration-200"
+                />
+              </div>
+              <div className="w-20">
+                <input
+                  type="number"
+                  min="1"
+                  max="5"
+                  value="1"
+                  disabled
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 text-center"
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={addSubtask}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus-ring rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              Add Subtask
+            </button>
+          </div>
         </div>
 
         <div>
@@ -205,23 +416,24 @@ export default function TodoForm({ onTodoAdded }: TodoFormProps) {
                     d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                Creating...
+                {editingTodo ? 'Updating...' : 'Creating...'}
               </>
             ) : (
               <>
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                  {editingTodo ? (
+                    <path fillRule="evenodd" d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" clipRule="evenodd" />
+                  ) : (
+                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                  )}
                 </svg>
-                Create Todo
+                {editingTodo ? 'Update Todo' : 'Create Todo'}
               </>
             )}
           </button>
           <button
             type="button"
-            onClick={() => {
-              setIsOpen(false)
-              setFormData({ title: "", description: "", notes: "", status_id: 1 })
-            }}
+            onClick={handleCancel}
             className="px-6 py-3 text-sm font-semibold text-black dark:text-white bg-gray-100 dark:bg-gray-900 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200 btn-hover flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
