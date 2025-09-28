@@ -123,7 +123,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         }
                       }}
                       className={`
-                        flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 btn-hover focus-ring
+                        flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200    focus-ring
                         ${isActive 
                           ? 'bg-black dark:bg-white text-white dark:text-black shadow-lg' 
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900'

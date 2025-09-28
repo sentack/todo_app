@@ -115,14 +115,14 @@ export default function ConfirmModal({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="px-6 py-3 text-sm font-semibold text-black dark:text-white bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl focus-ring disabled:opacity-50 transition-all duration-200 btn-hover"
+            className="px-6 py-3 text-sm font-semibold text-black dark:text-white bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl focus-ring disabled:opacity-50 transition-all duration-200   "
           >
             {cancelText}
           </button>
           <button
             onClick={handleConfirm}
             disabled={isLoading || !canConfirm}
-            className="px-6 py-3 text-sm font-semibold text-white dark:text-black bg-red-600 dark:bg-red-500 hover:bg-red-700 dark:hover:bg-red-600 rounded-xl focus-ring disabled:opacity-50 flex items-center gap-2 transition-all duration-200 btn-hover"
+            className="px-6 py-3 text-sm font-semibold text-white dark:text-black bg-red-600 dark:bg-red-500 hover:bg-red-700 dark:hover:bg-red-600 rounded-xl focus-ring disabled:opacity-50 flex items-center gap-2 transition-all duration-200   "
           >
             {isLoading && (
               <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import ConfirmModal from "./ConfirmModal"
 
@@ -32,6 +32,7 @@ interface TodoItemProps {
 export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemProps) {
   const [loading, setLoading] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isNoteExpanded, setIsNoteExpanded] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const supabase = createBrowserSupabaseClient()
 
@@ -49,33 +50,42 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
   }
 
   const updateTodoStatusBasedOnSubtasks = async () => {
-    if (!todo.subtasks || todo.subtasks.length === 0) return
+  // Fetch fresh subtasks from DB
+  const { data: subtasks, error } = await supabase
+    .from("subtasks")
+    .select("*")
+    .eq("todo_id", todo.id)
 
-    const allCompleted = todo.subtasks.every(subtask => subtask.completed)
-    const someCompleted = todo.subtasks.some(subtask => subtask.completed)
+  if (error || !subtasks) return
 
-    let newStatusId = todo.status_id
-    let newCompleted = todo.completed
+  const allCompleted = subtasks.every(subtask => subtask.completed)
+  const someCompleted = subtasks.some(subtask => subtask.completed)
 
-    if (allCompleted) {
-      newStatusId = 3 // completed
-      newCompleted = true
-    } else if (someCompleted && todo.status_id === 1) {
-      newStatusId = 2 // in progress
-      newCompleted = false
-    }
+  let newStatusId = todo.status_id
+  let newCompleted = todo.completed
 
-    if (newStatusId !== todo.status_id || newCompleted !== todo.completed) {
-      await supabase
-        .from("todos")
-        .update({
-          status_id: newStatusId,
-          completed: newCompleted,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", todo.id)
-    }
+  if (allCompleted) {
+    newStatusId = 3
+    newCompleted = true
+  } else if (someCompleted) {
+    newStatusId = 2
+    newCompleted = false
+  } else {
+    newStatusId = 1
+    newCompleted = false
   }
+
+  if (newStatusId !== todo.status_id || newCompleted !== todo.completed) {
+    await supabase
+      .from("todos")
+      .update({
+        status_id: newStatusId,
+        completed: newCompleted,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", todo.id)
+  }
+}
 
   const toggleCompleted = async () => {
     setLoading(true)
@@ -215,7 +225,7 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
           <button
             onClick={toggleCompleted}
             disabled={loading}
-            className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center focus-ring transition-all duration-200 btn-hover ${
+            className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center focus-ring transition-all duration-200    ${
               todo.completed
                 ? "bg-green-500 border-green-500 text-white shadow-lg"
                 : "border-gray-300 dark:border-gray-600 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950"
@@ -250,7 +260,7 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
                   <button
                     onClick={() => onEditTodo(todo)}
                     disabled={loading}
-                    className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 focus-ring p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200 btn-hover"
+                    className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 focus-ring p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200   "
                     aria-label="Edit todo"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -261,21 +271,20 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
                 <button
                   onClick={() => setShowDeleteModal(true)}
                   disabled={loading}
-                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 focus-ring p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200 btn-hover"
+                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 focus-ring p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
                   aria-label="Delete todo"
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5" fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
                     <path
                       fillRule="evenodd"
-                      d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"
-                      clipRule="evenodd"
-                    />
-                    <path
-                      fillRule="evenodd"
-                      d="M10 5a1 1 0 011 1v6a1 1 0 11-2 0V6a1 1 0 011-1zM6 10a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z"
+                      d="M6 8a1 1 0 011-1h6a1 1 0 011 1v7a2 2 0 01-2 2H8a2 2 0 01-2-2V8zM9 4a1 1 0 011-1h0a1 1 0 011 1h5a1 1 0 110 2H4a1 1 0 110-2h5z"
                       clipRule="evenodd"
                     />
                   </svg>
+
                 </button>
               </div>
             </div>
@@ -367,15 +376,15 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
             {todo.notes && (
               <div className="mt-3">
                 <button
-                  onClick={() => setIsExpanded(!isExpanded)}
+                  onClick={() => setIsNoteExpanded(!isNoteExpanded)}
                   className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus-ring px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200 flex items-center gap-1"
                 >
-                  <svg className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                  <svg className={`w-4 h-4 transition-transform duration-200 ${isNoteExpanded ? 'rotate-90' : ''}`} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                   </svg>
-                  {isExpanded ? "Hide notes" : "Show notes"}
+                  {isNoteExpanded ? "Hide notes" : "Show notes"}
                 </button>
-                {isExpanded && (
+                {isNoteExpanded && (
                   <div
                     className={`mt-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-950 text-sm border border-gray-200 dark:border-gray-800 animate-slide-in-down ${
                       todo.completed 

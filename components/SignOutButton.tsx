@@ -36,7 +36,7 @@ export default function SignOutButton({ user }: SignOutButtonProps) {
       <button
         onClick={handleSignOut}
         disabled={loading}
-        className="px-4 py-2 text-sm inline-flex gap-2 items-center font-semibold rounded-lg bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 focus-ring transition-all duration-200 btn-hover"
+        className="px-4 py-2 text-sm inline-flex gap-2 items-center font-semibold rounded-lg bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 focus-ring transition-all duration-200   "
       >
         {loading ? (
           <>

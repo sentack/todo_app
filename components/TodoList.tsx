@@ -149,7 +149,7 @@ const TodoList: React.FC<TodoListProps>= ({ loading, setLoading }) => {
             <button
               key={filterOption}
               onClick={() => setFilter(filterOption)}
-              className={`px-4 py-2 text-sm font-medium rounded-xl capitalize focus-ring transition-all duration-200 btn-hover ${
+              className={`px-4 py-2 text-sm font-medium rounded-xl capitalize focus-ring transition-all duration-200    ${
                 filter === filterOption
                   ? "bg-black dark:bg-white text-white dark:text-black shadow-lg"
                   : "bg-gray-100 dark:bg-gray-900 text-black dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800"
