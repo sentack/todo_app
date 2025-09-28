@@ -18,7 +18,6 @@ interface Todo {
   title: string
   description: string | null
   notes: string | null
-  status: string
   completed: boolean
   created_at: string
   status_id: number

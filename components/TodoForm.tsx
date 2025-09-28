@@ -221,7 +221,7 @@ export default function TodoForm({ onTodoAdded, editingTodo, onEditComplete }: T
       <div className="group">
         <button
           onClick={() => setIsOpen(true)}
-          className="w-full p-6 text-left border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl hover:border-black dark:hover:border-white transition-all duration-300 btn-hover group-hover:bg-gray-50 dark:group-hover:bg-gray-950"
+          className="w-full p-6 text-left border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl hover:border-black dark:hover:border-white transition-all duration-300 group-hover:bg-gray-50 dark:group-hover:bg-gray-950"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-900 group-hover:bg-black dark:group-hover:bg-white flex items-center justify-center transition-all duration-300">
@@ -327,28 +327,6 @@ export default function TodoForm({ onTodoAdded, editingTodo, onEditComplete }: T
                 </div>
               </div>
             ))}
-            {/* Always show one empty input for new subtask */}
-            <div className="flex gap-3 items-center">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  placeholder="Add new subtask..."
-                  value=""
-                  onChange={(e) => handleSubtaskTitleChange(subtasks.length, e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all duration-200"
-                />
-              </div>
-              <div className="w-20">
-                <input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value="1"
-                  disabled
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 text-center"
-                />
-              </div>
-            </div>
             <button
               type="button"
               onClick={addSubtask}
