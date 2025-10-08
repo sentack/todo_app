@@ -20,10 +20,10 @@ const HomeClient: React.FC<HomeClientProps> = ({user}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
  return (
-    <div className="min-h-screen bg-white dark:bg-black flex">
+    <div className="min-h-screen w-full bg-white dark:bg-black flex">
       {user && <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
       
-      <div className={`h-screen w-screen overflow-y-auto  ${user ? "lg:mx-64" : ""}`}>
+      <div className={`h-screen w-full overflow-y-auto`}>
         <header className="bg-white dark:bg-black shadow-lg border-b border-gray-200 dark:border-gray-800 backdrop-blur-md">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-20">
