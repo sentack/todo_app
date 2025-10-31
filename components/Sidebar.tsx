@@ -88,13 +88,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-black dark:bg-white rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <img className="w-full"  
+                    src="/favicon.ico" 
+                    />
               </div>
               <h2 className="text-lg font-bold text-black dark:text-white">TodoFlow</h2>
             </div>
