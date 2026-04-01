@@ -1,4 +1,3 @@
-import type React from "react";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -16,7 +15,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Todo App",
   description: "A minimal todo app.",
+  icons: {
+    icon: "/favicon.ico", // Standard favicon
+    apple: "/favicon.ico", // Apple Touch Icon
+  },
 };
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
