@@ -1,97 +1,106 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
-import ConfirmModal from "./ConfirmModal"
+import { useEffect, useState } from "react";
+import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser";
+import ConfirmModal from "./ConfirmModal";
 
 interface Subtask {
-  id: string
-  title: string
-  completed: boolean
-  weight: number
-  created_at: string
+  id: string;
+  title: string;
+  completed: boolean;
+  weight: number;
+  created_at: string;
 }
 
 interface Todo {
-  id: string
-  title: string
-  description: string | null
-  notes: string | null
-  status_id: number
-  completed: boolean
-  created_at: string
-  subtasks?: Subtask[]
+  id: string;
+  title: string;
+  description: string | null;
+  notes: string | null;
+  status_id: number;
+  completed: boolean;
+  created_at: string;
+  subtasks?: Subtask[];
 }
 
 interface TodoItemProps {
-  todo: Todo
-  onTodoUpdated: () => void
-  onEditTodo?: (todo: Todo) => void
+  todo: Todo;
+  onTodoUpdated: () => void;
+  onEditTodo?: (todo: Todo) => void;
 }
 
-export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemProps) {
-  const [loading, setLoading] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [isNoteExpanded, setIsNoteExpanded] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const supabase = createBrowserSupabaseClient()
+export default function TodoItem({
+  todo,
+  onTodoUpdated,
+  onEditTodo,
+}: TodoItemProps) {
+  const [loading, setLoading] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isNoteExpanded, setIsNoteExpanded] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const supabase = createBrowserSupabaseClient();
 
   const calculateProgress = () => {
     if (!todo.subtasks || todo.subtasks.length === 0) {
-      return todo.completed ? 100 : 0
+      return todo.completed ? 100 : 0;
     }
 
-    const totalWeight = todo.subtasks.reduce((sum, subtask) => sum + subtask.weight, 0)
+    const totalWeight = todo.subtasks.reduce(
+      (sum, subtask) => sum + subtask.weight,
+      0,
+    );
     const completedWeight = todo.subtasks
-      .filter(subtask => subtask.completed)
-      .reduce((sum, subtask) => sum + subtask.weight, 0)
+      .filter((subtask) => subtask.completed)
+      .reduce((sum, subtask) => sum + subtask.weight, 0);
 
-    return totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0
-  }
+    return totalWeight > 0
+      ? Math.round((completedWeight / totalWeight) * 100)
+      : 0;
+  };
 
   const updateTodoStatusBasedOnSubtasks = async () => {
-  // Fetch fresh subtasks from DB
-  const { data: subtasks, error } = await supabase
-    .from("subtasks")
-    .select("*")
-    .eq("todo_id", todo.id)
+    // Fetch fresh subtasks from DB
+    const { data: subtasks, error } = await supabase
+      .from("subtasks")
+      .select("*")
+      .eq("todo_id", todo.id);
 
-  if (error || !subtasks) return
+    if (error || !subtasks) return;
 
-  const allCompleted = subtasks.every(subtask => subtask.completed)
-  const someCompleted = subtasks.some(subtask => subtask.completed)
+    const allCompleted = subtasks.every((subtask) => subtask.completed);
+    const someCompleted = subtasks.some((subtask) => subtask.completed);
 
-  let newStatusId = todo.status_id
-  let newCompleted = todo.completed
+    let newStatusId = todo.status_id;
+    let newCompleted = todo.completed;
 
-  if (allCompleted) {
-    newStatusId = 3
-    newCompleted = true
-  } else if (someCompleted) {
-    newStatusId = 2
-    newCompleted = false
-  } else {
-    newStatusId = 1
-    newCompleted = false
-  }
+    if (allCompleted) {
+      newStatusId = 3;
+      newCompleted = true;
+    } else if (someCompleted) {
+      newStatusId = 2;
+      newCompleted = false;
+    } else {
+      newStatusId = 1;
+      newCompleted = false;
+    }
 
-  if (newStatusId !== todo.status_id || newCompleted !== todo.completed) {
-    await supabase
-      .from("todos")
-      .update({
-        status_id: newStatusId,
-        completed: newCompleted,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", todo.id)
-  }
-}
+    if (newStatusId !== todo.status_id || newCompleted !== todo.completed) {
+      await supabase
+        .from("todos")
+        .update({
+          status_id: newStatusId,
+          completed: newCompleted,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", todo.id);
+    }
+  };
 
   const toggleCompleted = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const newCompleted = !todo.completed
-      const newStatusId = newCompleted ? 3 : 1
+      const newCompleted = !todo.completed;
+      const newStatusId = newCompleted ? 3 : 1;
 
       // Update todo
       const { error: todoError } = await supabase
@@ -101,9 +110,9 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
           status_id: newStatusId,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", todo.id)
+        .eq("id", todo.id);
 
-      if (todoError) throw todoError
+      if (todoError) throw todoError;
 
       // If todo is marked complete, mark all subtasks complete
       if (newCompleted && todo.subtasks && todo.subtasks.length > 0) {
@@ -113,21 +122,24 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
             completed: true,
             updated_at: new Date().toISOString(),
           })
-          .eq("todo_id", todo.id)
+          .eq("todo_id", todo.id);
 
-        if (subtaskError) throw subtaskError
+        if (subtaskError) throw subtaskError;
       }
 
-      onTodoUpdated()
+      onTodoUpdated();
     } catch (error) {
-      console.error("Error updating todo:", error)
+      console.error("Error updating todo:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const toggleSubtaskCompleted = async (subtaskId: string, currentCompleted: boolean) => {
-    setLoading(true)
+  const toggleSubtaskCompleted = async (
+    subtaskId: string,
+    currentCompleted: boolean,
+  ) => {
+    setLoading(true);
     try {
       const { error } = await supabase
         .from("subtasks")
@@ -135,22 +147,22 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
           completed: !currentCompleted,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", subtaskId)
+        .eq("id", subtaskId);
 
-      if (error) throw error
+      if (error) throw error;
 
       // Update todo status based on subtask completion
-      await updateTodoStatusBasedOnSubtasks()
-      onTodoUpdated()
+      await updateTodoStatusBasedOnSubtasks();
+      onTodoUpdated();
     } catch (error) {
-      console.error("Error updating subtask:", error)
+      console.error("Error updating subtask:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const updateStatus = async (newStatusId: number) => {
-    setLoading(true)
+    setLoading(true);
     try {
       const { error } = await supabase
         .from("todos")
@@ -159,32 +171,32 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
           completed: newStatusId === 3,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", todo.id)
+        .eq("id", todo.id);
 
-      if (error) throw error
+      if (error) throw error;
 
-      onTodoUpdated()
+      onTodoUpdated();
     } catch (error) {
-      console.error("Error updating status:", error)
+      console.error("Error updating status:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const deleteTodo = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const { error } = await supabase.from("todos").delete().eq("id", todo.id)
+      const { error } = await supabase.from("todos").delete().eq("id", todo.id);
 
-      if (error) throw error
-      onTodoUpdated()
-      setShowDeleteModal(false)
+      if (error) throw error;
+      onTodoUpdated();
+      setShowDeleteModal(false);
     } catch (error) {
-      console.error("Error deleting todo:", error)
+      console.error("Error deleting todo:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getStatusInfo = (statusId: number) => {
     switch (statusId) {
@@ -193,46 +205,51 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
           name: "Completed",
           color: "status-completed",
           icon: "✅",
-        }
+        };
       case 2:
         return {
           name: "In Progress",
           color: "status-progress",
           icon: "⚡",
-        }
+        };
       default:
         return {
           name: "Pending",
           color: "status-pending",
           icon: "📋",
-        }
+        };
     }
-  }
+  };
 
-  const statusInfo = getStatusInfo(todo.status_id)
-  const progress = calculateProgress()
+  const statusInfo = getStatusInfo(todo.status_id);
+  const progress = calculateProgress();
 
   return (
     <>
       <div
-        className={`p-6 border rounded-2xl transition-all duration-300 hover:shadow-lg ${
-          todo.completed 
-            ? "bg-gray-50 dark:bg-gray-950 opacity-75 border-gray-200 dark:border-gray-800" 
+        className={`w-full max-w-full overflow-hidden p-4 sm:p-6 border rounded-2xl transition-all duration-300 hover:shadow-lg ${
+          todo.completed
+            ? "bg-gray-50 dark:bg-gray-950 opacity-75 border-gray-200 dark:border-gray-800"
             : "bg-white dark:bg-black border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700"
         }`}
       >
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-3 sm:gap-4">
+          {/* Checkbox */}
           <button
             onClick={toggleCompleted}
             disabled={loading}
-            className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center focus-ring transition-all duration-200    ${
+            className={`mt-1 w-5 h-5 sm:w-6 sm:h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 focus-ring transition-all duration-200 ${
               todo.completed
                 ? "bg-green-500 border-green-500 text-white shadow-lg"
                 : "border-gray-300 dark:border-gray-600 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950"
             }`}
           >
             {todo.completed && (
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className="w-3 h-3 sm:w-4 sm:h-4"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path
                   fillRule="evenodd"
                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -242,17 +259,23 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
             )}
           </button>
 
+          {/* Main content area */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className={`font-semibold text-lg ${
-                todo.completed 
-                  ? "line-through text-gray-500 dark:text-gray-400" 
-                  : "text-black dark:text-white"
-              }`}>
+            {/* Header: title, status, actions */}
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 mb-2">
+              <h3
+                className={`font-semibold text-base sm:text-lg break-words ${
+                  todo.completed
+                    ? "line-through text-gray-500 dark:text-gray-400"
+                    : "text-black dark:text-white"
+                }`}
+              >
                 {todo.title}
               </h3>
-              <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1 ${statusInfo.color}`}>
+              <div className="flex items-center justify-start sm:justify-end gap-2 flex-wrap">
+                <span
+                  className={`px-2 py-1 text-xs font-semibold rounded-full flex items-center gap-1 ${statusInfo.color}`}
+                >
                   <span>{statusInfo.icon}</span>
                   <span>{statusInfo.name}</span>
                 </span>
@@ -260,10 +283,14 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
                   <button
                     onClick={() => onEditTodo(todo)}
                     disabled={loading}
-                    className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 focus-ring p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200   "
+                    className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 focus-ring p-1.5 sm:p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200"
                     aria-label="Edit todo"
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <svg
+                      className="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
                       <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                     </svg>
                   </button>
@@ -271,12 +298,13 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
                 <button
                   onClick={() => setShowDeleteModal(true)}
                   disabled={loading}
-                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 focus-ring p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
+                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 focus-ring p-1.5 sm:p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
                   aria-label="Delete todo"
                 >
-                  <svg className="w-5 h-5" fill="currentColor"
+                  <svg
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    fill="currentColor"
                     viewBox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
                       fillRule="evenodd"
@@ -284,7 +312,6 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
                       clipRule="evenodd"
                     />
                   </svg>
-
                 </button>
               </div>
             </div>
@@ -293,14 +320,18 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
             {todo.subtasks && todo.subtasks.length > 0 && (
               <div className="mt-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Progress</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">{progress}%</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Progress
+                  </span>
+                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    {progress}%
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div
                     className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${progress}%` }}
-                  ></div>
+                  />
                 </div>
               </div>
             )}
@@ -310,31 +341,52 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
               <div className="mt-4">
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus-ring px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200 flex items-center gap-1"
+                  className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus-ring px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200 flex items-center gap-1"
                 >
-                  <svg className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  <svg
+                    className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${
+                      isExpanded ? "rotate-90" : ""
+                    }`}
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
-                  {isExpanded ? "Hide subtasks" : `Show subtasks (${todo.subtasks.length})`}
+                  {isExpanded
+                    ? "Hide subtasks"
+                    : `Show subtasks (${todo.subtasks.length})`}
                 </button>
                 {isExpanded && (
                   <div className="mt-3 space-y-2 animate-slide-in-down">
                     {todo.subtasks.map((subtask) => (
                       <div
                         key={subtask.id}
-                        className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800"
+                        className="flex items-center gap-3 p-2 sm:p-3 bg-gray-50 dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800"
                       >
                         <button
-                          onClick={() => toggleSubtaskCompleted(subtask.id, subtask.completed)}
+                          onClick={() =>
+                            toggleSubtaskCompleted(
+                              subtask.id,
+                              subtask.completed,
+                            )
+                          }
                           disabled={loading}
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center focus-ring transition-all duration-200 btn-hover ${
+                          className={`w-4 h-4 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center flex-shrink-0 focus-ring transition-all duration-200 ${
                             subtask.completed
                               ? "bg-green-500 border-green-500 text-white shadow-lg"
                               : "border-gray-300 dark:border-gray-600 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950"
                           }`}
                         >
                           {subtask.completed && (
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <svg
+                              className="w-2.5 h-2.5 sm:w-3 sm:h-3"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
                               <path
                                 fillRule="evenodd"
                                 d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -343,18 +395,24 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
                             </svg>
                           )}
                         </button>
-                        <div className="flex-1">
-                          <span className={`text-sm ${
-                            subtask.completed 
-                              ? "line-through text-gray-500 dark:text-gray-400" 
-                              : "text-gray-700 dark:text-gray-300"
-                          }`}>
+                        <div className="flex-1 min-w-0 break-words">
+                          <span
+                            className={`text-xs sm:text-sm ${
+                              subtask.completed
+                                ? "line-through text-gray-500 dark:text-gray-400"
+                                : "text-gray-700 dark:text-gray-300"
+                            }`}
+                          >
                             {subtask.title}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-gray-500 dark:text-gray-400">Weight:</span>
-                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{subtask.weight}</span>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            Weight:
+                          </span>
+                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                            {subtask.weight}
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -363,55 +421,80 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
               </div>
             )}
 
+            {/* Description */}
             {todo.description && (
-              <p className={`text-sm mt-2 ${
-                todo.completed 
-                  ? "text-gray-400 dark:text-gray-500" 
-                  : "text-gray-600 dark:text-gray-300"
-              }`}>
+              <p
+                className={`text-xs sm:text-sm mt-2 break-words ${
+                  todo.completed
+                    ? "text-gray-400 dark:text-gray-500"
+                    : "text-gray-600 dark:text-gray-300"
+                }`}
+              >
                 {todo.description}
               </p>
             )}
 
+            {/* Notes */}
             {todo.notes && (
               <div className="mt-3">
                 <button
                   onClick={() => setIsNoteExpanded(!isNoteExpanded)}
-                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus-ring px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200 flex items-center gap-1"
+                  className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus-ring px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200 flex items-center gap-1"
                 >
-                  <svg className={`w-4 h-4 transition-transform duration-200 ${isNoteExpanded ? 'rotate-90' : ''}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  <svg
+                    className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${
+                      isNoteExpanded ? "rotate-90" : ""
+                    }`}
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   {isNoteExpanded ? "Hide notes" : "Show notes"}
                 </button>
                 {isNoteExpanded && (
                   <div
-                    className={`mt-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-950 text-sm border border-gray-200 dark:border-gray-800 animate-slide-in-down ${
-                      todo.completed 
-                        ? "text-gray-400 dark:text-gray-500" 
+                    className={`mt-3 p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-950 text-xs sm:text-sm border border-gray-200 dark:border-gray-800 animate-slide-in-down ${
+                      todo.completed
+                        ? "text-gray-400 dark:text-gray-500"
                         : "text-gray-700 dark:text-gray-300"
                     }`}
                   >
-                    <pre className="whitespace-pre-wrap font-sans">{todo.notes}</pre>
+                    <pre className="whitespace-pre-wrap font-sans break-words">
+                      {todo.notes}
+                    </pre>
                   </div>
                 )}
               </div>
             )}
 
-            <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-gray-900">
+            {/* Footer: status select and date */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-gray-900 gap-3">
               <select
                 value={todo.status_id}
                 onChange={(e) => updateStatus(Number.parseInt(e.target.value))}
                 disabled={loading}
-                className="text-sm px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-black text-black dark:text-white focus-ring transition-all duration-200"
+                className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-black text-black dark:text-white focus-ring transition-all duration-200"
               >
                 <option value={1}>📋 Pending</option>
                 <option value={2}>⚡ In Progress</option>
                 <option value={3}>✅ Completed</option>
               </select>
-              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+              <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                <svg
+                  className="w-3 h-3 sm:w-4 sm:h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 <span>{new Date(todo.created_at).toLocaleDateString()}</span>
               </div>
@@ -432,5 +515,5 @@ export default function TodoItem({ todo, onTodoUpdated, onEditTodo }: TodoItemPr
         confirmationText="DELETE"
       />
     </>
-  )
+  );
 }
