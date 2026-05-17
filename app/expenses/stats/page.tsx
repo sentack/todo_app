@@ -178,10 +178,10 @@ export default function ExpenseStatsPage() {
               <div>
                 <h2 className="text-xl font-semibold text-black dark:text-white mb-4">Totals</h2>
                 <div className="grid grid-cols-2 gap-4">
-                  <StatCard label="Today" value={`$${todayTotal.toFixed(2)}`} delay={0} />
-                  <StatCard label="Past 7 Days" value={`$${weekTotal.toFixed(2)}`} delay={1} />
-                  <StatCard label="Past 30 Days" value={`$${monthTotal.toFixed(2)}`} delay={2} />
-                  <StatCard label="All Time" value={`$${allTotal.toFixed(2)}`} sub={`${allDays.length} day${allDays.length !== 1 ? "s" : ""} tracked`} delay={3} />
+                  <StatCard label="Today" value={`ETB ${todayTotal.toFixed(2)}`} delay={0} />
+                  <StatCard label="Past 7 Days" value={`ETB ${weekTotal.toFixed(2)}`} delay={1} />
+                  <StatCard label="Past 30 Days" value={`ETB ${monthTotal.toFixed(2)}`} delay={2} />
+                  <StatCard label="All Time" value={`ETB ${allTotal.toFixed(2)}`} sub={`${allDays.length} day${allDays.length !== 1 ? "s" : ""} tracked`} delay={3} />
                 </div>
               </div>
 
@@ -191,13 +191,13 @@ export default function ExpenseStatsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <StatCard
                     label="Avg per spending day"
-                    value={`$${avgDaily.toFixed(2)}`}
+                    value={`ETB ${avgDaily.toFixed(2)}`}
                     sub="Days with at least one expense"
                     delay={0}
                   />
                   <StatCard
                     label="Avg per calendar day"
-                    value={`$${avg30.toFixed(2)}`}
+                    value={`ETB ${avg30.toFixed(2)}`}
                     sub="Based on last 30 days"
                     delay={1}
                   />
@@ -218,7 +218,7 @@ export default function ExpenseStatsPage() {
                           </p>
                           <p className="text-xs text-gray-400 mt-0.5">{formatDateLabel(biggest.date)}</p>
                         </div>
-                        <span className="text-xl font-bold text-black dark:text-white">${Number(biggest.amount).toFixed(2)}</span>
+                        <span className="text-xl font-bold text-black dark:text-white">ETB {Number(biggest.amount).toFixed(2)}</span>
                       </div>
                     )}
                     {mostExpensiveDay && (
@@ -227,7 +227,7 @@ export default function ExpenseStatsPage() {
                           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-0.5">Most Expensive Day</p>
                           <p className="font-semibold text-black dark:text-white">{formatDateLabel(mostExpensiveDay)}</p>
                         </div>
-                        <span className="text-xl font-bold text-black dark:text-white">${(mostExpensiveDayTotal as number).toFixed(2)}</span>
+                        <span className="text-xl font-bold text-black dark:text-white">ETB {(mostExpensiveDayTotal as number).toFixed(2)}</span>
                       </div>
                     )}
                   </div>
@@ -247,7 +247,7 @@ export default function ExpenseStatsPage() {
                           <div className="flex items-center justify-between mb-1.5">
                             <span className={`text-sm font-semibold ${CATEGORY_TEXT[cat] || CATEGORY_TEXT["Other"]}`}>{cat}</span>
                             <div className="text-right">
-                              <span className="text-sm font-bold text-black dark:text-white">${total.toFixed(2)}</span>
+                              <span className="text-sm font-bold text-black dark:text-white">ETB {total.toFixed(2)}</span>
                               <span className="text-xs text-gray-400 ml-2">{count} item{count !== 1 ? "s" : ""}</span>
                             </div>
                           </div>
