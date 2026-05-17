@@ -53,7 +53,7 @@ const HomeClient: React.FC<HomeClientProps> = ({ user }) => {
         <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {user ? (
             <div className="animate-fade-in">
-              <TodoList loading={loading} setLoading={setLoading} />
+              <TodoList setLoading={setLoading} />
             </div>
           ) : (
             <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">

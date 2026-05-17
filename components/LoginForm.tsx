@@ -6,48 +6,72 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function LoginForm() {
-  const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const router = useRouter();
+  const [loading, setLoading]     = useState(false);
+  const [isSignUp, setIsSignUp]   = useState(false);
+  const [identifier, setIdentifier] = useState(""); // sign-in: email or username
+  const [email, setEmail]         = useState("");    // sign-up: email
+  const [username, setUsername]   = useState("");    // sign-up: username
+  const [password, setPassword]   = useState("");
+  const [error, setError]         = useState("");
+  const router  = useRouter();
   const supabase = createBrowserSupabaseClient();
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
+  const switchMode = (toSignUp: boolean) => {
+    setIsSignUp(toSignUp);
+    setError("");
+    setIdentifier(""); setEmail(""); setUsername(""); setPassword("");
+  };
+
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const trimmedUsername = username.trim().toLowerCase();
+        if (!/^[a-z0-9_]{3,30}$/.test(trimmedUsername)) {
+          throw new Error("Username must be 3–30 characters: letters, numbers, and underscores only.");
+        }
+        // Pre-check username uniqueness
+        const { data: existing } = await supabase
+          .from("users")
+          .select("id")
+          .eq("username", trimmedUsername)
+          .maybeSingle();
+        if (existing) throw new Error("That username is already taken.");
+
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
+            data: { username: trimmedUsername },
             emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
-        if (error) throw error;
+        if (signUpError) throw signUpError;
         setError("Check your email for the confirmation link!");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
+        // Resolve email: if identifier has no @, treat it as a username
+        let loginEmail = identifier.trim();
+        if (!loginEmail.includes("@")) {
+          const { data: resolvedEmail, error: lookupError } = await supabase
+            .rpc("get_email_by_username", { p_username: loginEmail.toLowerCase() });
+          if (lookupError || !resolvedEmail) throw new Error("Username not found. Try signing in with your email instead.");
+          loginEmail = resolvedEmail as string;
+        }
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
+        if (signInError) throw signInError;
         router.refresh();
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError("An unknown error occurred");
-      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
     } finally {
       setLoading(false);
     }
   };
+
+  const isSuccess = error.includes("Check your email");
 
   return (
     <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-2xl">
@@ -56,58 +80,95 @@ export default function LoginForm() {
           {isSignUp ? "Create Account" : "Sign In"}
         </h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          {isSignUp
-            ? "Join TodoFlow to get started"
-            : "Welcome back to TodoFlow"}
+          {isSignUp ? "Join TodoFlow to get started" : "Welcome back to TodoFlow"}
         </p>
       </div>
 
-      <form onSubmit={handleEmailAuth} className="space-y-6">
+      <form onSubmit={handleAuth} className="space-y-6">
         <div className="space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-black dark:text-white mb-2"
-            >
-              <div className="flex items-center gap-2">
-                <svg
-                  className="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                </svg>
-                Email Address
-              </div>
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-              placeholder="Enter your email"
-            />
-          </div>
 
+          {/* Sign-in: single identifier field */}
+          {!isSignUp && (
+            <div>
+              <label htmlFor="identifier" className="block text-sm font-medium text-black dark:text-white mb-2">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                  Email or Username
+                </div>
+              </label>
+              <input
+                id="identifier"
+                type="text"
+                value={identifier}
+                onChange={e => setIdentifier(e.target.value)}
+                required
+                autoComplete="username"
+                placeholder="Enter your email or username"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              />
+            </div>
+          )}
+
+          {/* Sign-up: username field */}
+          {isSignUp && (
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-black dark:text-white mb-2">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                  Username
+                </div>
+              </label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                required
+                minLength={3}
+                maxLength={30}
+                autoComplete="username"
+                placeholder="your_username"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              />
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Letters, numbers and underscores only</p>
+            </div>
+          )}
+
+          {/* Sign-up: email field */}
+          {isSignUp && (
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-black dark:text-white mb-2">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                  </svg>
+                  Email Address
+                </div>
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                placeholder="Enter your email"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              />
+            </div>
+          )}
+
+          {/* Password — always shown */}
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-black dark:text-white mb-2"
-            >
+            <label htmlFor="password" className="block text-sm font-medium text-black dark:text-white mb-2">
               <div className="flex items-center gap-2">
-                <svg
-                  className="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                    clipRule="evenodd"
-                  />
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                 </svg>
                 Password
               </div>
@@ -116,53 +177,38 @@ export default function LoginForm() {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               required
               minLength={6}
+              autoComplete={isSignUp ? "new-password" : "current-password"}
+              placeholder={isSignUp ? "Create a password (min 6 chars)" : "Enter your password"}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-              placeholder="Enter your password"
             />
           </div>
         </div>
 
+        {/* Error / success banner */}
         {error && (
-          <div
-            className={`text-sm p-4 rounded-xl animate-slide-in-down ${
-              error.includes("Check your email")
-                ? "text-green-800 bg-green-100 dark:text-green-300 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
-                : "text-red-800 bg-red-100 dark:text-red-300 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
-            }`}
-          >
+          <div className={`text-sm p-4 rounded-xl animate-slide-in-down ${
+            isSuccess
+              ? "text-green-800 bg-green-100 dark:text-green-300 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+              : "text-red-800 bg-red-100 dark:text-red-300 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+          }`}>
             <div className="flex items-center gap-2">
-              {error.includes("Check your email") ? (
-                <svg
-                  className="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
+              {isSuccess ? (
+                <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               ) : (
-                <svg
-                  className="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
+                <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
               )}
               {error}
             </div>
           </div>
         )}
+
         <button
           type="submit"
           disabled={loading}
@@ -171,35 +217,16 @@ export default function LoginForm() {
           {loading ? (
             <>
               {isSignUp ? "Creating Account..." : "Signing In..."}
-              <svg
-                className="w-4 h-4 animate-spin"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             </>
           ) : (
             <>
               {isSignUp ? "Create Account" : "Sign In"}
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
+                <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
             </>
           )}
@@ -208,12 +235,10 @@ export default function LoginForm() {
 
       <div className="mt-6 text-center">
         <button
-          onClick={() => setIsSignUp(!isSignUp)}
+          onClick={() => switchMode(!isSignUp)}
           className="text-sm text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors duration-200"
         >
-          {isSignUp
-            ? "Already have an account? Sign in"
-            : "Need an account? Sign up"}
+          {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
         </button>
       </div>
     </div>

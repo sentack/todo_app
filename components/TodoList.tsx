@@ -9,21 +9,26 @@ const PAGE_SIZE = 10;
 
 interface Subtask { id: string; title: string; completed: boolean; weight: number; created_at: string }
 interface Todo { id: string; title: string; description: string | null; notes: string | null; completed: boolean; created_at: string; status_id: number; subtasks?: Subtask[] }
-interface TodoListProps { loading: boolean; setLoading: React.Dispatch<React.SetStateAction<boolean>> }
+interface TodoListProps { setLoading: React.Dispatch<React.SetStateAction<boolean>> }
 
-const TodoList: React.FC<TodoListProps> = ({ loading, setLoading }) => {
+const TodoList: React.FC<TodoListProps> = ({ setLoading }) => {
   const [todos, setTodos]         = useState<Todo[]>([]);
   const [filter, setFilter]       = useState<"all" | "pending" | "completed">("all");
   const [page, setPage]           = useState(1);
   const [counts, setCounts]       = useState({ all: 0, pending: 0, completed: 0 });
   const [totalFiltered, setTotalFiltered] = useState(0);
-  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
-  const [refreshKey, setRefreshKey]   = useState(0);
-  const [search, setSearch]           = useState("");
+  const [editingTodo, setEditingTodo]     = useState<Todo | null>(null);
+  const [refreshKey, setRefreshKey]       = useState(0);
+  const [search, setSearch]               = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  // initialLoading: full skeleton shown only on the very first fetch
+  // listLoading:    dims the list area on filter / search / page changes
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [listLoading, setListLoading]       = useState(false);
 
-  const supabase   = useMemo(() => createBrowserSupabaseClient(), []);
-  const userIdRef  = useRef<string | null>(null);
+  const supabase    = useMemo(() => createBrowserSupabaseClient(), []);
+  const userIdRef   = useRef<string | null>(null);
+  const isFirstLoad = useRef(true);
 
   // Debounce search 300ms
   useEffect(() => {
@@ -31,24 +36,26 @@ const TodoList: React.FC<TodoListProps> = ({ loading, setLoading }) => {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Reset page when search changes
+  // Reset to page 1 when search changes
   useEffect(() => { setPage(1); }, [debouncedSearch]);
 
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
-      setLoading(true);
+      // Only the very first fetch shows the full-page skeleton.
+      // All subsequent fetches (filter / search / page) dim just the list.
+      if (!isFirstLoad.current) setListLoading(true);
 
       if (!userIdRef.current) {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setLoading(false); return; }
+        if (!user) { setInitialLoading(false); setLoading(false); return; }
         userIdRef.current = user.id;
       }
       if (cancelled) return;
       const uid = userIdRef.current!;
 
-      // Lightweight count query for accurate tab totals (unaffected by search)
+      // Lightweight count query — unaffected by search, always shows true totals in tabs
       const { data: countData } = await supabase
         .from("todos")
         .select("completed")
@@ -62,7 +69,7 @@ const TodoList: React.FC<TodoListProps> = ({ loading, setLoading }) => {
         });
       }
 
-      // Paginated display query with search + exact count for pagination
+      // Paginated display query — filtered by search, returns exact count for pagination
       const from = (page - 1) * PAGE_SIZE;
       let q = supabase
         .from("todos")
@@ -82,7 +89,13 @@ const TodoList: React.FC<TodoListProps> = ({ loading, setLoading }) => {
       if (!cancelled) {
         setTodos((data ?? []) as Todo[]);
         setTotalFiltered(count ?? 0);
-        setLoading(false);
+        if (isFirstLoad.current) {
+          isFirstLoad.current = false;
+          setInitialLoading(false);
+          setLoading(false); // tell parent to reveal the Footer
+        } else {
+          setListLoading(false);
+        }
       }
     };
 
@@ -101,12 +114,13 @@ const TodoList: React.FC<TodoListProps> = ({ loading, setLoading }) => {
 
   // ── render ────────────────────────────────────────────────────────────────
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="space-y-6">
         <div className="skeleton rounded-2xl h-16" />
+        <div className="skeleton rounded-xl h-11" />
         <div className="flex justify-center gap-2">
-          {[16, 20, 24].map(w => <div key={w} className="skeleton rounded-lg h-8 w-20" />)}
+          {[16, 20, 24].map(w => <div key={w} className="skeleton rounded-xl h-9 w-24" />)}
         </div>
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => <div key={i} className="skeleton rounded-2xl h-24" />)}
@@ -126,7 +140,7 @@ const TodoList: React.FC<TodoListProps> = ({ loading, setLoading }) => {
       </div>
 
       {/* Search */}
-      <div className="relative animate-fade-in">
+      <div className="relative">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
         </svg>
@@ -145,7 +159,7 @@ const TodoList: React.FC<TodoListProps> = ({ loading, setLoading }) => {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex items-center justify-center animate-fade-in w-full min-w-0 gap-2">
+      <div className="flex items-center justify-center w-full min-w-0 gap-2">
         {(["all", "pending", "completed"] as const).map(f => (
           <button
             key={f}
@@ -161,8 +175,8 @@ const TodoList: React.FC<TodoListProps> = ({ loading, setLoading }) => {
         ))}
       </div>
 
-      {/* List */}
-      <div className="space-y-4 w-full max-w-full overflow-x-hidden">
+      {/* List — dims while fetching, no full-page flash */}
+      <div className={`space-y-4 w-full max-w-full overflow-x-hidden transition-opacity duration-150 ${listLoading ? "opacity-50 pointer-events-none" : "opacity-100"}`}>
         {todos.length === 0 ? (
           <div className="text-center py-8 sm:py-16 px-4 animate-fade-in">
             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -174,7 +188,9 @@ const TodoList: React.FC<TodoListProps> = ({ loading, setLoading }) => {
               {debouncedSearch ? "No results found" : filter === "all" ? "No todos yet" : `No ${filter} todos`}
             </h3>
             <p className="text-xs sm:text-base text-gray-600 dark:text-gray-400">
-              {debouncedSearch ? `No todos match "${debouncedSearch}".` : filter === "all" ? "Create your first todo to get started!" : `You don't have any ${filter} todos right now.`}
+              {debouncedSearch
+                ? `No todos match "${debouncedSearch}".`
+                : filter === "all" ? "Create your first todo to get started!" : `You don't have any ${filter} todos right now.`}
             </p>
             {debouncedSearch && (
               <button onClick={() => setSearch("")} className="mt-3 text-sm font-semibold text-black dark:text-white underline underline-offset-2">Clear search</button>
