@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
-import Link from "next/link"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import AuthenticatedLayout from "@/components/AuthenticatedLayout"
 
@@ -220,25 +219,17 @@ export default function ExpensesPage() {
                   <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
                 </svg>
               </div>
-              <h1 className="text-3xl font-bold text-black dark:text-white">Expenses</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-black dark:text-white">Expenses</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={formOpen ? closeForm : () => setFormOpen(true)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${formOpen ? "bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300" : "bg-black dark:bg-white text-white dark:text-black hover:opacity-80"}`}
-              >
-                <svg className={`w-4 h-4 transition-transform duration-200 ${formOpen ? "rotate-45" : ""}`} fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                {formOpen ? "Cancel" : (editingExpense ? "Editing" : "Add Expense")}
-              </button>
-              <Link href="/expenses/stats" className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors duration-200">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                </svg>
-                Stats
-              </Link>
-            </div>
+            <button
+              onClick={formOpen ? closeForm : () => setFormOpen(true)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shrink-0 ${formOpen ? "bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300" : "bg-black dark:bg-white text-white dark:text-black hover:opacity-80"}`}
+            >
+              <svg className={`w-4 h-4 transition-transform duration-200 ${formOpen ? "rotate-45" : ""}`} fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              {formOpen ? "Cancel" : (editingExpense ? "Editing" : "Add Expense")}
+            </button>
           </div>
 
           {/* Today's total banner */}
