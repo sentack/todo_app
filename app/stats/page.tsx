@@ -28,7 +28,12 @@ interface ToBuyItem {
   urgency: "low" | "medium" | "high" | "critical"; bought: boolean
 }
 
-type Tab = "todo" | "expenses" | "to-buy"
+interface FinanceItem {
+  id: string; amount: number; amount_paid: number; deadline: string | null
+  paid_history: { amount: number; date: string }[]
+}
+
+type Tab = "todo" | "expenses" | "to-buy" | "debts" | "lending"
 
 // ─── Shared components ────────────────────────────────────────────────────────
 
@@ -102,6 +107,14 @@ export default function StatsPage() {
   const [toBuyLoaded, setToBuyLoaded]   = useState(false)
   const [toBuyItems, setToBuyItems]     = useState<ToBuyItem[]>([])
 
+  const [debtsLoading, setDebtsLoading] = useState(false)
+  const [debtsLoaded, setDebtsLoaded]   = useState(false)
+  const [debts, setDebts]               = useState<FinanceItem[]>([])
+
+  const [lendingLoading, setLendingLoading] = useState(false)
+  const [lendingLoaded, setLendingLoaded]   = useState(false)
+  const [lendings, setLendings]             = useState<FinanceItem[]>([])
+
   const supabase = useMemo(() => createBrowserSupabaseClient(), [])
 
   useEffect(() => {
@@ -118,6 +131,8 @@ export default function StatsPage() {
     if (!userId) return
     if (activeTab === "expenses" && !expensesLoaded) loadExpensesData(userId)
     if (activeTab === "to-buy"   && !toBuyLoaded)   loadToBuyData(userId)
+    if (activeTab === "debts"    && !debtsLoaded)   loadDebtsData(userId)
+    if (activeTab === "lending"  && !lendingLoaded) loadLendingData(userId)
   }, [activeTab, userId])
 
   // ── Data loaders ──────────────────────────────────────────────────────────
@@ -181,6 +196,22 @@ export default function StatsPage() {
     setToBuyLoading(false)
   }
 
+  const loadDebtsData = async (uid: string) => {
+    setDebtsLoading(true)
+    const { data } = await supabase.from("debts").select("id, amount, amount_paid, deadline, paid_history").eq("user_id", uid)
+    if (data) setDebts(data as FinanceItem[])
+    setDebtsLoaded(true)
+    setDebtsLoading(false)
+  }
+
+  const loadLendingData = async (uid: string) => {
+    setLendingLoading(true)
+    const { data } = await supabase.from("lendings").select("id, amount, amount_paid, deadline, paid_history").eq("user_id", uid)
+    if (data) setLendings(data as FinanceItem[])
+    setLendingLoaded(true)
+    setLendingLoading(false)
+  }
+
   // ── Computed ──────────────────────────────────────────────────────────────
 
   const expStats = useMemo(() => {
@@ -218,6 +249,21 @@ export default function StatsPage() {
     }
   }, [expenses])
 
+  const financeStats = (items: FinanceItem[]) => {
+    const getStatus = (i: FinanceItem) => Number(i.amount_paid) >= Number(i.amount) ? "paid" : Number(i.amount_paid) > 0 ? "partial" : "unpaid"
+    const now = new Date()
+    return {
+      total:       items.length,
+      paid:        items.filter(i => getStatus(i) === "paid").length,
+      partial:     items.filter(i => getStatus(i) === "partial").length,
+      unpaid:      items.filter(i => getStatus(i) === "unpaid").length,
+      totalAmount: items.reduce((s, i) => s + Number(i.amount), 0),
+      totalPaid:   items.reduce((s, i) => s + Number(i.amount_paid), 0),
+      outstanding: items.filter(i => getStatus(i) !== "paid").reduce((s, i) => s + (Number(i.amount) - Number(i.amount_paid)), 0),
+      overdue:     items.filter(i => i.deadline && new Date(i.deadline + "T00:00:00") < now && getStatus(i) !== "paid").length,
+    }
+  }
+
   const toBuyStats = useMemo(() => {
     const pending = toBuyItems.filter(i => !i.bought)
     const bought  = toBuyItems.filter(i =>  i.bought)
@@ -249,12 +295,12 @@ export default function StatsPage() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1 mb-8">
-            {([["todo", "Todo"], ["expenses", "Expenses"], ["to-buy", "To Buy"]] as [Tab, string][]).map(([t, label]) => (
+          <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1 mb-8 overflow-x-auto">
+            {([["todo", "Todo"], ["expenses", "Expenses"], ["to-buy", "To Buy"], ["debts", "Debts"], ["lending", "Lending"]] as [Tab, string][]).map(([t, label]) => (
               <button
                 key={t}
                 onClick={() => setActiveTab(t)}
-                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
+                className={`shrink-0 px-3 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-150 ${
                   activeTab === t
                     ? "bg-black dark:bg-white text-white dark:text-black shadow-sm"
                     : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
@@ -513,6 +559,84 @@ export default function StatsPage() {
 
               </div>
             ) : null
+          )}
+
+          {/* ── Debts Tab ────────────────────────────────────────────── */}
+          {activeTab === "debts" && (
+            debtsLoading ? <SectionSkeleton /> :
+            debtsLoaded && debts.length === 0 ? (
+              <div className="text-center py-20"><p className="text-gray-500 dark:text-gray-400">No debts recorded yet.</p></div>
+            ) : debtsLoaded ? (() => {
+              const s = financeStats(debts)
+              return (
+                <div className="space-y-8">
+                  <div>
+                    <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Overview</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                      <StatCard label="Total Debts"     value={String(s.total)}                       sub={`${s.paid} paid off`}        delay={0} />
+                      <StatCard label="Total Owed"      value={`ETB ${s.totalAmount.toFixed(2)}`}     sub="all time"                    delay={1} />
+                      <StatCard label="Total Paid"      value={`ETB ${s.totalPaid.toFixed(2)}`}       sub="amount repaid"               delay={2} />
+                      <StatCard label="Outstanding"     value={`ETB ${s.outstanding.toFixed(2)}`}     sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} delay={3} />
+                    </div>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-black dark:text-white mb-4">By Status</h2>
+                    <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                      {([["Unpaid", s.unpaid, "bg-red-400", "text-red-600 dark:text-red-400"], ["Partial", s.partial, "bg-yellow-400", "text-yellow-600 dark:text-yellow-400"], ["Paid", s.paid, "bg-green-500", "text-green-600 dark:text-green-400"]] as [string, number, string, string][]).map(([label, count, bar, text], idx, arr) => (
+                        <div key={label} className={`px-5 py-4 ${idx < arr.length - 1 ? "border-b border-gray-100 dark:border-gray-900" : ""}`}>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className={`text-sm font-semibold ${text}`}>{label}</span>
+                            <span className="text-sm font-bold text-black dark:text-white">{count} item{count !== 1 ? "s" : ""}</span>
+                          </div>
+                          <div className="h-2 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-500 ${bar}`} style={{ width: `${Math.round((count / Math.max(s.total, 1)) * 100)}%` }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
+            })() : null
+          )}
+
+          {/* ── Lending Tab ──────────────────────────────────────────── */}
+          {activeTab === "lending" && (
+            lendingLoading ? <SectionSkeleton /> :
+            lendingLoaded && lendings.length === 0 ? (
+              <div className="text-center py-20"><p className="text-gray-500 dark:text-gray-400">No lendings recorded yet.</p></div>
+            ) : lendingLoaded ? (() => {
+              const s = financeStats(lendings)
+              return (
+                <div className="space-y-8">
+                  <div>
+                    <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Overview</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                      <StatCard label="Total Lendings"  value={String(s.total)}                       sub={`${s.paid} returned fully`}  delay={0} />
+                      <StatCard label="Total Lent"      value={`ETB ${s.totalAmount.toFixed(2)}`}     sub="all time"                    delay={1} />
+                      <StatCard label="Total Received"  value={`ETB ${s.totalPaid.toFixed(2)}`}       sub="amount returned"             delay={2} />
+                      <StatCard label="Outstanding"     value={`ETB ${s.outstanding.toFixed(2)}`}     sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} delay={3} />
+                    </div>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-black dark:text-white mb-4">By Status</h2>
+                    <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                      {([["Unpaid", s.unpaid, "bg-blue-400", "text-blue-600 dark:text-blue-400"], ["Partial", s.partial, "bg-yellow-400", "text-yellow-600 dark:text-yellow-400"], ["Returned", s.paid, "bg-green-500", "text-green-600 dark:text-green-400"]] as [string, number, string, string][]).map(([label, count, bar, text], idx, arr) => (
+                        <div key={label} className={`px-5 py-4 ${idx < arr.length - 1 ? "border-b border-gray-100 dark:border-gray-900" : ""}`}>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className={`text-sm font-semibold ${text}`}>{label}</span>
+                            <span className="text-sm font-bold text-black dark:text-white">{count} item{count !== 1 ? "s" : ""}</span>
+                          </div>
+                          <div className="h-2 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-500 ${bar}`} style={{ width: `${Math.round((count / Math.max(s.total, 1)) * 100)}%` }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
+            })() : null
           )}
 
         </div>
