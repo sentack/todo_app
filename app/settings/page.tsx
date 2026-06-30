@@ -9,6 +9,8 @@ import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { useRouter } from "next/navigation"
 import ClearDataModal from "@/components/ClearDataModal"
 import AuthenticatedLayout from "@/components/AuthenticatedLayout"
+import { useCurrency } from "@/contexts/CurrencyContext"
+import { CURRENCIES, CATEGORIES } from "@/lib/constants"
 
 interface UserProfile {
   id: string
@@ -31,12 +33,50 @@ export default function SettingsPage() {
   const [profileSuccess, setProfileSuccess] = useState("")
   const [showClearModal, setShowClearModal] = useState(false)
 
+  // Budgets
+  const [budgets, setBudgets] = useState<Record<string, string>>({})
+  const [savingBudgets, setSavingBudgets] = useState(false)
+  const [budgetSuccess, setBudgetSuccess] = useState("")
+
   const supabase = createBrowserSupabaseClient()
   const router = useRouter()
+  const { currency, setCurrencyPref } = useCurrency()
 
   useEffect(() => {
     fetchUser()
   }, [])
+
+  useEffect(() => {
+    if (!user) return
+    ;(async () => {
+      const { data } = await supabase.from("expense_budgets").select("category, monthly_limit").eq("user_id", user.id)
+      if (data) {
+        const map: Record<string, string> = {}
+        for (const row of data) map[row.category] = String(row.monthly_limit)
+        setBudgets(map)
+      }
+    })()
+  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSaveBudgets = async () => {
+    if (!user) return
+    setSavingBudgets(true)
+    setBudgetSuccess("")
+    const rows = Object.entries(budgets)
+      .filter(([, v]) => v.trim() !== "" && !isNaN(parseFloat(v)))
+      .map(([category, v]) => ({ user_id: user.id, category, monthly_limit: parseFloat(v) }))
+    if (rows.length > 0) {
+      await supabase.from("expense_budgets").upsert(rows, { onConflict: "user_id,category" })
+    }
+    // Delete any budgets that were cleared
+    const cleared = CATEGORIES.filter(c => !budgets[c] || budgets[c].trim() === "")
+    if (cleared.length > 0) {
+      await supabase.from("expense_budgets").delete().eq("user_id", user.id).in("category", cleared)
+    }
+    setBudgetSuccess("Budgets saved!")
+    setTimeout(() => setBudgetSuccess(""), 3000)
+    setSavingBudgets(false)
+  }
 
   const fetchUser = async () => {
     try {
@@ -284,6 +324,80 @@ export default function SettingsPage() {
                   )}
                 </button>
               </form>
+            </div>
+
+            {/* Preferences Section */}
+            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-xl">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-black dark:text-white">Preferences</h2>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-black dark:text-white mb-2">Currency</label>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Used across expenses, debts, and lending.</p>
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={currency}
+                      onChange={e => setCurrencyPref(e.target.value)}
+                      className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-black text-black dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all"
+                    >
+                      {CURRENCIES.map(c => (
+                        <option key={c.code} value={c.code}>{c.code} – {c.name}</option>
+                      ))}
+                    </select>
+                    <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Current: {currency}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Spending Budgets Section */}
+            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-xl">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-black dark:text-white">Spending Budgets</h2>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Set monthly limits per category. Leave blank for no limit.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                {CATEGORIES.map(cat => (
+                  <div key={cat}>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{cat}</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium">{currency}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={budgets[cat] ?? ""}
+                        onChange={e => setBudgets(prev => ({ ...prev, [cat]: e.target.value }))}
+                        placeholder="No limit"
+                        className="w-full pl-11 pr-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-950 text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {budgetSuccess && (
+                <div className="text-sm p-3 rounded-xl text-green-800 bg-green-100 dark:text-green-300 dark:bg-green-900/20 border border-green-200 dark:border-green-800 mb-4 animate-slide-in-down">
+                  {budgetSuccess}
+                </div>
+              )}
+              <button
+                onClick={handleSaveBudgets}
+                disabled={savingBudgets}
+                className="w-full px-6 py-3 text-sm font-semibold text-white dark:text-black bg-black dark:bg-white rounded-xl hover:opacity-80 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+              >
+                {savingBudgets ? "Saving..." : "Save Budgets"}
+              </button>
             </div>
 
             {/* Change Password Section */}

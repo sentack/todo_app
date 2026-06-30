@@ -43,7 +43,7 @@ export default function NotFound() {
   if (user) {
     return (
       <div className="min-h-screen bg-white dark:bg-black flex">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userId={user.id} />
 
         <div className="h-screen w-full overflow-y-auto">
           <header className="bg-white dark:bg-black shadow-lg border-b border-gray-200 dark:border-gray-800 backdrop-blur-md">

@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import AuthenticatedLayout from "@/components/AuthenticatedLayout"
+import { useCurrency } from "@/contexts/CurrencyContext"
+import { triggerUndo } from "@/lib/undoToast"
 
 interface ToBuyItem {
   id: string; name: string; quantity: number; price: number
@@ -22,31 +24,31 @@ const URGENCY_META: Record<string, { label: string; badge: string; dot: string }
   low:      { label: "Low",      badge: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",           dot: "bg-gray-400"   },
 }
 
+interface LogPrompt { itemId: string; name: string; amount: number }
+
 export default function ToBuyPage() {
   const [allItems, setAllItems]       = useState<ToBuyItem[]>([])
   const [loading, setLoading]         = useState(true)
   const [refreshKey, setRefreshKey]   = useState(0)
   const [page, setPage]               = useState(1)
-  const [formOpen, setFormOpen]       = useState(false)
-  const [submitting, setSubmitting]   = useState(false)
-  const [deletingId, setDeletingId]   = useState<string | null>(null)
   const [togglingId, setTogglingId]   = useState<string | null>(null)
-  const [editingItem, setEditingItem] = useState<ToBuyItem | null>(null)
-
-  // form
-  const [name, setName]         = useState("")
-  const [quantity, setQuantity] = useState("1")
-  const [price, setPrice]       = useState("")
-  const [urgency, setUrgency]   = useState<ToBuyItem["urgency"]>("medium")
-  const [notes, setNotes]       = useState("")
+  const [logPrompt, setLogPrompt]     = useState<LogPrompt | null>(null)
 
   // filters
-  const [viewFilter, setViewFilter]               = useState<ViewFilter>("pending")
-  const [search, setSearch]                       = useState("")
-  const [debouncedSearch, setDebouncedSearch]     = useState("")
+  const [viewFilter, setViewFilter]           = useState<ViewFilter>("pending")
+  const [search, setSearch]                   = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
 
   const supabase  = useMemo(() => createBrowserSupabaseClient(), [])
   const userIdRef = useRef<string | null>(null)
+  const { currency } = useCurrency()
+
+  // Auto-dismiss log prompt after 8s
+  useEffect(() => {
+    if (!logPrompt) return
+    const t = setTimeout(() => setLogPrompt(null), 8000)
+    return () => clearTimeout(t)
+  }, [logPrompt])
 
   // Debounce search 300ms
   useEffect(() => {
@@ -134,68 +136,51 @@ export default function ToBuyPage() {
 
   const refresh = () => setRefreshKey(k => k + 1)
 
-  const closeForm = () => {
-    setFormOpen(false)
-    setEditingItem(null)
-    setName(""); setQuantity("1"); setPrice(""); setNotes("")
-    setUrgency("medium")
-  }
-
-  const startEdit = (item: ToBuyItem) => {
-    setEditingItem(item)
-    setName(item.name)
-    setQuantity(String(item.quantity))
-    setPrice(item.price > 0 ? String(item.price) : "")
-    setUrgency(item.urgency)
-    setNotes(item.notes ?? "")
-    setFormOpen(true)
-  }
-
-  const submitItem = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
-    setSubmitting(true)
-
-    const payload = {
-      name: name.trim(),
-      quantity: parseFloat(quantity) || 1,
-      price: parseFloat(price) || 0,
-      urgency,
-      notes: notes.trim() || null,
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail?.type === "to-buy") { setPage(1); refresh() }
     }
-
-    if (editingItem) {
-      const { data, error } = await supabase.from("to_buy_items").update(payload).eq("id", editingItem.id).select().single()
-      if (!error && data) {
-        setAllItems(prev => prev.map(i => i.id === data.id ? data : i))
-        closeForm()
-      }
-    } else {
-      if (!userIdRef.current) { setSubmitting(false); return }
-      const { error } = await supabase.from("to_buy_items").insert({ user_id: userIdRef.current, ...payload })
-      if (!error) {
-        closeForm()
-        setPage(1)
-        refresh()
-      }
-    }
-    setSubmitting(false)
-  }
+    window.addEventListener("refresh-data", handler)
+    return () => window.removeEventListener("refresh-data", handler)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleBought = async (item: ToBuyItem) => {
     setTogglingId(item.id)
-    const { error } = await supabase.from("to_buy_items").update({ bought: !item.bought }).eq("id", item.id)
+    const newBought = !item.bought
+    const { error } = await supabase.from("to_buy_items").update({ bought: newBought }).eq("id", item.id)
     if (!error) {
-      setAllItems(prev => prev.map(i => i.id === item.id ? { ...i, bought: !i.bought } : i))
+      setAllItems(prev => prev.map(i => i.id === item.id ? { ...i, bought: newBought } : i))
+      // Prompt to log as expense only when marking as bought and item has a price
+      if (newBought && Number(item.price) > 0) {
+        setLogPrompt({ itemId: item.id, name: item.name, amount: Number(item.price) * Number(item.quantity) })
+      }
     }
     setTogglingId(null)
   }
 
-  const deleteItem = async (id: string) => {
-    setDeletingId(id)
-    await supabase.from("to_buy_items").delete().eq("id", id)
+  const logAsExpense = async () => {
+    if (!logPrompt || !userIdRef.current) return
+    const today = new Date().toISOString().split("T")[0]
+    await supabase.from("expenses").insert({
+      user_id: userIdRef.current,
+      category: "Shopping",
+      amount: logPrompt.amount,
+      description: logPrompt.name,
+      date: today,
+    })
+    setLogPrompt(null)
+  }
+
+  const deleteItem = (id: string) => {
+    const item = allItems.find(i => i.id === id)
+    if (!item) return
     setAllItems(prev => prev.filter(i => i.id !== id))
-    setDeletingId(null)
+    let undone = false
+    triggerUndo(`Removed "${item.name}"`, () => {
+      undone = true
+      setAllItems(prev => [item, ...prev])
+    })
+    setTimeout(() => { if (!undone) supabase.from("to_buy_items").delete().eq("id", id) }, 5100)
   }
 
   // ── render ────────────────────────────────────────────────────────────────
@@ -206,24 +191,13 @@ export default function ToBuyPage() {
         <div className="animate-slide-in-down">
 
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-black dark:bg-white rounded-xl flex items-center justify-center shrink-0">
-                <svg className="w-6 h-6 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-                </svg>
-              </div>
-              <h1 className="text-3xl font-bold text-black dark:text-white">To Buy</h1>
-            </div>
-            <button
-              onClick={formOpen ? closeForm : () => setFormOpen(true)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${formOpen ? "bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300" : "bg-black dark:bg-white text-white dark:text-black hover:opacity-80"}`}
-            >
-              <svg className={`w-4 h-4 transition-transform duration-200 ${formOpen ? "rotate-45" : ""}`} fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-black dark:bg-white rounded-xl flex items-center justify-center shrink-0">
+              <svg className="w-6 h-6 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
               </svg>
-              {formOpen ? "Cancel" : (editingItem ? "Editing" : "Add Item")}
-            </button>
+            </div>
+            <h1 className="text-3xl font-bold text-black dark:text-white">To Buy</h1>
           </div>
 
           {/* Summary banner */}
@@ -233,7 +207,7 @@ export default function ToBuyPage() {
                 <div>
                   <p className="text-gray-400 dark:text-gray-600 text-sm font-medium mb-1">Pending</p>
                   <p className="text-3xl font-bold text-white dark:text-black">{summary.pendingCount} item{summary.pendingCount !== 1 ? "s" : ""}</p>
-                  {summary.pendingTotal > 0 && <p className="text-gray-400 dark:text-gray-600 text-sm mt-1">≈ ETB {summary.pendingTotal.toFixed(2)}</p>}
+                  {summary.pendingTotal > 0 && <p className="text-gray-400 dark:text-gray-600 text-sm mt-1">≈ {currency} {summary.pendingTotal.toFixed(2)}</p>}
                 </div>
                 <div className="text-right">
                   <p className="text-gray-400 dark:text-gray-600 text-sm font-medium mb-1">Bought</p>
@@ -243,53 +217,24 @@ export default function ToBuyPage() {
             </div>
           )}
 
-          {/* Collapsible form */}
-          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${formOpen ? "max-h-[640px] opacity-100 mb-6" : "max-h-0 opacity-0"}`}>
-            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-xl">
-              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">{editingItem ? "Edit Item" : "New Item"}</h2>
-              <form onSubmit={submitItem} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Item name</label>
-                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="What do you need to buy?" required className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all" />
+          {/* Log-as-expense prompt */}
+          {logPrompt && (
+            <div className="animate-slide-in-down bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-2xl p-4 mb-6 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 bg-green-500 rounded-xl flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                 </div>
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Quantity</label>
-                    <input type="number" step="0.01" min="0.01" value={quantity} onChange={e => setQuantity(e.target.value)} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all" />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Price per unit (ETB)</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-xs">ETB</span>
-                      <input type="number" step="0.01" min="0" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" className="w-full pl-11 pr-3 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all" />
-                    </div>
-                  </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-green-900 dark:text-green-100 truncate">Bought: {logPrompt.name}</p>
+                  <p className="text-xs text-green-700 dark:text-green-300">Log {currency} {logPrompt.amount.toFixed(2)} as expense?</p>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Urgency</label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {(["low", "medium", "high", "critical"] as ToBuyItem["urgency"][]).map(u => (
-                      <button key={u} type="button" onClick={() => setUrgency(u)}
-                        className={`py-2 rounded-xl text-xs font-semibold capitalize transition-all duration-150 ${urgency === u
-                          ? u === "critical" ? "bg-red-500 text-white" : u === "high" ? "bg-orange-400 text-white" : u === "medium" ? "bg-yellow-400 text-black" : "bg-gray-400 text-white"
-                          : "bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800"
-                        }`}
-                      >
-                        {URGENCY_META[u].label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Notes <span className="text-gray-400">(optional)</span></label>
-                  <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any details..." className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all" />
-                </div>
-                <button type="submit" disabled={submitting} className="w-full py-3 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-xl hover:opacity-80 disabled:opacity-50 transition-all duration-200">
-                  {submitting ? "Saving..." : (editingItem ? "Save Changes" : "Add to List")}
-                </button>
-              </form>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button onClick={logAsExpense} className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-xl transition-colors">Log</button>
+                <button onClick={() => setLogPrompt(null)} className="px-3 py-1.5 bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 text-green-800 dark:text-green-200 text-xs font-semibold rounded-xl transition-colors">Skip</button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Search + view filter */}
           <div className="space-y-3 mb-6">
@@ -324,7 +269,7 @@ export default function ToBuyPage() {
                 </svg>
               </div>
               <p className="text-gray-500 dark:text-gray-400">
-                {search ? "No items match your search." : viewFilter === "bought" ? "Nothing bought yet." : "Your list is empty. Add something above."}
+                {search ? "No items match your search." : viewFilter === "bought" ? "Nothing bought yet." : "Your list is empty. Use the + button to add something."}
               </p>
             </div>
           ) : (
@@ -339,7 +284,7 @@ export default function ToBuyPage() {
                   </div>
                   <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
                     {urgencyGroups[u].map((item, idx) => (
-                      <ItemRow key={item.id} item={item} isLast={idx === urgencyGroups[u].length - 1} togglingId={togglingId} deletingId={deletingId} onToggle={toggleBought} onDelete={deleteItem} onEdit={startEdit} />
+                      <ItemRow key={item.id} item={item} isLast={idx === urgencyGroups[u].length - 1} togglingId={togglingId} currency={currency} onToggle={toggleBought} onDelete={deleteItem} onUpdated={updated => setAllItems(prev => prev.map(i => i.id === updated.id ? updated : i))} />
                     ))}
                   </div>
                 </div>
@@ -356,7 +301,7 @@ export default function ToBuyPage() {
                   )}
                   <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
                     {boughtPaged.map((item, idx) => (
-                      <ItemRow key={item.id} item={item} isLast={idx === boughtPaged.length - 1} togglingId={togglingId} deletingId={deletingId} onToggle={toggleBought} onDelete={deleteItem} onEdit={startEdit} />
+                      <ItemRow key={item.id} item={item} isLast={idx === boughtPaged.length - 1} togglingId={togglingId} currency={currency} onToggle={toggleBought} onDelete={deleteItem} onUpdated={updated => setAllItems(prev => prev.map(i => i.id === updated.id ? updated : i))} />
                     ))}
                   </div>
                 </div>
@@ -393,23 +338,97 @@ export default function ToBuyPage() {
 
 // ── ItemRow ───────────────────────────────────────────────────────────────────
 
-function ItemRow({ item, isLast, togglingId, deletingId, onToggle, onDelete, onEdit }: {
-  item: ToBuyItem; isLast: boolean; togglingId: string | null; deletingId: string | null
-  onToggle: (item: ToBuyItem) => void; onDelete: (id: string) => void; onEdit: (item: ToBuyItem) => void
-}) {
-  const BADGE: Record<string, string> = {
-    critical: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-    high:     "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-    medium:   "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-    low:      "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
-  }
-  const itemTotal = Number(item.price) * Number(item.quantity)
+const BADGE: Record<string, string> = {
+  critical: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  high:     "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  medium:   "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+  low:      "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+}
+const URGENCY_ACTIVE: Record<string, string> = {
+  critical: "bg-red-500 text-white", high: "bg-orange-400 text-white",
+  medium: "bg-yellow-400 text-black", low: "bg-gray-400 text-white",
+}
+const ITEM_INPUT = "w-full px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm"
 
-  const qtyStr = Number(item.quantity) % 1 === 0 ? String(Number(item.quantity)) : Number(item.quantity).toFixed(2)
+function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpdated }: {
+  item: ToBuyItem; isLast: boolean; togglingId: string | null; currency: string
+  onToggle: (item: ToBuyItem) => void; onDelete: (id: string) => void
+  onUpdated: (updated: ToBuyItem) => void
+}) {
+  const [isEditing, setIsEditing]   = useState(false)
+  const [name, setName]             = useState(item.name)
+  const [quantity, setQuantity]     = useState(String(item.quantity))
+  const [price, setPrice]           = useState(item.price > 0 ? String(item.price) : "")
+  const [urgency, setUrgency]       = useState(item.urgency)
+  const [notes, setNotes]           = useState(item.notes ?? "")
+  const [saving, setSaving]         = useState(false)
+  const supabase = useMemo(() => createBrowserSupabaseClient(), [])
+
+  const startEdit = () => {
+    setName(item.name); setQuantity(String(item.quantity))
+    setPrice(item.price > 0 ? String(item.price) : "")
+    setUrgency(item.urgency); setNotes(item.notes ?? "")
+    setIsEditing(true)
+  }
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name.trim()) return
+    setSaving(true)
+    const payload = { name: name.trim(), quantity: parseFloat(quantity) || 1, price: parseFloat(price) || 0, urgency, notes: notes.trim() || null }
+    const { data, error } = await supabase.from("to_buy_items").update(payload).eq("id", item.id).select().single()
+    setSaving(false)
+    if (!error && data) { setIsEditing(false); onUpdated(data as ToBuyItem) }
+  }
+
+  const itemTotal = Number(item.price) * Number(item.quantity)
+  const qtyStr    = Number(item.quantity) % 1 === 0 ? String(Number(item.quantity)) : Number(item.quantity).toFixed(2)
+  const borderCls = !isLast ? "border-b border-gray-100 dark:border-gray-900" : ""
+  const inactiveCls = "bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800"
+
+  if (isEditing) {
+    return (
+      <div className={`px-4 py-3 ${borderCls}`}>
+        <form onSubmit={handleSave} className="space-y-3">
+          <div className="flex gap-2">
+            <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Item name" autoFocus className={`${ITEM_INPUT} flex-1`} />
+            <button type="button" onClick={() => setIsEditing(false)} className="p-2 text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Qty</label>
+              <input type="number" step="0.01" min="0.01" value={quantity} onChange={e => setQuantity(e.target.value)} className={ITEM_INPUT} />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Price ({currency})</label>
+              <input type="number" step="0.01" min="0" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" className={ITEM_INPUT} />
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-1.5">
+            {(["low","medium","high","critical"] as const).map(u => (
+              <button key={u} type="button" onClick={() => setUrgency(u)}
+                className={`py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${urgency === u ? URGENCY_ACTIVE[u] : inactiveCls}`}
+              >{u}</button>
+            ))}
+          </div>
+          <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)" className={ITEM_INPUT} />
+          <div className="flex gap-2">
+            <button type="submit" disabled={saving} className="flex-1 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">
+              {saving ? "Saving..." : "Save"}
+            </button>
+            <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm font-semibold rounded-xl hover:opacity-80">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    )
+  }
 
   return (
-    <div className={`px-4 py-3 transition-colors ${item.bought ? "bg-gray-50 dark:bg-gray-950" : ""} ${!isLast ? "border-b border-gray-100 dark:border-gray-900" : ""}`}>
-      {/* Top row: toggle · name · actions */}
+    <div className={`px-4 py-3 transition-colors ${item.bought ? "bg-gray-50 dark:bg-gray-950" : ""} ${borderCls}`}>
       <div className="flex items-center gap-3">
         <button
           onClick={() => onToggle(item)} disabled={togglingId === item.id}
@@ -417,30 +436,26 @@ function ItemRow({ item, isLast, togglingId, deletingId, onToggle, onDelete, onE
         >
           {item.bought && <svg className="w-3 h-3 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
         </button>
-
         <p className={`flex-1 min-w-0 font-medium truncate ${item.bought ? "line-through text-gray-400 dark:text-gray-600" : "text-black dark:text-white"}`}>
           {item.name}
         </p>
-
         <div className="flex items-center gap-1 shrink-0">
-          <button onClick={() => onEdit(item)} className="p-1.5 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors duration-200">
+          <button onClick={startEdit} className="p-1.5 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
           </button>
-          <button onClick={() => onDelete(item.id)} disabled={deletingId === item.id} className="p-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors duration-200 disabled:opacity-40">
+          <button onClick={() => onDelete(item.id)} className="p-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
           </button>
         </div>
       </div>
-
-      {/* Bottom row: qty/price/notes · total + badge (indented to align with name) */}
       <div className="flex items-center justify-between mt-1 pl-8 gap-2">
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
           <span className="text-xs text-gray-500 dark:text-gray-400">Qty: {qtyStr}</span>
-          {Number(item.price) > 0 && <span className="text-xs text-gray-500 dark:text-gray-400">· ETB {Number(item.price).toFixed(2)} each</span>}
+          {Number(item.price) > 0 && <span className="text-xs text-gray-500 dark:text-gray-400">· {currency} {Number(item.price).toFixed(2)} each</span>}
           {item.notes && <span className="text-xs text-gray-400 dark:text-gray-600 truncate max-w-[100px]">· {item.notes}</span>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {itemTotal > 0 && <span className={`text-sm font-bold ${item.bought ? "text-gray-400 dark:text-gray-600 line-through" : "text-black dark:text-white"}`}>ETB {itemTotal.toFixed(2)}</span>}
+          {itemTotal > 0 && <span className={`text-sm font-bold ${item.bought ? "text-gray-400 dark:text-gray-600 line-through" : "text-black dark:text-white"}`}>{currency} {itemTotal.toFixed(2)}</span>}
           {!item.bought && <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${BADGE[item.urgency]}`}>{item.urgency}</span>}
         </div>
       </div>

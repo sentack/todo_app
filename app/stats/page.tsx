@@ -4,6 +4,8 @@
 import { useState, useEffect, useMemo } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import AuthenticatedLayout from "@/components/AuthenticatedLayout"
+import { useCurrency } from "@/contexts/CurrencyContext"
+import { CATEGORY_COLORS, CATEGORY_TEXT } from "@/lib/constants"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,27 +60,90 @@ function SectionSkeleton() {
   )
 }
 
+// ─── SVG Charts ───────────────────────────────────────────────────────────────
+
+function SpendingLineChart({ expenses, currency }: { expenses: Expense[], currency: string }) {
+  const today = new Date()
+  const days = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(d.getDate() - (29 - i))
+    return d.toISOString().split("T")[0]
+  })
+  const byDay = new Map<string, number>()
+  for (const exp of expenses) byDay.set(exp.date, (byDay.get(exp.date) ?? 0) + Number(exp.amount))
+  const values = days.map(d => byDay.get(d) ?? 0)
+  const maxVal = Math.max(...values, 1)
+
+  const W = 400, H = 130, padT = 14, padB = 24, padL = 4, padR = 4
+  const chartW = W - padL - padR
+  const chartH = H - padT - padB
+
+  const pts = values.map((v, i) => {
+    const x = padL + (i / (days.length - 1)) * chartW
+    const y = padT + chartH - (v / maxVal) * chartH
+    return [x, y] as [number, number]
+  })
+  const polyline = pts.map(([x, y]) => `${x},${y}`).join(" ")
+  const area = [`${padL},${padT + chartH}`, ...pts.map(([x, y]) => `${x},${y}`), `${padL + chartW},${padT + chartH}`].join(" ")
+
+  const activeDays = days.filter(d => (byDay.get(d) ?? 0) > 0).length
+  const avgPerDay = values.reduce((a, b) => a + b, 0) / 30
+
+  return (
+    <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-xl">
+      <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">30-Day Spending</h3>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="sf-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <polygon points={area} fill="url(#sf-grad)" className="text-black dark:text-white" />
+        <polyline points={polyline} fill="none" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" className="stroke-black dark:stroke-white" />
+        {days.map((d, i) => {
+          if (i % 7 !== 0 && i !== 29) return null
+          const x = padL + (i / (days.length - 1)) * chartW
+          const label = new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })
+          return <text key={d} x={x} y={H - 5} textAnchor={i === 0 ? "start" : i === 29 ? "end" : "middle"} className="fill-gray-400 dark:fill-gray-600" fontSize="9">{label}</text>
+        })}
+        <text x={padL} y={padT + 3} textAnchor="start" className="fill-gray-400 dark:fill-gray-600" fontSize="9">{currency} {maxVal.toFixed(0)}</text>
+      </svg>
+      <p className="text-xs text-gray-400 dark:text-gray-600 mt-1 text-center">{activeDays} active day{activeDays !== 1 ? "s" : ""} · avg {currency} {avgPerDay.toFixed(0)}/day</p>
+    </div>
+  )
+}
+
+function CompletionBarChart({ completions }: { completions: { date: string; count: number }[] }) {
+  const maxCount = Math.max(...completions.map(c => c.count), 1)
+  const W = 300, H = 90, padB = 20, chartH = H - padB
+  const barW = W / completions.length
+
+  return (
+    <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-xl">
+      <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">7-Day Completions</h3>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" preserveAspectRatio="none">
+        {completions.map((c, i) => {
+          const bw = barW * 0.65
+          const x = i * barW + (barW - bw) / 2
+          const barH = Math.max(c.count > 0 ? 3 : 0, (c.count / maxCount) * chartH)
+          const y = chartH - barH
+          const label = new Date(c.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short" })
+          return (
+            <g key={c.date}>
+              <rect x={x} y={y} width={bw} height={barH} rx="3" className="fill-black dark:fill-white" opacity={c.count > 0 ? 0.85 : 0.08} />
+              {c.count > 0 && <text x={x + bw / 2} y={y - 3} textAnchor="middle" fontSize="9" className="fill-black dark:fill-white">{c.count}</text>}
+              <text x={x + bw / 2} y={H - 5} textAnchor="middle" fontSize="9" className="fill-gray-400 dark:fill-gray-600">{label}</text>
+            </g>
+          )
+        })}
+      </svg>
+      <p className="text-xs text-gray-400 dark:text-gray-600 mt-1 text-center">{completions.reduce((s, c) => s + c.count, 0)} todos completed this week</p>
+    </div>
+  )
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const CATEGORY_COLORS: Record<string, string> = {
-  "Food & Drinks": "bg-orange-400 dark:bg-orange-500",
-  "Transport":     "bg-blue-400 dark:bg-blue-500",
-  "Shopping":      "bg-pink-400 dark:bg-pink-500",
-  "Entertainment": "bg-purple-400 dark:bg-purple-500",
-  "Health":        "bg-green-400 dark:bg-green-500",
-  "Bills":         "bg-red-400 dark:bg-red-500",
-  "Other":         "bg-gray-400 dark:bg-gray-500",
-}
-
-const CATEGORY_TEXT: Record<string, string> = {
-  "Food & Drinks": "text-orange-600 dark:text-orange-400",
-  "Transport":     "text-blue-600 dark:text-blue-400",
-  "Shopping":      "text-pink-600 dark:text-pink-400",
-  "Entertainment": "text-purple-600 dark:text-purple-400",
-  "Health":        "text-green-600 dark:text-green-400",
-  "Bills":         "text-red-600 dark:text-red-400",
-  "Other":         "text-gray-600 dark:text-gray-400",
-}
 
 const URGENCY_META = {
   critical: { label: "Critical", color: "bg-red-500",    text: "text-red-600 dark:text-red-400"       },
@@ -93,11 +158,14 @@ export default function StatsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("todo")
   const [userId, setUserId] = useState<string | null>(null)
 
+  const { currency } = useCurrency()
+
   const [todoLoading, setTodoLoading]       = useState(true)
   const [periodStats, setPeriodStats]       = useState<TodoPeriodStat[]>([])
   const [longestTodos, setLongestTodos]     = useState<LongestTodo[]>([])
   const [fastestTodos, setFastestTodos]     = useState<TimedTodo[]>([])
   const [longestCompleted, setLongestCompleted] = useState<TimedTodo[]>([])
+  const [completionsByDay, setCompletionsByDay] = useState<{ date: string; count: number }[]>([])
 
   const [expensesLoading, setExpensesLoading] = useState(false)
   const [expensesLoaded, setExpensesLoaded]   = useState(false)
@@ -178,6 +246,25 @@ export default function StatsPage() {
       setLongestCompleted([...mapped].sort((a, b) => b.hours - a.hours).slice(0, 3))
       setFastestTodos([...mapped].sort((a, b) => a.hours - b.hours).slice(0, 3))
     }
+
+    // 7-day completions: bucket by updated_at date
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+    sevenDaysAgo.setHours(0, 0, 0, 0)
+    const { data: recentDone } = await supabase
+      .from("todos").select("updated_at").eq("user_id", uid).eq("status_id", 3).gte("updated_at", sevenDaysAgo.toISOString())
+    const completionMap: Record<string, number> = {}
+    for (const t of (recentDone ?? [])) {
+      const d = t.updated_at.split("T")[0]
+      completionMap[d] = (completionMap[d] ?? 0) + 1
+    }
+    const last7 = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date()
+      d.setDate(d.getDate() - (6 - i))
+      const key = d.toISOString().split("T")[0]
+      return { date: key, count: completionMap[key] ?? 0 }
+    })
+    setCompletionsByDay(last7)
   }
 
   const loadExpensesData = async (uid: string) => {
@@ -345,6 +432,12 @@ export default function StatsPage() {
                   </div>
                 </div>
 
+                {completionsByDay.length > 0 && (
+                  <div>
+                    <CompletionBarChart completions={completionsByDay} />
+                  </div>
+                )}
+
                 <div>
                   <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Longest Running</h2>
                   <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-xl">
@@ -432,18 +525,18 @@ export default function StatsPage() {
                 <div>
                   <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Totals</h2>
                   <div className="grid grid-cols-2 gap-4">
-                    <StatCard label="Today"        value={`ETB ${expStats.todayTotal.toFixed(2)}`} delay={0} />
-                    <StatCard label="Past 7 Days"  value={`ETB ${expStats.weekTotal.toFixed(2)}`}  delay={1} />
-                    <StatCard label="Past 30 Days" value={`ETB ${expStats.monthTotal.toFixed(2)}`} delay={2} />
-                    <StatCard label="All Time"     value={`ETB ${expStats.allTotal.toFixed(2)}`}   sub={`${expStats.allDays.length} day${expStats.allDays.length !== 1 ? "s" : ""} tracked`} delay={3} />
+                    <StatCard label="Today"        value={`${currency} ${expStats.todayTotal.toFixed(2)}`} delay={0} />
+                    <StatCard label="Past 7 Days"  value={`${currency} ${expStats.weekTotal.toFixed(2)}`}  delay={1} />
+                    <StatCard label="Past 30 Days" value={`${currency} ${expStats.monthTotal.toFixed(2)}`} delay={2} />
+                    <StatCard label="All Time"     value={`${currency} ${expStats.allTotal.toFixed(2)}`}   sub={`${expStats.allDays.length} day${expStats.allDays.length !== 1 ? "s" : ""} tracked`} delay={3} />
                   </div>
                 </div>
 
                 <div>
                   <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Averages</h2>
                   <div className="grid grid-cols-2 gap-4">
-                    <StatCard label="Avg per spending day"   value={`ETB ${expStats.avgDaily.toFixed(2)}`} sub="Days with at least one expense" delay={0} />
-                    <StatCard label="Avg per calendar day"   value={`ETB ${expStats.avg30.toFixed(2)}`}    sub="Based on last 30 days"          delay={1} />
+                    <StatCard label="Avg per spending day"   value={`${currency} ${expStats.avgDaily.toFixed(2)}`} sub="Days with at least one expense" delay={0} />
+                    <StatCard label="Avg per calendar day"   value={`${currency} ${expStats.avg30.toFixed(2)}`}    sub="Based on last 30 days"          delay={1} />
                   </div>
                 </div>
 
@@ -458,7 +551,7 @@ export default function StatsPage() {
                             <p className="font-semibold text-black dark:text-white truncate">{expStats.biggest.description || expStats.biggest.category}</p>
                             <p className="text-xs text-gray-400 mt-0.5">{fmtDate(expStats.biggest.date)}</p>
                           </div>
-                          <span className="text-lg font-bold text-black dark:text-white ml-4 shrink-0">ETB {Number(expStats.biggest.amount).toFixed(2)}</span>
+                          <span className="text-lg font-bold text-black dark:text-white ml-4 shrink-0">{currency} {Number(expStats.biggest.amount).toFixed(2)}</span>
                         </div>
                       )}
                       {expStats.bigDay && (
@@ -467,12 +560,16 @@ export default function StatsPage() {
                             <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-0.5">Most Expensive Day</p>
                             <p className="font-semibold text-black dark:text-white">{fmtDate(expStats.bigDay)}</p>
                           </div>
-                          <span className="text-lg font-bold text-black dark:text-white ml-4 shrink-0">ETB {expStats.bigDayTotal.toFixed(2)}</span>
+                          <span className="text-lg font-bold text-black dark:text-white ml-4 shrink-0">{currency} {expStats.bigDayTotal.toFixed(2)}</span>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
+
+                <div>
+                  <SpendingLineChart expenses={expenses} currency={currency} />
+                </div>
 
                 {expStats.sortedCats.length > 0 && (
                   <div>
@@ -486,7 +583,7 @@ export default function StatsPage() {
                             <div className="flex items-center justify-between mb-1.5">
                               <span className={`text-sm font-semibold ${CATEGORY_TEXT[cat] || CATEGORY_TEXT["Other"]}`}>{cat}</span>
                               <div className="text-right">
-                                <span className="text-sm font-bold text-black dark:text-white">ETB {total.toFixed(2)}</span>
+                                <span className="text-sm font-bold text-black dark:text-white">{currency} {total.toFixed(2)}</span>
                                 <span className="text-xs text-gray-400 ml-2">{count} item{count !== 1 ? "s" : ""}</span>
                               </div>
                             </div>
@@ -521,7 +618,7 @@ export default function StatsPage() {
                     <StatCard label="Bought"        value={String(toBuyStats.bought.length)}  sub="items completed" delay={1} />
                     <StatCard
                       label="Pending Value"
-                      value={toBuyStats.pendingTotal > 0 ? `ETB ${toBuyStats.pendingTotal.toFixed(2)}` : "–"}
+                      value={toBuyStats.pendingTotal > 0 ? `${currency} ${toBuyStats.pendingTotal.toFixed(2)}` : "–"}
                       sub={toBuyStats.pendingTotal > 0 ? "estimated total" : "no prices set"}
                       delay={2}
                     />
@@ -574,9 +671,9 @@ export default function StatsPage() {
                     <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Overview</h2>
                     <div className="grid grid-cols-2 gap-4">
                       <StatCard label="Total Debts"     value={String(s.total)}                       sub={`${s.paid} paid off`}        delay={0} />
-                      <StatCard label="Total Owed"      value={`ETB ${s.totalAmount.toFixed(2)}`}     sub="all time"                    delay={1} />
-                      <StatCard label="Total Paid"      value={`ETB ${s.totalPaid.toFixed(2)}`}       sub="amount repaid"               delay={2} />
-                      <StatCard label="Outstanding"     value={`ETB ${s.outstanding.toFixed(2)}`}     sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} delay={3} />
+                      <StatCard label="Total Owed"      value={`${currency} ${s.totalAmount.toFixed(2)}`}     sub="all time"                    delay={1} />
+                      <StatCard label="Total Paid"      value={`${currency} ${s.totalPaid.toFixed(2)}`}       sub="amount repaid"               delay={2} />
+                      <StatCard label="Outstanding"     value={`${currency} ${s.outstanding.toFixed(2)}`}     sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} delay={3} />
                     </div>
                   </div>
                   <div>
@@ -613,9 +710,9 @@ export default function StatsPage() {
                     <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Overview</h2>
                     <div className="grid grid-cols-2 gap-4">
                       <StatCard label="Total Lendings"  value={String(s.total)}                       sub={`${s.paid} returned fully`}  delay={0} />
-                      <StatCard label="Total Lent"      value={`ETB ${s.totalAmount.toFixed(2)}`}     sub="all time"                    delay={1} />
-                      <StatCard label="Total Received"  value={`ETB ${s.totalPaid.toFixed(2)}`}       sub="amount returned"             delay={2} />
-                      <StatCard label="Outstanding"     value={`ETB ${s.outstanding.toFixed(2)}`}     sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} delay={3} />
+                      <StatCard label="Total Lent"      value={`${currency} ${s.totalAmount.toFixed(2)}`}     sub="all time"                    delay={1} />
+                      <StatCard label="Total Received"  value={`${currency} ${s.totalPaid.toFixed(2)}`}       sub="amount returned"             delay={2} />
+                      <StatCard label="Outstanding"     value={`${currency} ${s.outstanding.toFixed(2)}`}     sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} delay={3} />
                     </div>
                   </div>
                   <div>

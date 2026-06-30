@@ -3,21 +3,19 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser";
 import TodoItem from "./TodoItem";
-import TodoForm from "./TodoForm";
 
 const PAGE_SIZE = 10;
 
 interface Subtask { id: string; title: string; completed: boolean; weight: number; created_at: string }
-interface Todo { id: string; title: string; description: string | null; notes: string | null; completed: boolean; created_at: string; status_id: number; subtasks?: Subtask[] }
+interface Todo { id: string; title: string; description: string | null; notes: string | null; completed: boolean; created_at: string; status_id: number; due_date?: string | null; subtasks?: Subtask[] }
 interface TodoListProps { setLoading: React.Dispatch<React.SetStateAction<boolean>> }
 
 const TodoList: React.FC<TodoListProps> = ({ setLoading }) => {
   const [todos, setTodos]         = useState<Todo[]>([]);
-  const [filter, setFilter]       = useState<"all" | "pending" | "completed">("all");
+  const [filter, setFilter]       = useState<"all" | "pending" | "completed" | "overdue">("all");
   const [page, setPage]           = useState(1);
-  const [counts, setCounts]       = useState({ all: 0, pending: 0, completed: 0 });
+  const [counts, setCounts]       = useState({ all: 0, pending: 0, completed: 0, overdue: 0 });
   const [totalFiltered, setTotalFiltered] = useState(0);
-  const [editingTodo, setEditingTodo]     = useState<Todo | null>(null);
   const [refreshKey, setRefreshKey]       = useState(0);
   const [search, setSearch]               = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -56,9 +54,10 @@ const TodoList: React.FC<TodoListProps> = ({ setLoading }) => {
       const uid = userIdRef.current!;
 
       // Lightweight count query — unaffected by search, always shows true totals in tabs
+      const today = new Date().toISOString().split("T")[0];
       const { data: countData } = await supabase
         .from("todos")
-        .select("completed")
+        .select("completed, due_date")
         .eq("user_id", uid);
 
       if (!cancelled && countData) {
@@ -66,6 +65,7 @@ const TodoList: React.FC<TodoListProps> = ({ setLoading }) => {
           all:       countData.length,
           pending:   countData.filter(t => !t.completed).length,
           completed: countData.filter(t =>  t.completed).length,
+          overdue:   countData.filter(t => !t.completed && t.due_date && t.due_date < today).length,
         });
       }
 
@@ -80,6 +80,7 @@ const TodoList: React.FC<TodoListProps> = ({ setLoading }) => {
 
       if (filter === "pending")   q = q.eq("completed", false);
       if (filter === "completed") q = q.eq("completed", true);
+      if (filter === "overdue")   q = q.eq("completed", false).lt("due_date", today).not("due_date", "is", null);
 
       if (debouncedSearch.trim()) {
         q = q.or(`title.ilike.%${debouncedSearch.trim()}%,description.ilike.%${debouncedSearch.trim()}%`);
@@ -103,12 +104,22 @@ const TodoList: React.FC<TodoListProps> = ({ setLoading }) => {
     return () => { cancelled = true; };
   }, [filter, page, refreshKey, debouncedSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const changeFilter = (f: "all" | "pending" | "completed") => {
+  const changeFilter = (f: "all" | "pending" | "completed" | "overdue") => {
     setFilter(f);
     setPage(1);
   };
 
   const refresh = () => setRefreshKey(k => k + 1);
+
+  // Listen for FAB-triggered adds from other pages
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent
+      if (ce.detail?.type === "todo") { setPage(1); refresh() }
+    }
+    window.addEventListener("refresh-data", handler)
+    return () => window.removeEventListener("refresh-data", handler)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
 
@@ -131,14 +142,6 @@ const TodoList: React.FC<TodoListProps> = ({ setLoading }) => {
 
   return (
     <div className="space-y-6">
-      <div className="animate-slide-in-down">
-        <TodoForm
-          onTodoAdded={() => { setPage(1); refresh(); }}
-          editingTodo={editingTodo}
-          onEditComplete={() => { setEditingTodo(null); setPage(1); refresh(); }}
-        />
-      </div>
-
       {/* Search */}
       <div className="relative">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -159,20 +162,31 @@ const TodoList: React.FC<TodoListProps> = ({ setLoading }) => {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex items-center justify-center w-full min-w-0 gap-2">
-        {(["all", "pending", "completed"] as const).map(f => (
-          <button
-            key={f}
-            onClick={() => changeFilter(f)}
-            className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl capitalize focus-ring transition-all duration-200 ${filter === f ? "bg-black dark:bg-white text-white dark:text-black shadow-lg" : "bg-gray-100 dark:bg-gray-900 text-black dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800"}`}
-          >
-            <div className={`w-3 h-3 rounded-full ${f === "pending" ? "bg-yellow-400" : f === "completed" ? "bg-green-400" : "hidden"}`} />
-            {f}
-            {f === "pending"   && <span className="font-bold text-green-600 dark:text-green-400">{counts.pending}</span>}
-            {f === "completed" && <span className="font-bold text-green-600 dark:text-green-400">{counts.completed}</span>}
-            {f === "all"       && `(${counts.all})`}
-          </button>
-        ))}
+      <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
+        <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-2xl p-1 w-fit min-w-full">
+          {(["all", "pending", "completed", "overdue"] as const).map(f => {
+            const isActive = filter === f
+            const dot = f === "pending" ? "bg-yellow-400" : f === "completed" ? "bg-green-400" : f === "overdue" ? "bg-red-500" : null
+            const count = f === "all" ? counts.all : f === "pending" ? counts.pending : f === "completed" ? counts.completed : counts.overdue
+            return (
+              <button
+                key={f}
+                onClick={() => changeFilter(f)}
+                className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold capitalize whitespace-nowrap transition-all duration-150 ${isActive ? "bg-white dark:bg-black text-black dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}
+              >
+                {dot && <span className={`w-2 h-2 rounded-full shrink-0 ${dot} ${f === "overdue" && counts.overdue === 0 ? "opacity-30" : ""}`} />}
+                {f}
+                <span className={`text-xs font-bold tabular-nums ${
+                  f === "overdue" && count > 0 ? "text-red-500 dark:text-red-400" :
+                  isActive ? "text-black dark:text-white opacity-60" :
+                  "text-gray-400 dark:text-gray-600"
+                }`}>
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* List — dims while fetching, no full-page flash */}
@@ -199,7 +213,7 @@ const TodoList: React.FC<TodoListProps> = ({ setLoading }) => {
         ) : (
           todos.map((todo, index) => (
             <div key={todo.id} className="animate-slide-in-up w-full max-w-full" style={{ animationDelay: `${Math.min(index, 6) * 0.05}s` }}>
-              <TodoItem todo={todo} onTodoUpdated={refresh} onEditTodo={setEditingTodo} />
+              <TodoItem todo={todo} onTodoUpdated={refresh} />
             </div>
           ))
         )}

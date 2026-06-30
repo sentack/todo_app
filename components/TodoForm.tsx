@@ -3,6 +3,7 @@
 import type React from "react";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser";
 
 interface Subtask {
@@ -19,6 +20,7 @@ interface Todo {
   notes: string | null;
   status_id: number;
   completed: boolean;
+  due_date?: string | null;
   subtasks?: Subtask[];
 }
 
@@ -41,9 +43,22 @@ export default function TodoForm({
     notes: "",
     status_id: 1,
   });
+  const [dueDate, setDueDate] = useState("");
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
 
   const supabase = createBrowserSupabaseClient();
+  const searchParams = useSearchParams();
+
+  // Open form when ?new=1 or quick-add-form event fires
+  useEffect(() => {
+    if (searchParams.get("new") === "1") setIsOpen(true);
+  }, [searchParams]);
+
+  useEffect(() => {
+    const handler = () => setIsOpen(true);
+    window.addEventListener("quick-add-form", handler);
+    return () => window.removeEventListener("quick-add-form", handler);
+  }, []);
 
   // Load editing todo data
   useEffect(() => {
@@ -54,6 +69,7 @@ export default function TodoForm({
         notes: editingTodo.notes || "",
         status_id: editingTodo.status_id,
       });
+      setDueDate(editingTodo.due_date ?? "");
       setSubtasks(editingTodo.subtasks || []);
       setIsOpen(true);
     }
@@ -140,6 +156,7 @@ export default function TodoForm({
         notes: formData.notes.trim() || null,
         status_id: formData.status_id,
         completed: formData.status_id === 3,
+        due_date: dueDate || null,
         updated_at: new Date().toISOString(),
       };
 
@@ -200,6 +217,7 @@ export default function TodoForm({
 
       // Reset form
       setFormData({ title: "", description: "", notes: "", status_id: 1 });
+      setDueDate("");
       setSubtasks([]);
       setIsOpen(false);
 
@@ -230,6 +248,7 @@ export default function TodoForm({
   const handleCancel = () => {
     setIsOpen(false);
     setFormData({ title: "", description: "", notes: "", status_id: 1 });
+    setDueDate("");
     setSubtasks([]);
     if (editingTodo && onEditComplete) {
       onEditComplete();
@@ -436,6 +455,23 @@ export default function TodoForm({
             }
             rows={3}
             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent resize-none transition-all duration-200"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-black dark:text-white mb-2">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+              </svg>
+              Due Date <span className="text-gray-400 font-normal">(optional)</span>
+            </div>
+          </label>
+          <input
+            type="date"
+            value={dueDate}
+            onChange={e => setDueDate(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all duration-200"
           />
         </div>
 

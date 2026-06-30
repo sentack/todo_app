@@ -5,6 +5,8 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import AuthenticatedLayout from "@/components/AuthenticatedLayout"
+import { useCurrency } from "@/contexts/CurrencyContext"
+import { CATEGORY_COLORS, CATEGORY_TEXT } from "@/lib/constants"
 
 interface Expense {
   id: string
@@ -14,25 +16,6 @@ interface Expense {
   date: string
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  "Food & Drinks": "bg-orange-400 dark:bg-orange-500",
-  "Transport": "bg-blue-400 dark:bg-blue-500",
-  "Shopping": "bg-pink-400 dark:bg-pink-500",
-  "Entertainment": "bg-purple-400 dark:bg-purple-500",
-  "Health": "bg-green-400 dark:bg-green-500",
-  "Bills": "bg-red-400 dark:bg-red-500",
-  "Other": "bg-gray-400 dark:bg-gray-500",
-}
-
-const CATEGORY_TEXT: Record<string, string> = {
-  "Food & Drinks": "text-orange-600 dark:text-orange-400",
-  "Transport": "text-blue-600 dark:text-blue-400",
-  "Shopping": "text-pink-600 dark:text-pink-400",
-  "Entertainment": "text-purple-600 dark:text-purple-400",
-  "Health": "text-green-600 dark:text-green-400",
-  "Bills": "text-red-600 dark:text-red-400",
-  "Other": "text-gray-600 dark:text-gray-400",
-}
 
 function StatCard({
   label,
@@ -62,6 +45,7 @@ export default function ExpenseStatsPage() {
   const [loading, setLoading] = useState(true)
 
   const supabase = createBrowserSupabaseClient()
+  const { currency } = useCurrency()
 
   useEffect(() => {
     ;(async () => {
@@ -178,10 +162,10 @@ export default function ExpenseStatsPage() {
               <div>
                 <h2 className="text-xl font-semibold text-black dark:text-white mb-4">Totals</h2>
                 <div className="grid grid-cols-2 gap-4">
-                  <StatCard label="Today" value={`ETB ${todayTotal.toFixed(2)}`} delay={0} />
-                  <StatCard label="Past 7 Days" value={`ETB ${weekTotal.toFixed(2)}`} delay={1} />
-                  <StatCard label="Past 30 Days" value={`ETB ${monthTotal.toFixed(2)}`} delay={2} />
-                  <StatCard label="All Time" value={`ETB ${allTotal.toFixed(2)}`} sub={`${allDays.length} day${allDays.length !== 1 ? "s" : ""} tracked`} delay={3} />
+                  <StatCard label="Today" value={`${currency} ${todayTotal.toFixed(2)}`} delay={0} />
+                  <StatCard label="Past 7 Days" value={`${currency} ${weekTotal.toFixed(2)}`} delay={1} />
+                  <StatCard label="Past 30 Days" value={`${currency} ${monthTotal.toFixed(2)}`} delay={2} />
+                  <StatCard label="All Time" value={`${currency} ${allTotal.toFixed(2)}`} sub={`${allDays.length} day${allDays.length !== 1 ? "s" : ""} tracked`} delay={3} />
                 </div>
               </div>
 
@@ -191,13 +175,13 @@ export default function ExpenseStatsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <StatCard
                     label="Avg per spending day"
-                    value={`ETB ${avgDaily.toFixed(2)}`}
+                    value={`${currency} ${avgDaily.toFixed(2)}`}
                     sub="Days with at least one expense"
                     delay={0}
                   />
                   <StatCard
                     label="Avg per calendar day"
-                    value={`ETB ${avg30.toFixed(2)}`}
+                    value={`${currency} ${avg30.toFixed(2)}`}
                     sub="Based on last 30 days"
                     delay={1}
                   />
@@ -218,7 +202,7 @@ export default function ExpenseStatsPage() {
                           </p>
                           <p className="text-xs text-gray-400 mt-0.5">{formatDateLabel(biggest.date)}</p>
                         </div>
-                        <span className="text-xl font-bold text-black dark:text-white">ETB {Number(biggest.amount).toFixed(2)}</span>
+                        <span className="text-xl font-bold text-black dark:text-white">{currency} {Number(biggest.amount).toFixed(2)}</span>
                       </div>
                     )}
                     {mostExpensiveDay && (
@@ -227,7 +211,7 @@ export default function ExpenseStatsPage() {
                           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-0.5">Most Expensive Day</p>
                           <p className="font-semibold text-black dark:text-white">{formatDateLabel(mostExpensiveDay)}</p>
                         </div>
-                        <span className="text-xl font-bold text-black dark:text-white">ETB {(mostExpensiveDayTotal as number).toFixed(2)}</span>
+                        <span className="text-xl font-bold text-black dark:text-white">{currency} {(mostExpensiveDayTotal as number).toFixed(2)}</span>
                       </div>
                     )}
                   </div>
@@ -247,7 +231,7 @@ export default function ExpenseStatsPage() {
                           <div className="flex items-center justify-between mb-1.5">
                             <span className={`text-sm font-semibold ${CATEGORY_TEXT[cat] || CATEGORY_TEXT["Other"]}`}>{cat}</span>
                             <div className="text-right">
-                              <span className="text-sm font-bold text-black dark:text-white">ETB {total.toFixed(2)}</span>
+                              <span className="text-sm font-bold text-black dark:text-white">{currency} {total.toFixed(2)}</span>
                               <span className="text-xs text-gray-400 ml-2">{count} item{count !== 1 ? "s" : ""}</span>
                             </div>
                           </div>
