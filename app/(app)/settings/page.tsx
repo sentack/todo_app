@@ -187,6 +187,7 @@ export default function SettingsPage() {
   }
 
   return (
+    <>
       <div className="mx-auto px-4 w-full sm:px-6 lg:px-8 py-8">
         <div className="animate-slide-in-down">
           <div className="flex items-center gap-3 mb-8">
@@ -553,5 +554,6 @@ export default function SettingsPage() {
       </div>
 
       <ClearDataModal isOpen={showClearModal} onClose={() => setShowClearModal(false)} />
+    </>
   )
 }
