@@ -13,14 +13,13 @@ interface SidebarProps {
 
 interface Badges {
   todos: number
-  debts: number
-  lending: number
+  finances: number
 }
 
 export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
   const pathname  = usePathname()
   const [mounted, setMounted] = useState(false)
-  const [badges, setBadges]   = useState<Badges>({ todos: 0, debts: 0, lending: 0 })
+  const [badges, setBadges]   = useState<Badges>({ todos: 0, finances: 0 })
   const supabase  = createBrowserSupabaseClient()
   const today     = new Date().toISOString().split("T")[0]
 
@@ -44,9 +43,8 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       const overdueLending = (lendingItems ?? []).filter(i => Number(i.amount_paid) < Number(i.amount)).length
 
       setBadges({
-        todos:   todosCount ?? 0,
-        debts:   overdueDebts,
-        lending: overdueLending,
+        todos:    todosCount ?? 0,
+        finances: overdueDebts + overdueLending,
       })
     }
     load()
@@ -96,22 +94,13 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       ),
     },
     {
-      name: "Debts",
+      name: "Finances",
       href: "/debts",
-      badge: badges.debts,
+      badge: badges.finances,
       icon: (
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-        </svg>
-      ),
-    },
-    {
-      name: "Lending",
-      href: "/lending",
-      badge: badges.lending,
-      icon: (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+          <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
         </svg>
       ),
     },
@@ -185,7 +174,7 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
           <nav className="flex-1 p-4 overflow-y-auto">
             <ul className="space-y-1">
               {navigationItems.map((item) => {
-                const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+                const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) || (item.href === "/debts" && pathname.startsWith("/lending"))
                 return (
                   <li key={item.name}>
                     <Link
