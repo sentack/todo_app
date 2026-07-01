@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { useState, useEffect, useMemo } from "react"
-import { useRouter } from "next/navigation"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import Sidebar from "@/components/Sidebar"
 import ThemeToggle from "@/components/ThemeToggle"
@@ -19,7 +18,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [loading, setLoading]         = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const supabase = useMemo(() => createBrowserSupabaseClient(), [])
-  const router   = useRouter()
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
