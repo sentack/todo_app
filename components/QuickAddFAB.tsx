@@ -83,16 +83,18 @@ function AddTodoForm({ onDone }: { onDone: () => void }) {
         <label className={LABEL}>Subtasks ({subtasks.length})</label>
         <div className="space-y-2 mb-2">
           {subtasks.map((s, i) => (
-            <div key={i} className="flex gap-2">
-              <input type="text" value={s.title} onChange={e => {
-                const next = [...subtasks]
-                if (!e.target.value) next.splice(i, 1)
-                else next[i] = { ...next[i], title: e.target.value }
-                setSubtasks(next)
-              }} placeholder="Subtask" className={`${INPUT} flex-1`} />
+            <div key={i} className="flex gap-2 items-center">
+              <div className="flex-1 min-w-0">
+                <input type="text" value={s.title} onChange={e => {
+                  const next = [...subtasks]
+                  if (!e.target.value) next.splice(i, 1)
+                  else next[i] = { ...next[i], title: e.target.value }
+                  setSubtasks(next)
+                }} placeholder="Subtask name" className={INPUT} />
+              </div>
               <input type="number" min="1" max="5" value={s.weight} onChange={e => {
                 const next = [...subtasks]; next[i] = { ...next[i], weight: parseInt(e.target.value) || 1 }; setSubtasks(next)
-              }} className={`${INPUT} w-16 text-center`} />
+              }} className="w-12 shrink-0 px-2 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white text-center focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm" />
             </div>
           ))}
         </div>
@@ -468,7 +470,7 @@ export default function QuickAddFAB() {
               <button
                 key={s.modal}
                 onClick={() => handleSection(s.modal)}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg text-sm font-semibold text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 transition-all"
+                className="w-36 flex items-center gap-2 px-4 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg text-sm font-semibold text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 transition-all"
               >
                 <span>{s.icon}</span>
                 {s.label}

@@ -200,23 +200,27 @@ export default function ExpensesPage() {
                 </button>
               )}
             </div>
-            <div className="flex flex-wrap gap-2">
-              <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1">
+            {/* Time filter — single scrollable row */}
+            <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
+              <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1 w-fit min-w-full">
                 {(["all", "today", "7d", "30d"] as TimeFilter[]).map(t => (
-                  <button key={t} onClick={() => setTimeFilter(t)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${timeFilter === t ? "bg-black dark:bg-white text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
+                  <button key={t} onClick={() => setTimeFilter(t)} className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 ${timeFilter === t ? "bg-black dark:bg-white text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
                     {t === "all" ? "All time" : t === "today" ? "Today" : t === "7d" ? "7 days" : "30 days"}
                   </button>
                 ))}
               </div>
-              <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="px-3 py-1.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-semibold text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all">
+            </div>
+            {/* Category + sort — one row, each takes half */}
+            <div className="flex gap-2">
+              <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="flex-1 px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-semibold text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all">
                 <option value="all">All categories</option>
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <select value={sortKey} onChange={e => setSortKey(e.target.value as SortKey)} className="px-3 py-1.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-semibold text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all ml-auto">
+              <select value={sortKey} onChange={e => setSortKey(e.target.value as SortKey)} className="flex-1 px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-semibold text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all">
                 <option value="date-desc">Newest first</option>
                 <option value="date-asc">Oldest first</option>
-                <option value="amount-desc">Amount: high to low</option>
-                <option value="amount-asc">Amount: low to high</option>
+                <option value="amount-desc">High → low</option>
+                <option value="amount-asc">Low → high</option>
               </select>
             </div>
           </div>

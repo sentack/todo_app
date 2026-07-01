@@ -195,16 +195,18 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
             <div className="space-y-2 mb-2">
               {editSubtasks.map((s, i) => (
                 <div key={i} className="flex gap-2 items-center">
-                  <input type="text" value={s.title} onChange={e => {
-                    const next = [...editSubtasks];
-                    if (!e.target.value) next.splice(i, 1);
-                    else next[i] = { ...next[i], title: e.target.value };
-                    setEditSubtasks(next);
-                  }} placeholder="Subtask" className={`${INPUT} flex-1`} />
+                  <div className="flex-1 min-w-0">
+                    <input type="text" value={s.title} onChange={e => {
+                      const next = [...editSubtasks];
+                      if (!e.target.value) next.splice(i, 1);
+                      else next[i] = { ...next[i], title: e.target.value };
+                      setEditSubtasks(next);
+                    }} placeholder="Subtask name" className={INPUT} />
+                  </div>
                   <input type="number" min="1" max="5" value={s.weight} onChange={e => {
                     const next = [...editSubtasks]; next[i] = { ...next[i], weight: parseInt(e.target.value) || 1 }; setEditSubtasks(next);
-                  }} className={`${INPUT} w-14 text-center`} />
-                  <button type="button" onClick={() => setEditSubtasks(prev => prev.filter((_, idx) => idx !== i))} className="text-gray-400 hover:text-red-500 transition-colors">
+                  }} className="w-12 shrink-0 px-2 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-black dark:text-white text-center focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm" />
+                  <button type="button" onClick={() => setEditSubtasks(prev => prev.filter((_, idx) => idx !== i))} className="shrink-0 text-gray-400 hover:text-red-500 transition-colors">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                   </button>
                 </div>

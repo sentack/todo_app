@@ -25,7 +25,7 @@ const HomeClient: React.FC<HomeClientProps> = ({ user }) => {
     return (
       <div className="min-h-screen w-full bg-white dark:bg-black flex">
         <div className="h-screen w-full overflow-y-auto">
-          <header className="bg-white dark:bg-black shadow-lg border-b border-gray-200 dark:border-gray-800 backdrop-blur-md">
+          <header className="relative z-[160] bg-white dark:bg-black shadow-lg border-b border-gray-200 dark:border-gray-800">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-20">
                 <div className="flex items-center gap-3">
@@ -63,14 +63,15 @@ const HomeClient: React.FC<HomeClientProps> = ({ user }) => {
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userId={user.id} />
 
         <div className="h-screen w-full overflow-y-auto">
-          <header className="bg-white dark:bg-black shadow-lg border-b border-gray-200 dark:border-gray-800 backdrop-blur-md">
+          <header className="relative z-[160] bg-white dark:bg-black shadow-lg border-b border-gray-200 dark:border-gray-800">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-20">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center lg:hidden">
                     <button
                       onClick={() => setSidebarOpen(true)}
-                      className="rounded-lg text-gray-600 dark:text-gray-400 focus-none transition-all duration-200"
+                      className="rounded-full focus:outline-none transition-all duration-200"
+                      aria-label="Open menu"
                     >
                       <img className="w-full" src="/favicon.ico" alt="" />
                     </button>
