@@ -6,6 +6,7 @@ import AuthenticatedLayout from "@/components/AuthenticatedLayout"
 import FriendCombobox from "@/components/FriendCombobox"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
+import { formatMoney } from "@/lib/formatMoney"
 
 interface PayRecord { amount: number; date: string }
 
@@ -139,15 +140,15 @@ export default function LendingPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <p className="text-gray-400 dark:text-gray-600 text-xs font-medium mb-1">Total Lent</p>
-                  <p className="text-lg font-bold text-white dark:text-black">{currency} {summary.total.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-white dark:text-black">{currency} {formatMoney(summary.total)}</p>
                 </div>
                 <div>
                   <p className="text-gray-400 dark:text-gray-600 text-xs font-medium mb-1">Received</p>
-                  <p className="text-lg font-bold text-white dark:text-black">{currency} {summary.received.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-white dark:text-black">{currency} {formatMoney(summary.received)}</p>
                 </div>
                 <div>
                   <p className="text-gray-400 dark:text-gray-600 text-xs font-medium mb-1">Outstanding</p>
-                  <p className="text-lg font-bold text-white dark:text-black">{currency} {summary.outstanding.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-white dark:text-black">{currency} {formatMoney(summary.outstanding)}</p>
                   {summary.overdue > 0 && <p className="text-xs text-red-400 mt-0.5">{summary.overdue} overdue</p>}
                 </div>
               </div>
@@ -331,13 +332,13 @@ function LendingCard({ item, userId, currency, onUpdated, onDelete }: {
             </div>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-xl font-bold text-black dark:text-white">{currency} {Number(item.amount).toFixed(2)}</p>
-            {status !== "paid" && <p className="text-sm text-gray-500 dark:text-gray-400">{currency} {remaining.toFixed(2)} left</p>}
+            <p className="text-xl font-bold text-black dark:text-white">{currency} {formatMoney(Number(item.amount))}</p>
+            {status !== "paid" && <p className="text-sm text-gray-500 dark:text-gray-400">{currency} {formatMoney(remaining)} left</p>}
           </div>
         </div>
         <div className="mb-4">
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-            <span>Received {currency} {Number(item.amount_paid).toFixed(2)}</span>
+            <span>Received {currency} {formatMoney(Number(item.amount_paid))}</span>
             <span>{pct}%</span>
           </div>
           <div className="h-2 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
@@ -369,7 +370,7 @@ function LendingCard({ item, userId, currency, onUpdated, onDelete }: {
           <form onSubmit={handleReceipt} className="space-y-3">
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Amount (max {currency} {remaining.toFixed(2)})</label>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Amount (max {currency} {formatMoney(remaining)})</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">{currency}</span>
                   <input type="number" step="0.01" min="0.01" max={remaining} value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder="0.00" required autoFocus className={`${CARD_INPUT} pl-11`} />
@@ -400,7 +401,7 @@ function LendingCard({ item, userId, currency, onUpdated, onDelete }: {
             {[...item.paid_history].reverse().map((p, i) => (
               <div key={i} className="flex items-center justify-between">
                 <span className="text-xs text-gray-500 dark:text-gray-400">{fmtDate(p.date)}</span>
-                <span className="text-xs font-semibold text-black dark:text-white">{currency} {Number(p.amount).toFixed(2)}</span>
+                <span className="text-xs font-semibold text-black dark:text-white">{currency} {formatMoney(Number(p.amount))}</span>
               </div>
             ))}
           </div>

@@ -6,6 +6,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import AuthenticatedLayout from "@/components/AuthenticatedLayout"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { CATEGORY_COLORS, CATEGORY_TEXT } from "@/lib/constants"
+import { formatMoney } from "@/lib/formatMoney"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -525,18 +526,18 @@ export default function StatsPage() {
                 <div>
                   <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Totals</h2>
                   <div className="grid grid-cols-2 gap-4">
-                    <StatCard label="Today"        value={`${currency} ${expStats.todayTotal.toFixed(2)}`} delay={0} />
-                    <StatCard label="Past 7 Days"  value={`${currency} ${expStats.weekTotal.toFixed(2)}`}  delay={1} />
-                    <StatCard label="Past 30 Days" value={`${currency} ${expStats.monthTotal.toFixed(2)}`} delay={2} />
-                    <StatCard label="All Time"     value={`${currency} ${expStats.allTotal.toFixed(2)}`}   sub={`${expStats.allDays.length} day${expStats.allDays.length !== 1 ? "s" : ""} tracked`} delay={3} />
+                    <StatCard label="Today"        value={`${currency} ${formatMoney(expStats.todayTotal)}`} delay={0} />
+                    <StatCard label="Past 7 Days"  value={`${currency} ${formatMoney(expStats.weekTotal)}`}  delay={1} />
+                    <StatCard label="Past 30 Days" value={`${currency} ${formatMoney(expStats.monthTotal)}`} delay={2} />
+                    <StatCard label="All Time"     value={`${currency} ${formatMoney(expStats.allTotal)}`}   sub={`${expStats.allDays.length} day${expStats.allDays.length !== 1 ? "s" : ""} tracked`} delay={3} />
                   </div>
                 </div>
 
                 <div>
                   <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Averages</h2>
                   <div className="grid grid-cols-2 gap-4">
-                    <StatCard label="Avg per spending day"   value={`${currency} ${expStats.avgDaily.toFixed(2)}`} sub="Days with at least one expense" delay={0} />
-                    <StatCard label="Avg per calendar day"   value={`${currency} ${expStats.avg30.toFixed(2)}`}    sub="Based on last 30 days"          delay={1} />
+                    <StatCard label="Avg per spending day"   value={`${currency} ${formatMoney(expStats.avgDaily)}`} sub="Days with at least one expense" delay={0} />
+                    <StatCard label="Avg per calendar day"   value={`${currency} ${formatMoney(expStats.avg30)}`}    sub="Based on last 30 days"          delay={1} />
                   </div>
                 </div>
 
@@ -551,7 +552,7 @@ export default function StatsPage() {
                             <p className="font-semibold text-black dark:text-white truncate">{expStats.biggest.description || expStats.biggest.category}</p>
                             <p className="text-xs text-gray-400 mt-0.5">{fmtDate(expStats.biggest.date)}</p>
                           </div>
-                          <span className="text-lg font-bold text-black dark:text-white ml-4 shrink-0">{currency} {Number(expStats.biggest.amount).toFixed(2)}</span>
+                          <span className="text-lg font-bold text-black dark:text-white ml-4 shrink-0">{currency} {formatMoney(Number(expStats.biggest.amount))}</span>
                         </div>
                       )}
                       {expStats.bigDay && (
@@ -560,7 +561,7 @@ export default function StatsPage() {
                             <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-0.5">Most Expensive Day</p>
                             <p className="font-semibold text-black dark:text-white">{fmtDate(expStats.bigDay)}</p>
                           </div>
-                          <span className="text-lg font-bold text-black dark:text-white ml-4 shrink-0">{currency} {expStats.bigDayTotal.toFixed(2)}</span>
+                          <span className="text-lg font-bold text-black dark:text-white ml-4 shrink-0">{currency} {formatMoney(expStats.bigDayTotal)}</span>
                         </div>
                       )}
                     </div>
@@ -583,7 +584,7 @@ export default function StatsPage() {
                             <div className="flex items-center justify-between mb-1.5">
                               <span className={`text-sm font-semibold ${CATEGORY_TEXT[cat] || CATEGORY_TEXT["Other"]}`}>{cat}</span>
                               <div className="text-right">
-                                <span className="text-sm font-bold text-black dark:text-white">{currency} {total.toFixed(2)}</span>
+                                <span className="text-sm font-bold text-black dark:text-white">{currency} {formatMoney(total)}</span>
                                 <span className="text-xs text-gray-400 ml-2">{count} item{count !== 1 ? "s" : ""}</span>
                               </div>
                             </div>
@@ -618,7 +619,7 @@ export default function StatsPage() {
                     <StatCard label="Bought"        value={String(toBuyStats.bought.length)}  sub="items completed" delay={1} />
                     <StatCard
                       label="Pending Value"
-                      value={toBuyStats.pendingTotal > 0 ? `${currency} ${toBuyStats.pendingTotal.toFixed(2)}` : "–"}
+                      value={toBuyStats.pendingTotal > 0 ? `${currency} ${formatMoney(toBuyStats.pendingTotal)}` : "–"}
                       sub={toBuyStats.pendingTotal > 0 ? "estimated total" : "no prices set"}
                       delay={2}
                     />
@@ -671,9 +672,9 @@ export default function StatsPage() {
                     <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Overview</h2>
                     <div className="grid grid-cols-2 gap-4">
                       <StatCard label="Total Debts"     value={String(s.total)}                       sub={`${s.paid} paid off`}        delay={0} />
-                      <StatCard label="Total Owed"      value={`${currency} ${s.totalAmount.toFixed(2)}`}     sub="all time"                    delay={1} />
-                      <StatCard label="Total Paid"      value={`${currency} ${s.totalPaid.toFixed(2)}`}       sub="amount repaid"               delay={2} />
-                      <StatCard label="Outstanding"     value={`${currency} ${s.outstanding.toFixed(2)}`}     sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} delay={3} />
+                      <StatCard label="Total Owed"      value={`${currency} ${formatMoney(s.totalAmount)}`}     sub="all time"                    delay={1} />
+                      <StatCard label="Total Paid"      value={`${currency} ${formatMoney(s.totalPaid)}`}       sub="amount repaid"               delay={2} />
+                      <StatCard label="Outstanding"     value={`${currency} ${formatMoney(s.outstanding)}`}     sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} delay={3} />
                     </div>
                   </div>
                   <div>
@@ -710,9 +711,9 @@ export default function StatsPage() {
                     <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Overview</h2>
                     <div className="grid grid-cols-2 gap-4">
                       <StatCard label="Total Lendings"  value={String(s.total)}                       sub={`${s.paid} returned fully`}  delay={0} />
-                      <StatCard label="Total Lent"      value={`${currency} ${s.totalAmount.toFixed(2)}`}     sub="all time"                    delay={1} />
-                      <StatCard label="Total Received"  value={`${currency} ${s.totalPaid.toFixed(2)}`}       sub="amount returned"             delay={2} />
-                      <StatCard label="Outstanding"     value={`${currency} ${s.outstanding.toFixed(2)}`}     sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} delay={3} />
+                      <StatCard label="Total Lent"      value={`${currency} ${formatMoney(s.totalAmount)}`}     sub="all time"                    delay={1} />
+                      <StatCard label="Total Received"  value={`${currency} ${formatMoney(s.totalPaid)}`}       sub="amount returned"             delay={2} />
+                      <StatCard label="Outstanding"     value={`${currency} ${formatMoney(s.outstanding)}`}     sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} delay={3} />
                     </div>
                   </div>
                   <div>

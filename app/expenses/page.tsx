@@ -6,6 +6,7 @@ import AuthenticatedLayout from "@/components/AuthenticatedLayout"
 import { CATEGORIES, CATEGORY_BADGE } from "@/lib/constants"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
+import { formatMoney } from "@/lib/formatMoney"
 
 interface Expense {
   id: string
@@ -183,7 +184,7 @@ export default function ExpensesPage() {
           {!hasActiveFilters && (
             <div className="bg-black dark:bg-white rounded-2xl p-5 mb-6 shadow-xl">
               <p className="text-gray-400 dark:text-gray-600 text-sm font-medium mb-1">Today&apos;s Total</p>
-              <p className="text-3xl font-bold text-white dark:text-black">{currency} {todayTotal.toFixed(2)}</p>
+              <p className="text-3xl font-bold text-white dark:text-black">{currency} {formatMoney(todayTotal)}</p>
             </div>
           )}
 
@@ -261,7 +262,7 @@ export default function ExpensesPage() {
                   <div key={dateKey}>
                     <div className="flex items-center justify-between mb-2 px-1">
                       <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{formatDateLabel(dateKey)}</span>
-                      <span className="text-sm font-bold text-black dark:text-white">{currency} {dayTotal.toFixed(2)}</span>
+                      <span className="text-sm font-bold text-black dark:text-white">{currency} {formatMoney(dayTotal)}</span>
                     </div>
                     <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
                       {dayExpenses.map((exp, idx) => (
@@ -382,7 +383,7 @@ function ExpenseRow({ exp, isLast, onDelete, onUpdated, showDate = false, curren
           {showDate && <span className="text-xs text-gray-400 dark:text-gray-600">{formatDateLabel(exp.date)}</span>}
         </div>
       </div>
-      <span className="text-lg font-bold text-black dark:text-white shrink-0">{currency} {Number(exp.amount).toFixed(2)}</span>
+      <span className="text-lg font-bold text-black dark:text-white shrink-0">{currency} {formatMoney(Number(exp.amount))}</span>
       <button onClick={startEdit} className="p-1.5 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors duration-200">
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
       </button>

@@ -5,6 +5,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import AuthenticatedLayout from "@/components/AuthenticatedLayout"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
+import { formatMoney } from "@/lib/formatMoney"
 
 interface ToBuyItem {
   id: string; name: string; quantity: number; price: number
@@ -207,7 +208,7 @@ export default function ToBuyPage() {
                 <div>
                   <p className="text-gray-400 dark:text-gray-600 text-sm font-medium mb-1">Pending</p>
                   <p className="text-3xl font-bold text-white dark:text-black">{summary.pendingCount} item{summary.pendingCount !== 1 ? "s" : ""}</p>
-                  {summary.pendingTotal > 0 && <p className="text-gray-400 dark:text-gray-600 text-sm mt-1">≈ {currency} {summary.pendingTotal.toFixed(2)}</p>}
+                  {summary.pendingTotal > 0 && <p className="text-gray-400 dark:text-gray-600 text-sm mt-1">≈ {currency} {formatMoney(summary.pendingTotal)}</p>}
                 </div>
                 <div className="text-right">
                   <p className="text-gray-400 dark:text-gray-600 text-sm font-medium mb-1">Bought</p>
@@ -226,7 +227,7 @@ export default function ToBuyPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-green-900 dark:text-green-100 truncate">Bought: {logPrompt.name}</p>
-                  <p className="text-xs text-green-700 dark:text-green-300">Log {currency} {logPrompt.amount.toFixed(2)} as expense?</p>
+                  <p className="text-xs text-green-700 dark:text-green-300">Log {currency} {formatMoney(logPrompt.amount)} as expense?</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -451,11 +452,11 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
       <div className="flex items-center justify-between mt-1 pl-8 gap-2">
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
           <span className="text-xs text-gray-500 dark:text-gray-400">Qty: {qtyStr}</span>
-          {Number(item.price) > 0 && <span className="text-xs text-gray-500 dark:text-gray-400">· {currency} {Number(item.price).toFixed(2)} each</span>}
+          {Number(item.price) > 0 && <span className="text-xs text-gray-500 dark:text-gray-400">· {currency} {formatMoney(Number(item.price))} each</span>}
           {item.notes && <span className="text-xs text-gray-400 dark:text-gray-600 truncate max-w-[100px]">· {item.notes}</span>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {itemTotal > 0 && <span className={`text-sm font-bold ${item.bought ? "text-gray-400 dark:text-gray-600 line-through" : "text-black dark:text-white"}`}>{currency} {itemTotal.toFixed(2)}</span>}
+          {itemTotal > 0 && <span className={`text-sm font-bold ${item.bought ? "text-gray-400 dark:text-gray-600 line-through" : "text-black dark:text-white"}`}>{currency} {formatMoney(itemTotal)}</span>}
           {!item.bought && <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${BADGE[item.urgency]}`}>{item.urgency}</span>}
         </div>
       </div>

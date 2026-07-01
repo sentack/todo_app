@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { useCurrency } from "@/contexts/CurrencyContext"
+import { formatMoney } from "@/lib/formatMoney"
 
 interface SearchResult {
   id: string
@@ -94,11 +95,11 @@ export default function GlobalSearch({ userId }: GlobalSearchProps) {
       })),
       ...(debts ?? []).map(d => ({
         id: d.id, section: "Debts", href: "/debts",
-        label: d.person, sub: `${currency} ${Number(d.amount).toFixed(2)}`,
+        label: d.person, sub: `${currency} ${formatMoney(Number(d.amount))}`,
       })),
       ...(lendings ?? []).map(l => ({
         id: l.id, section: "Lending", href: "/lending",
-        label: l.person, sub: `${currency} ${Number(l.amount).toFixed(2)}`,
+        label: l.person, sub: `${currency} ${formatMoney(Number(l.amount))}`,
       })),
       ...(friends ?? []).map(f => ({
         id: f.id, section: "Friends", href: "/friends",
