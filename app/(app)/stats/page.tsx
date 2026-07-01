@@ -1,14 +1,13 @@
-/* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
-import AuthenticatedLayout from "@/components/AuthenticatedLayout"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { CATEGORY_COLORS, CATEGORY_TEXT } from "@/lib/constants"
 import { formatMoney } from "@/lib/formatMoney"
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface TodoPeriodStat {
   period: string; created: number; inProgress: number; completed: number
@@ -38,7 +37,7 @@ interface FinanceItem {
 
 type Tab = "todo" | "expenses" | "to-buy" | "debts" | "lending"
 
-// ─── Shared components ────────────────────────────────────────────────────────
+// â”€â”€â”€ Shared components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function StatCard({ label, value, sub, delay }: { label: string; value: string; sub?: string; delay?: number }) {
   return (
@@ -61,7 +60,7 @@ function SectionSkeleton() {
   )
 }
 
-// ─── SVG Charts ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ SVG Charts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SpendingLineChart({ expenses, currency }: { expenses: Expense[], currency: string }) {
   const today = new Date()
@@ -110,7 +109,7 @@ function SpendingLineChart({ expenses, currency }: { expenses: Expense[], curren
         })}
         <text x={padL} y={padT + 3} textAnchor="start" className="fill-gray-400 dark:fill-gray-600" fontSize="9">{currency} {maxVal.toFixed(0)}</text>
       </svg>
-      <p className="text-xs text-gray-400 dark:text-gray-600 mt-1 text-center">{activeDays} active day{activeDays !== 1 ? "s" : ""} · avg {currency} {avgPerDay.toFixed(0)}/day</p>
+      <p className="text-xs text-gray-400 dark:text-gray-600 mt-1 text-center">{activeDays} active day{activeDays !== 1 ? "s" : ""} Â· avg {currency} {avgPerDay.toFixed(0)}/day</p>
     </div>
   )
 }
@@ -144,7 +143,7 @@ function CompletionBarChart({ completions }: { completions: { date: string; coun
   )
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const URGENCY_META = {
   critical: { label: "Critical", color: "bg-red-500",    text: "text-red-600 dark:text-red-400"       },
@@ -153,7 +152,7 @@ const URGENCY_META = {
   low:      { label: "Low",      color: "bg-gray-400",   text: "text-gray-600 dark:text-gray-400"     },
 }
 
-// ─── Page ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function StatsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("todo")
@@ -204,7 +203,7 @@ export default function StatsPage() {
     if (activeTab === "lending"  && !lendingLoaded) loadLendingData(userId)
   }, [activeTab, userId])
 
-  // ── Data loaders ──────────────────────────────────────────────────────────
+  // â”€â”€ Data loaders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const loadTodoData = async (uid: string) => {
     const periods = [
@@ -300,7 +299,7 @@ export default function StatsPage() {
     setLendingLoading(false)
   }
 
-  // ── Computed ──────────────────────────────────────────────────────────────
+  // â”€â”€ Computed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const expStats = useMemo(() => {
     if (expenses.length === 0) return null
@@ -361,14 +360,13 @@ export default function StatsPage() {
     return { pending, bought, pendingTotal, urgencyCounts, maxCount: Math.max(...Object.values(urgencyCounts), 1) }
   }, [toBuyItems])
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const fmtDate = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   return (
-    <AuthenticatedLayout>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="animate-slide-in-down">
 
@@ -399,7 +397,7 @@ export default function StatsPage() {
             ))}
           </div>
 
-          {/* ── Todo Tab ─────────────────────────────────────────────────── */}
+          {/* â”€â”€ Todo Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {activeTab === "todo" && (
             todoLoading ? <SectionSkeleton /> : (
               <div className="space-y-8">
@@ -513,7 +511,7 @@ export default function StatsPage() {
             )
           )}
 
-          {/* ── Expenses Tab ─────────────────────────────────────────────── */}
+          {/* â”€â”€ Expenses Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {activeTab === "expenses" && (
             expensesLoading ? <SectionSkeleton /> :
             expensesLoaded && expenses.length === 0 ? (
@@ -602,7 +600,7 @@ export default function StatsPage() {
             ) : null
           )}
 
-          {/* ── To Buy Tab ───────────────────────────────────────────────── */}
+          {/* â”€â”€ To Buy Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {activeTab === "to-buy" && (
             toBuyLoading ? <SectionSkeleton /> :
             toBuyLoaded && toBuyItems.length === 0 ? (
@@ -619,7 +617,7 @@ export default function StatsPage() {
                     <StatCard label="Bought"        value={String(toBuyStats.bought.length)}  sub="items completed" delay={1} />
                     <StatCard
                       label="Pending Value"
-                      value={toBuyStats.pendingTotal > 0 ? `${currency} ${formatMoney(toBuyStats.pendingTotal)}` : "–"}
+                      value={toBuyStats.pendingTotal > 0 ? `${currency} ${formatMoney(toBuyStats.pendingTotal)}` : "â€“"}
                       sub={toBuyStats.pendingTotal > 0 ? "estimated total" : "no prices set"}
                       delay={2}
                     />
@@ -659,7 +657,7 @@ export default function StatsPage() {
             ) : null
           )}
 
-          {/* ── Debts Tab ────────────────────────────────────────────── */}
+          {/* â”€â”€ Debts Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {activeTab === "debts" && (
             debtsLoading ? <SectionSkeleton /> :
             debtsLoaded && debts.length === 0 ? (
@@ -698,7 +696,7 @@ export default function StatsPage() {
             })() : null
           )}
 
-          {/* ── Lending Tab ──────────────────────────────────────────── */}
+          {/* â”€â”€ Lending Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {activeTab === "lending" && (
             lendingLoading ? <SectionSkeleton /> :
             lendingLoaded && lendings.length === 0 ? (
@@ -739,6 +737,5 @@ export default function StatsPage() {
 
         </div>
       </div>
-    </AuthenticatedLayout>
   )
 }

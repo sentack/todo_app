@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/no-explicit-any */
 
 "use client"
 
@@ -8,7 +8,6 @@ import { useState, useEffect } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { useRouter } from "next/navigation"
 import ClearDataModal from "@/components/ClearDataModal"
-import AuthenticatedLayout from "@/components/AuthenticatedLayout"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { CURRENCIES, CATEGORIES } from "@/lib/constants"
 
@@ -178,19 +177,16 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <AuthenticatedLayout>
         <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="space-y-6">
             <div className="skeleton rounded-2xl h-8 w-48"></div>
             <div className="skeleton rounded-2xl h-64"></div>
           </div>
         </div>
-      </AuthenticatedLayout>
     )
   }
 
   return (
-    <AuthenticatedLayout>
       <div className="mx-auto px-4 w-full sm:px-6 lg:px-8 py-8">
         <div className="animate-slide-in-down">
           <div className="flex items-center gap-3 mb-8">
@@ -347,7 +343,7 @@ export default function SettingsPage() {
                       className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-black text-black dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all"
                     >
                       {CURRENCIES.map(c => (
-                        <option key={c.code} value={c.code}>{c.code} – {c.name}</option>
+                        <option key={c.code} value={c.code}>{c.code} â€“ {c.name}</option>
                       ))}
                     </select>
                     <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Current: {currency}</span>
@@ -557,6 +553,5 @@ export default function SettingsPage() {
       </div>
 
       <ClearDataModal isOpen={showClearModal} onClose={() => setShowClearModal(false)} />
-    </AuthenticatedLayout>
   )
 }

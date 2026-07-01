@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
-import AuthenticatedLayout from "@/components/AuthenticatedLayout"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { CATEGORY_COLORS, CATEGORY_TEXT } from "@/lib/constants"
 import { formatMoney } from "@/lib/formatMoney"
@@ -83,7 +82,7 @@ export default function ExpenseStatsPage() {
   const monthTotal = sum(monthExpenses)
   const allTotal = sum(expenses)
 
-  // Average daily spending — over distinct days that have any expense
+  // Average daily spending â€” over distinct days that have any expense
   const allDays = [...new Set(expenses.map(e => e.date))]
   const avgDaily = allDays.length > 0 ? allTotal / allDays.length : 0
 
@@ -117,7 +116,6 @@ export default function ExpenseStatsPage() {
   }
 
   return (
-    <AuthenticatedLayout>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="animate-slide-in-down">
           {/* Header */}
@@ -252,6 +250,5 @@ export default function ExpenseStatsPage() {
           )}
         </div>
       </div>
-    </AuthenticatedLayout>
   )
 }
