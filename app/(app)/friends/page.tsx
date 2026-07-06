@@ -79,8 +79,8 @@ export default function FriendsPage() {
       undone = true
       setFriends(prev => [...prev, friend].sort((a, b) => a.name.localeCompare(b.name)))
     })
-    setTimeout(() => {
-      if (!undone) supabase.from("friends").delete().eq("id", friend.id)
+    setTimeout(async () => {
+      if (!undone) await supabase.from("friends").delete().eq("id", friend.id)
     }, 5100)
   }
 
@@ -111,7 +111,7 @@ export default function FriendsPage() {
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search friendsâ€¦"
+                placeholder="Search friends…"
                 className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
               />
               {search && (
@@ -133,7 +133,7 @@ export default function FriendsPage() {
                 </svg>
               </div>
               <p className="text-gray-500 dark:text-gray-400 font-medium mb-1">No friends yet</p>
-              <p className="text-sm text-gray-400 dark:text-gray-600">Use the + button to add one â€” they&apos;ll autocomplete in Debts &amp; Lending</p>
+              <p className="text-sm text-gray-400 dark:text-gray-600">Use the + button to add one — they&apos;ll autocomplete in Debts &amp; Lending</p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
@@ -164,7 +164,7 @@ export default function FriendsPage() {
                         className="flex-1 px-3 py-1.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm"
                       />
                       <button type="submit" disabled={saving} className="px-3 py-1.5 bg-black dark:bg-white text-white dark:text-black text-xs font-semibold rounded-xl hover:opacity-80 disabled:opacity-40 transition-all">
-                        {saving ? "â€¦" : "Save"}
+                        {saving ? "…" : "Save"}
                       </button>
                       <button type="button" onClick={cancelEdit} className="px-3 py-1.5 bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 transition-all">
                         Cancel

@@ -89,7 +89,7 @@ export default function ToBuyPage() {
   // Reset to page 1 when filters change
   useEffect(() => { setPage(1) }, [viewFilter, debouncedSearch])
 
-  // â”€â”€ client-side filter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── client-side filter ────────────────────────────────────────────────────
 
   const filtered = useMemo(() => {
     let result = [...allItems]
@@ -132,7 +132,7 @@ export default function ToBuyPage() {
     urgencyGroups[item.urgency].push(item)
   }
 
-  // â”€â”€ mutations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── mutations ─────────────────────────────────────────────────────────────
 
   const refresh = () => setRefreshKey(k => k + 1)
 
@@ -180,10 +180,10 @@ export default function ToBuyPage() {
       undone = true
       setAllItems(prev => [item, ...prev])
     })
-    setTimeout(() => { if (!undone) supabase.from("to_buy_items").delete().eq("id", id) }, 5100)
+    setTimeout(async () => { if (!undone) await supabase.from("to_buy_items").delete().eq("id", id) }, 5100)
   }
 
-  // â”€â”€ render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── render ────────────────────────────────────────────────────────────────
 
   return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -206,7 +206,7 @@ export default function ToBuyPage() {
                 <div>
                   <p className="text-gray-400 dark:text-gray-600 text-sm font-medium mb-1">Pending</p>
                   <p className="text-3xl font-bold text-white dark:text-black">{summary.pendingCount} item{summary.pendingCount !== 1 ? "s" : ""}</p>
-                  {summary.pendingTotal > 0 && <p className="text-gray-400 dark:text-gray-600 text-sm mt-1">â‰ˆ {currency} {formatMoney(summary.pendingTotal)}</p>}
+                  {summary.pendingTotal > 0 && <p className="text-gray-400 dark:text-gray-600 text-sm mt-1">≈ {currency} {formatMoney(summary.pendingTotal)}</p>}
                 </div>
                 <div className="text-right">
                   <p className="text-gray-400 dark:text-gray-600 text-sm font-medium mb-1">Bought</p>
@@ -273,7 +273,7 @@ export default function ToBuyPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Pending â€” grouped by urgency */}
+              {/* Pending — grouped by urgency */}
               {pendingPaged.length > 0 && (["critical","high","medium","low"] as ToBuyItem["urgency"][]).filter(u => urgencyGroups[u]?.length).map(u => (
                 <div key={u}>
                   <div className="flex items-center gap-2 mb-2 px-1">
@@ -316,7 +316,7 @@ export default function ToBuyPage() {
                 disabled={page === 1}
                 className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
               >
-                â† Prev
+                ← Prev
               </button>
               <span className="text-sm text-gray-500 dark:text-gray-400">Page {page} of {totalPages}</span>
               <button
@@ -324,7 +324,7 @@ export default function ToBuyPage() {
                 disabled={page === totalPages}
                 className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
               >
-                Next â†’
+                Next →
               </button>
             </div>
           )}
@@ -334,7 +334,7 @@ export default function ToBuyPage() {
   )
 }
 
-// â”€â”€ ItemRow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ItemRow ───────────────────────────────────────────────────────────────────
 
 const BADGE: Record<string, string> = {
   critical: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",

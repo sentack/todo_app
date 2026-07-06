@@ -82,7 +82,7 @@ export default function ExpenseStatsPage() {
   const monthTotal = sum(monthExpenses)
   const allTotal = sum(expenses)
 
-  // Average daily spending â€” over distinct days that have any expense
+  // Average daily spending — over distinct days that have any expense
   const allDays = [...new Set(expenses.map(e => e.date))]
   const avgDaily = allDays.length > 0 ? allTotal / allDays.length : 0
 

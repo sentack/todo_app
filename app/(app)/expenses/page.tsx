@@ -89,7 +89,7 @@ export default function ExpensesPage() {
   // Reset to page 1 when any filter changes
   useEffect(() => { setPage(1) }, [debouncedSearch, categoryFilter, timeFilter, sortKey])
 
-  // â”€â”€ client-side filter + sort â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── client-side filter + sort ─────────────────────────────────────────────
 
   const filtered = useMemo(() => {
     let result = [...allExpenses]
@@ -135,7 +135,7 @@ export default function ExpensesPage() {
     ? Object.keys(grouped).sort((a, b) => sortKey === "date-asc" ? a.localeCompare(b) : b.localeCompare(a))
     : []
 
-  // â”€â”€ mutations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── mutations ─────────────────────────────────────────────────────────────
 
   const refresh = () => setRefreshKey(k => k + 1)
 
@@ -156,12 +156,12 @@ export default function ExpensesPage() {
       undone = true
       setAllExpenses(prev => [...prev, item].sort((a, b) => b.date.localeCompare(a.date) || b.created_at.localeCompare(a.created_at)))
     })
-    setTimeout(() => {
-      if (!undone) supabase.from("expenses").delete().eq("id", id)
+    setTimeout(async () => {
+      if (!undone) await supabase.from("expenses").delete().eq("id", id)
     }, 5100)
   }
 
-  // â”€â”€ render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── render ────────────────────────────────────────────────────────────────
 
   return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -199,7 +199,7 @@ export default function ExpensesPage() {
                 </button>
               )}
             </div>
-            {/* Time filter â€” single scrollable row */}
+            {/* Time filter — single scrollable row */}
             <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
               <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1 w-fit min-w-full">
                 {(["all", "today", "7d", "30d"] as TimeFilter[]).map(t => (
@@ -209,7 +209,7 @@ export default function ExpensesPage() {
                 ))}
               </div>
             </div>
-            {/* Category + sort â€” one row, each takes half */}
+            {/* Category + sort — one row, each takes half */}
             <div className="flex gap-2">
               <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="flex-1 px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-semibold text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all">
                 <option value="all">All categories</option>
@@ -218,8 +218,8 @@ export default function ExpensesPage() {
               <select value={sortKey} onChange={e => setSortKey(e.target.value as SortKey)} className="flex-1 px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-semibold text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all">
                 <option value="date-desc">Newest first</option>
                 <option value="date-asc">Oldest first</option>
-                <option value="amount-desc">High â†’ low</option>
-                <option value="amount-asc">Low â†’ high</option>
+                <option value="amount-desc">High → low</option>
+                <option value="amount-asc">Low → high</option>
               </select>
             </div>
           </div>
@@ -287,7 +287,7 @@ export default function ExpensesPage() {
                 disabled={page === 1}
                 className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
               >
-                â† Prev
+                ← Prev
               </button>
               <span className="text-sm text-gray-500 dark:text-gray-400">Page {page} of {totalPages}</span>
               <button
@@ -295,7 +295,7 @@ export default function ExpensesPage() {
                 disabled={page === totalPages}
                 className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
               >
-                Next â†’
+                Next →
               </button>
             </div>
           )}
@@ -305,7 +305,7 @@ export default function ExpensesPage() {
   )
 }
 
-// â”€â”€ ExpenseRow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ExpenseRow ────────────────────────────────────────────────────────────────
 
 const ROW_INPUT = "w-full px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm"
 

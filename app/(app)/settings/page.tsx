@@ -344,7 +344,7 @@ export default function SettingsPage() {
                       className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-black text-black dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all"
                     >
                       {CURRENCIES.map(c => (
-                        <option key={c.code} value={c.code}>{c.code} â€“ {c.name}</option>
+                        <option key={c.code} value={c.code}>{c.code} – {c.name}</option>
                       ))}
                     </select>
                     <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Current: {currency}</span>
