@@ -147,7 +147,7 @@ export default function DebtsPage() {
     setAllDebts(prev => prev.filter(d => d.id !== id))
     let undone = false
     triggerUndo(`Debt with ${item.person} deleted`, () => { undone = true; setAllDebts(prev => [...prev, item]) })
-    setTimeout(() => { if (!undone) supabase.from("debts").delete().eq("id", id) }, 5100)
+    setTimeout(async () => { if (!undone) await supabase.from("debts").delete().eq("id", id) }, 5100)
   }
 
   const onLendingDelete = (id: string) => {
@@ -156,7 +156,7 @@ export default function DebtsPage() {
     setAllLendings(prev => prev.filter(l => l.id !== id))
     let undone = false
     triggerUndo(`Lending for ${item.person} deleted`, () => { undone = true; setAllLendings(prev => [...prev, item]) })
-    setTimeout(() => { if (!undone) supabase.from("lendings").delete().eq("id", id) }, 5100)
+    setTimeout(async () => { if (!undone) await supabase.from("lendings").delete().eq("id", id) }, 5100)
   }
 
   return (
