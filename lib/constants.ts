@@ -6,6 +6,8 @@ export const CATEGORIES = [
   "Entertainment",
   "Health",
   "Bills",
+  "Mobile Card",
+  "Cosmetics",
   "Other",
 ] as const
 
@@ -19,6 +21,8 @@ export const CATEGORY_COLORS: Record<string, string> = {
   "Entertainment": "bg-purple-400 dark:bg-purple-500",
   "Health":        "bg-green-400 dark:bg-green-500",
   "Bills":         "bg-red-400 dark:bg-red-500",
+  "Mobile Card":   "bg-indigo-400 dark:bg-indigo-500",
+  "Cosmetics":     "bg-rose-400 dark:bg-rose-500",
   "Other":         "bg-gray-400 dark:bg-gray-500",
 }
 
@@ -30,6 +34,8 @@ export const CATEGORY_TEXT: Record<string, string> = {
   "Entertainment": "text-purple-600 dark:text-purple-400",
   "Health":        "text-green-600 dark:text-green-400",
   "Bills":         "text-red-600 dark:text-red-400",
+  "Mobile Card":   "text-indigo-600 dark:text-indigo-400",
+  "Cosmetics":     "text-rose-600 dark:text-rose-400",
   "Other":         "text-gray-600 dark:text-gray-400",
 }
 
@@ -41,6 +47,8 @@ export const CATEGORY_BADGE: Record<string, string> = {
   "Entertainment": "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
   "Health":        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
   "Bills":         "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  "Mobile Card":   "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
+  "Cosmetics":     "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
   "Other":         "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
 }
 

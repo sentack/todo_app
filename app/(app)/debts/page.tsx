@@ -625,7 +625,9 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
                   onChange={e => setPayAmount(e.target.value)} placeholder={`max ${formatMoney(remaining)}`}
                   required autoFocus className={`${CARD_INPUT} pl-11`} />
               </div>
-              <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)} className={`${CARD_INPUT} w-auto shrink-0`} />
+              <div className="shrink-0 w-36">
+                <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)} className={CARD_INPUT} />
+              </div>
             </div>
             <div className="flex gap-2">
               <button type="submit" disabled={submittingPay} className="flex-1 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">{submittingPay ? "Saving…" : "Save Payment"}</button>
@@ -797,7 +799,9 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
                   onChange={e => setPayAmount(e.target.value)} placeholder={`max ${formatMoney(remaining)}`}
                   required autoFocus className={`${CARD_INPUT} pl-11`} />
               </div>
-              <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)} className={`${CARD_INPUT} w-auto shrink-0`} />
+              <div className="shrink-0 w-36">
+                <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)} className={CARD_INPUT} />
+              </div>
             </div>
             <div className="flex gap-2">
               <button type="submit" disabled={submittingPay} className="flex-1 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">{submittingPay ? "Saving…" : "Save Receipt"}</button>
