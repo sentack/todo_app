@@ -104,7 +104,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-black">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pt-10">
           <div className="space-y-6">
             <div className="skeleton rounded-2xl h-8 w-48"></div>
             <div className="skeleton rounded-2xl h-64"></div>
@@ -116,7 +116,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pt-10">
         <div className="animate-slide-in-down">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3 mb-8">
@@ -125,7 +125,7 @@ export default function ProfilePage() {
                 <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-black dark:text-white">Profile</h1>
+            <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Profile</h1>
           </div>
 
           <Link  href="/" className="text-xl font-bold text-black dark:text-white">
@@ -133,10 +133,10 @@ export default function ProfilePage() {
           </Link>
           </div>
 
-          <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-xl">
+          <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-8 shadow-sm">
             <form onSubmit={handleSave} className="space-y-6">
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-black dark:text-white mb-2">
+                <label htmlFor="username" className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
@@ -149,13 +149,13 @@ export default function ProfilePage() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-volt focus:border-transparent bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-200 dark:border-white/[0.08] rounded-2xl focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt bg-gray-50 dark:bg-white/[0.04] focus:bg-white dark:focus:bg-white/[0.06] text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
                   placeholder="Enter your username"
                 />
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-black dark:text-white mb-2">
+                <label htmlFor="email" className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -170,7 +170,7 @@ export default function ProfilePage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-volt focus:border-transparent bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-200 dark:border-white/[0.08] rounded-2xl focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt bg-gray-50 dark:bg-white/[0.04] focus:bg-white dark:focus:bg-white/[0.06] text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
                   placeholder="Enter your email"
                 />
               </div>

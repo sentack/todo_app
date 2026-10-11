@@ -9,7 +9,7 @@ export default function HomePage() {
 
   return (
     <>
-      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pt-10">
         <div className="animate-fade-in">
           <TodoList setLoading={setLoading} />
         </div>

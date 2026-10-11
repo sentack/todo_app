@@ -97,7 +97,7 @@ export default function ConfirmModal({
 
         {confirmationText && (
           <div className="mb-6">
-            <label className="block text-sm font-medium text-black dark:text-white mb-2">
+            <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">
               Type <span className="font-mono bg-rose-50 dark:bg-rose-500/10 px-2 py-1 rounded-lg text-rose-600 dark:text-rose-400">{confirmationText}</span> to confirm:
             </label>
             <input

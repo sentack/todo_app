@@ -186,22 +186,22 @@ export default function ToBuyPage() {
   // ── render ────────────────────────────────────────────────────────────────
 
   return (
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pt-10">
         <div className="animate-slide-in-down">
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-black dark:bg-volt rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-black dark:bg-volt rounded-2xl flex items-center justify-center shrink-0 -rotate-3 shadow-lg shadow-black/15 dark:shadow-volt/20">
               <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-black dark:text-white">To Buy</h1>
+            <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">To Buy</h1>
           </div>
 
           {/* Summary banner */}
           {(summary.pendingCount > 0 || summary.boughtCount > 0) && (
-            <div className="bg-black dark:bg-volt rounded-2xl p-5 mb-6 shadow-xl">
+            <div className="hero-card rounded-3xl p-6 mb-6 shadow-xl">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-gray-400 dark:text-gray-600 text-sm font-medium mb-1">Pending</p>
@@ -238,10 +238,10 @@ export default function ToBuyPage() {
           {/* Search + view filter */}
           <div className="space-y-3 mb-6">
             <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
               </svg>
-              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search items..." className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all" />
+              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search items..." className="w-full pl-11 pr-10 h-12 bg-white dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] rounded-2xl shadow-sm text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt transition-all" />
               {search && (
                 <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
@@ -262,7 +262,7 @@ export default function ToBuyPage() {
             <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="skeleton rounded-2xl h-16" />)}</div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-14 h-14 bg-gray-100 dark:bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-white dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08] shadow-sm rounded-3xl flex items-center justify-center mx-auto mb-5 rotate-3">
                 <svg className="w-7 h-7 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
                 </svg>
@@ -281,7 +281,7 @@ export default function ToBuyPage() {
                     <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{URGENCY_META[u].label}</span>
                     <span className="text-xs text-gray-400 dark:text-gray-600">{urgencyGroups[u].length} item{urgencyGroups[u].length !== 1 ? "s" : ""}</span>
                   </div>
-                  <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                     {urgencyGroups[u].map((item, idx) => (
                       <ItemRow key={item.id} item={item} isLast={idx === urgencyGroups[u].length - 1} togglingId={togglingId} currency={currency} onToggle={toggleBought} onDelete={deleteItem} onUpdated={updated => setAllItems(prev => prev.map(i => i.id === updated.id ? updated : i))} />
                     ))}
@@ -298,7 +298,7 @@ export default function ToBuyPage() {
                       <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">Bought</span>
                     </div>
                   )}
-                  <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                     {boughtPaged.map((item, idx) => (
                       <ItemRow key={item.id} item={item} isLast={idx === boughtPaged.length - 1} togglingId={togglingId} currency={currency} onToggle={toggleBought} onDelete={deleteItem} onUpdated={updated => setAllItems(prev => prev.map(i => i.id === updated.id ? updated : i))} />
                     ))}
@@ -314,7 +314,7 @@ export default function ToBuyPage() {
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                className="h-10 px-4 rounded-full text-sm font-semibold bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] shadow-sm text-black dark:text-white disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
               >
                 ← Prev
               </button>
@@ -322,7 +322,7 @@ export default function ToBuyPage() {
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                className="h-10 px-4 rounded-full text-sm font-semibold bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] shadow-sm text-black dark:text-white disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
               >
                 Next →
               </button>
@@ -396,11 +396,11 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Qty</label>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Qty</label>
               <input type="number" step="0.01" min="0.01" value={quantity} onChange={e => setQuantity(e.target.value)} className={ITEM_INPUT} />
             </div>
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Price ({currency})</label>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Price ({currency})</label>
               <input type="number" step="0.01" min="0" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" className={ITEM_INPUT} />
             </div>
           </div>
@@ -413,7 +413,7 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
           </div>
           <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)" className={ITEM_INPUT} />
           <div className="flex gap-2">
-            <button type="submit" disabled={saving} className="flex-1 py-2 bg-black dark:bg-volt text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">
+            <button type="submit" disabled={saving} className="flex-1 h-11 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl shadow-md shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40">
               {saving ? "Saving..." : "Save"}
             </button>
             <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm font-semibold rounded-xl hover:opacity-80">
@@ -449,8 +449,8 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
       <div className="flex items-center justify-between mt-1 pl-8 gap-2">
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
           <span className="text-xs text-gray-500 dark:text-gray-400">Qty: {qtyStr}</span>
-          {Number(item.price) > 0 && <span className="text-xs text-gray-500 dark:text-gray-400">Â· {currency} {formatMoney(Number(item.price))} each</span>}
-          {item.notes && <span className="text-xs text-gray-400 dark:text-gray-600 truncate max-w-[100px]">Â· {item.notes}</span>}
+          {Number(item.price) > 0 && <span className="text-xs text-gray-500 dark:text-gray-400">· {currency} {formatMoney(Number(item.price))} each</span>}
+          {item.notes && <span className="text-xs text-gray-400 dark:text-gray-600 truncate max-w-[100px]">· {item.notes}</span>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {itemTotal > 0 && <span className={`text-sm font-bold ${item.bought ? "text-gray-400 dark:text-gray-600 line-through" : "text-black dark:text-white"}`}>{currency} {formatMoney(itemTotal)}</span>}

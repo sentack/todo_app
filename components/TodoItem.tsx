@@ -28,7 +28,7 @@ interface TodoItemProps {
   onTodoUpdated: () => void;
 }
 
-const INPUT = "w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all text-sm";
+const INPUT = "w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]";
 
 export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -171,27 +171,27 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
 
   if (isEditing) {
     return (
-      <div className="w-full max-w-full overflow-hidden p-4 sm:p-6 border border-gray-200 dark:border-gray-800 rounded-2xl bg-white dark:bg-black shadow-lg animate-slide-in-up">
+      <div className="w-full max-w-full overflow-hidden p-5 sm:p-6 border border-black/[0.06] dark:border-white/[0.08] rounded-3xl bg-white dark:bg-gray-950 shadow-xl ring-2 ring-volt/40 animate-slide-in-up">
         <form onSubmit={handleSave} className="space-y-4">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-sm font-semibold text-black dark:text-white">Editing Todo</p>
-            <button type="button" onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+            <p className="font-display text-lg font-bold tracking-tight text-black dark:text-white">Editing Todo</p>
+            <button type="button" onClick={() => setIsEditing(false)} className="w-9 h-9 grid place-items-center rounded-full bg-gray-100 dark:bg-white/[0.06] text-gray-500 hover:text-black dark:hover:text-white transition-colors">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
             </button>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Title *</label>
+            <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Title *</label>
             <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} required autoFocus className={INPUT} />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Description</label>
+            <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Description</label>
             <input type="text" value={editDesc} onChange={e => setEditDesc(e.target.value)} placeholder="Brief description" className={INPUT} />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Subtasks ({editSubtasks.length})</label>
+            <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Subtasks ({editSubtasks.length})</label>
             <div className="space-y-2 mb-2">
               {editSubtasks.map((s, i) => (
                 <div key={i} className="flex gap-2 items-center">
@@ -205,30 +205,30 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
                   </div>
                   <input type="number" min="1" max="5" value={s.weight} onChange={e => {
                     const next = [...editSubtasks]; next[i] = { ...next[i], weight: parseInt(e.target.value) || 1 }; setEditSubtasks(next);
-                  }} className="w-12 shrink-0 px-2 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-black dark:text-white text-center focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all text-sm" />
-                  <button type="button" onClick={() => setEditSubtasks(prev => prev.filter((_, idx) => idx !== i))} className="shrink-0 text-gray-400 hover:text-red-500 transition-colors">
+                  }} className="w-14 shrink-0 px-2 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white text-center font-semibold focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt transition-all text-sm" />
+                  <button type="button" onClick={() => setEditSubtasks(prev => prev.filter((_, idx) => idx !== i))} className="shrink-0 w-9 h-9 grid place-items-center rounded-full text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                   </button>
                 </div>
               ))}
             </div>
-            <button type="button" onClick={() => setEditSubtasks(prev => [...prev, { title: "", weight: 1 }])} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">
+            <button type="button" onClick={() => setEditSubtasks(prev => [...prev, { title: "", weight: 1 }])} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-volt-800 dark:text-volt bg-volt-100 dark:bg-volt/10 hover:bg-volt-200 dark:hover:bg-volt/20 transition-colors">
               + Add subtask
             </button>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Notes</label>
+            <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Notes</label>
             <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={2} placeholder="Additional notes" className={`${INPUT} resize-none`} />
           </div>
 
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Due date</label>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Due date</label>
               <input type="date" value={editDueDate} onChange={e => setEditDueDate(e.target.value)} className={INPUT} />
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Status</label>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Status</label>
               <select value={editStatusId} onChange={e => setEditStatusId(Number(e.target.value))} className={INPUT}>
                 <option value={1}>📋 Pending</option>
                 <option value={2}>⚡ In Progress</option>
@@ -238,10 +238,10 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           </div>
 
           <div className="flex gap-2 pt-1">
-            <button type="submit" disabled={saving || !editTitle.trim()} className="flex-1 py-2.5 bg-black dark:bg-volt text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50 transition-all">
+            <button type="submit" disabled={saving || !editTitle.trim()} className="flex-1 h-12 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl shadow-lg shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40 transition-all">
               {saving ? "Saving..." : "Save Changes"}
             </button>
-            <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2.5 bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm font-semibold rounded-xl hover:opacity-80 transition-all">
+            <button type="button" onClick={() => setIsEditing(false)} className="h-12 px-5 bg-gray-100 dark:bg-white/[0.06] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-200 dark:hover:bg-white/10 transition-all">
               Cancel
             </button>
           </div>
@@ -253,22 +253,23 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
   // ── view mode ───────────────────────────────────────────────────────────────
 
   return (
-    <div className={`w-full max-w-full overflow-hidden p-4 sm:p-6 border rounded-2xl transition-all duration-300 hover:shadow-lg ${
+    <div className={`group/todo relative w-full max-w-full overflow-hidden p-4 sm:p-5 border rounded-3xl transition-all duration-300 hover:shadow-lg hover:-translate-y-px ${
       isOverdue
-        ? "bg-white dark:bg-black border-l-4 border-l-red-500 border-t border-r border-b border-gray-200 dark:border-gray-800"
+        ? "bg-white dark:bg-black border-rose-200 dark:border-rose-500/25 shadow-sm shadow-rose-500/5 before:absolute before:left-0 before:top-5 before:bottom-5 before:w-1 before:rounded-r-full before:bg-rose-500"
         : todo.completed
-          ? "bg-gray-50 dark:bg-gray-950 opacity-75 border-gray-200 dark:border-gray-800"
-          : "bg-white dark:bg-black border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700"
+          ? "bg-white/50 dark:bg-white/[0.02] opacity-70 border-black/[0.04] dark:border-white/[0.05]"
+          : "bg-white dark:bg-black border-black/[0.06] dark:border-white/[0.07] shadow-sm hover:border-black/10 dark:hover:border-white/15"
     }`}>
       <div className="flex items-start gap-3 sm:gap-4">
         {/* Checkbox */}
         <button
           onClick={toggleCompleted}
           disabled={loading}
-          className={`mt-1 w-5 h-5 sm:w-6 sm:h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 focus-ring transition-all duration-200 ${todo.completed ? "bg-green-500 border-green-500 text-white shadow-lg" : "border-gray-300 dark:border-gray-600 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950"}`}
+          aria-label={todo.completed ? "Mark as not completed" : "Mark as completed"}
+          className={`mt-0.5 w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 focus-ring transition-all duration-300 ${todo.completed ? "bg-volt border-volt text-black shadow-md shadow-volt/40 scale-105" : "border-gray-300 dark:border-gray-600 hover:border-volt-500 dark:hover:border-volt hover:bg-volt/10"}`}
         >
           {todo.completed && (
-            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-4 h-4 animate-pop-in" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
           )}
@@ -277,18 +278,18 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
         {/* Main content */}
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 mb-2">
-            <h3 className={`font-semibold text-base sm:text-lg break-words ${todo.completed ? "line-through text-gray-500 dark:text-gray-400" : "text-black dark:text-white"}`}>
+            <h3 className={`font-bold text-[17px] sm:text-lg leading-snug tracking-tight break-words ${todo.completed ? "line-through decoration-2 decoration-volt-500 text-gray-500 dark:text-gray-400" : "text-black dark:text-white"}`}>
               {todo.title}
             </h3>
-            <div className="flex items-center justify-start sm:justify-end gap-2 flex-wrap">
-              <span className={`px-2 py-1 text-xs font-semibold rounded-full flex items-center gap-1 ${statusInfo.color}`}>
+            <div className="flex items-center justify-start sm:justify-end gap-1 flex-wrap">
+              <span className={`px-2.5 py-1 mr-1 text-[11px] font-bold rounded-full flex items-center gap-1 ${statusInfo.color}`}>
                 <span>{statusInfo.icon}</span>
                 <span>{statusInfo.name}</span>
               </span>
               <button
                 onClick={startEdit}
                 disabled={loading}
-                className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 focus-ring p-1.5 sm:p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200"
+                className="w-9 h-9 grid place-items-center text-gray-400 hover:text-black dark:hover:text-white focus-ring rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200"
                 aria-label="Edit todo"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -298,10 +299,10 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
               <button
                 onClick={deleteTodo}
                 disabled={loading}
-                className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 focus-ring p-1.5 sm:p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
+                className="w-9 h-9 grid place-items-center text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 focus-ring rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all duration-200"
                 aria-label="Delete todo"
               >
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M6 8a1 1 0 011-1h6a1 1 0 011 1v7a2 2 0 01-2 2H8a2 2 0 01-2-2V8zM9 4a1 1 0 011-1h0a1 1 0 011 1h5a1 1 0 110 2H4a1 1 0 110-2h5z" clipRule="evenodd" />
                 </svg>
               </button>
@@ -311,7 +312,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           {/* Due date badge */}
           {isDueToday && (
             <div className="mb-2">
-              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-300 ring-1 ring-inset ring-amber-300/50 dark:ring-amber-400/20">
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>
                 Due today
               </span>
@@ -319,7 +320,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           )}
           {isOverdue && (
             <div className="mb-2">
-              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 ring-1 ring-inset ring-rose-300/50 dark:ring-rose-500/20">
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
                 Overdue · {overdueDays} day{overdueDays !== 1 ? "s" : ""}
               </span>
@@ -335,11 +336,11 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           {todo.subtasks && todo.subtasks.length > 0 && (
             <div className="mt-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Progress</span>
-                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{progress}%</span>
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">Progress</span>
+                <span className="text-xs sm:text-sm font-bold text-black dark:text-white">{progress}%</span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+              <div className="w-full bg-gray-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
+                <div className="bg-volt-500 dark:bg-volt h-2 rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
               </div>
             </div>
           )}
@@ -349,7 +350,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
             <div className="mt-4">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus-ring px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200 flex items-center gap-1"
+                className="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white focus-ring px-3 py-1.5 rounded-full bg-gray-100 dark:bg-white/[0.05] hover:bg-gray-200 dark:hover:bg-white/10 transition-all duration-200 flex items-center gap-1"
               >
                 <svg className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
@@ -359,11 +360,11 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
               {isExpanded && (
                 <div className="mt-3 space-y-2 animate-slide-in-down">
                   {todo.subtasks.map(subtask => (
-                    <div key={subtask.id} className="flex items-center gap-3 p-2 sm:p-3 bg-gray-50 dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800">
+                    <div key={subtask.id} className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-white/[0.03] rounded-2xl border border-black/[0.04] dark:border-white/[0.05]">
                       <button
                         onClick={() => toggleSubtask(subtask.id, subtask.completed)}
                         disabled={loading}
-                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center flex-shrink-0 focus-ring transition-all duration-200 ${subtask.completed ? "bg-green-500 border-green-500 text-white shadow-lg" : "border-gray-300 dark:border-gray-600 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950"}`}
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 focus-ring transition-all duration-200 ${subtask.completed ? "bg-volt border-volt text-black" : "border-gray-300 dark:border-gray-600 hover:border-volt-500 dark:hover:border-volt hover:bg-volt/10"}`}
                       >
                         {subtask.completed && (
                           <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -377,8 +378,8 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
                         </span>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">W:</span>
-                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{subtask.weight}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">W</span>
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{subtask.weight}</span>
                       </div>
                     </div>
                   ))}
@@ -399,7 +400,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
             <div className="mt-3">
               <button
                 onClick={() => setIsNoteExpanded(!isNoteExpanded)}
-                className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus-ring px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200 flex items-center gap-1"
+                className="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white focus-ring px-3 py-1.5 rounded-full bg-gray-100 dark:bg-white/[0.05] hover:bg-gray-200 dark:hover:bg-white/10 transition-all duration-200 flex items-center gap-1"
               >
                 <svg className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${isNoteExpanded ? "rotate-90" : ""}`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
@@ -407,7 +408,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
                 {isNoteExpanded ? "Hide notes" : "Show notes"}
               </button>
               {isNoteExpanded && (
-                <div className={`mt-3 p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-950 text-xs sm:text-sm border border-gray-200 dark:border-gray-800 animate-slide-in-down ${todo.completed ? "text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-300"}`}>
+                <div className={`mt-3 p-4 rounded-2xl bg-gray-50 dark:bg-white/[0.03] text-sm border border-black/[0.04] dark:border-white/[0.05] animate-slide-in-down ${todo.completed ? "text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-300"}`}>
                   <pre className="whitespace-pre-wrap font-sans break-words">{todo.notes}</pre>
                 </div>
               )}
@@ -415,18 +416,18 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           )}
 
           {/* Footer */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-gray-900 gap-3">
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-dashed border-gray-200 dark:border-white/[0.07] gap-3">
             <select
               value={todo.status_id}
               onChange={e => updateStatus(Number(e.target.value))}
               disabled={loading}
-              className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-black text-black dark:text-white focus-ring transition-all duration-200"
+              className="text-xs sm:text-sm font-semibold h-9 pl-3 pr-8 border border-black/[0.06] dark:border-white/[0.08] rounded-full bg-gray-50 dark:bg-white/[0.04] text-black dark:text-white focus-ring transition-all duration-200"
             >
               <option value={1}>📋 Pending</option>
               <option value={2}>⚡ In Progress</option>
               <option value={3}>✅ Completed</option>
             </select>
-            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-400 dark:text-gray-500">
               <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
               </svg>

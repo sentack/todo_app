@@ -406,17 +406,17 @@ export default function StatsPage() {
   // ── Render ───────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pt-10">
       <div className="animate-slide-in-down">
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-black dark:bg-volt rounded-xl flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 bg-black dark:bg-volt rounded-2xl flex items-center justify-center shrink-0 -rotate-3 shadow-lg shadow-black/15 dark:shadow-volt/20">
             <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
               <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
             </svg>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-black dark:text-white">Statistics</h1>
+          <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Statistics</h1>
         </div>
 
         {/* Tabs */}
@@ -487,7 +487,7 @@ export default function StatsPage() {
         {activeTab === "expenses" && (
           expensesLoading ? <SectionSkeleton /> :
           expensesLoaded && expenses.length === 0 ? (
-            <div className="text-center py-20"><p className="text-gray-500 dark:text-gray-400">No expense data yet.</p></div>
+            <div className="text-center py-16 sm:py-20"><p className="text-gray-500 dark:text-gray-400">No expense data yet.</p></div>
           ) : expensesLoaded ? (
             <div className="space-y-6">
 
@@ -503,11 +503,11 @@ export default function StatsPage() {
 
               {/* Description / reason search */}
               <div className="relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                 </svg>
                 <input type="text" value={descRaw} onChange={e => setDescRaw(e.target.value)} placeholder="Search description or category…"
-                  className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all text-sm" />
+                  className="w-full pl-11 pr-10 h-12 bg-white dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] rounded-2xl shadow-sm text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt transition-all text-sm" />
                 {descRaw && (
                   <button onClick={() => { setDescRaw(""); setDescQuery("") }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
@@ -521,7 +521,7 @@ export default function StatsPage() {
                   <div className="space-y-4">
 
                     {/* Aggregate card */}
-                    <div className="bg-black dark:bg-volt rounded-2xl p-5 shadow-xl">
+                    <div className="hero-card rounded-3xl p-6 shadow-xl">
                       <p className="text-gray-400 dark:text-gray-600 text-xs font-medium mb-3">Results for "{descQuery}" — all time</p>
                       <div className="grid grid-cols-3 gap-3 mb-4">
                         <div>
@@ -564,7 +564,7 @@ export default function StatsPage() {
                     )}
 
                     {/* Matching expense list */}
-                    <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                    <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                       <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-900 flex items-center justify-between">
                         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Matching Expenses</p>
                         <span className="text-xs text-gray-400">{descAggregate.count} found</span>
@@ -603,7 +603,7 @@ export default function StatsPage() {
                 <>
                   {/* Summary cards */}
                   <div>
-                    <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{PERIOD_LABELS[expPeriod]} — Summary</h2>
+                    <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">{PERIOD_LABELS[expPeriod]} — Summary</h2>
                     <div className="grid grid-cols-2 gap-4">
                       {expPeriod === "all" ? (
                         <>
@@ -625,7 +625,7 @@ export default function StatsPage() {
 
                   {/* Biggest / best day */}
                   {(expStats.biggest || expStats.bigDay) && (
-                    <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                    <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                       {expStats.biggest && (
                         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-900">
                           <div className="min-w-0 flex-1">
@@ -654,7 +654,7 @@ export default function StatsPage() {
                   {/* By Category */}
                   {expStats.sortedCats.length > 0 && (
                     <div>
-                      <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">By Category</h2>
+                      <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Category</h2>
                       <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-xl space-y-4">
                         {(showAllCat ? expStats.sortedCats : expStats.sortedCats.slice(0, 6)).map(([cat, { total, count }]) => (
                           <RankBar
@@ -679,7 +679,7 @@ export default function StatsPage() {
                   {/* By Description / Reason */}
                   {descRanking.length > 0 && (
                     <div>
-                      <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">By Description / Reason</h2>
+                      <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Description / Reason</h2>
                       <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-xl space-y-4">
                         {(showAllDesc ? descRanking : descRanking.slice(0, 8)).map((item, idx) => (
                           <RankBar
@@ -704,8 +704,8 @@ export default function StatsPage() {
                   {/* Top spending days */}
                   {expStats.sortedDays.length > 0 && (
                     <div>
-                      <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Top Spending Days</h2>
-                      <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                      <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">Top Spending Days</h2>
+                      <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                         <div className="divide-y divide-gray-100 dark:divide-gray-900">
                           {(showAllDays ? expStats.sortedDays : expStats.sortedDays.slice(0, 5)).map(([day, total], idx) => {
                             const dayExps = periodExpenses.filter(e => e.date === day)
@@ -742,7 +742,7 @@ export default function StatsPage() {
         {activeTab === "to-buy" && (
           toBuyLoading ? <SectionSkeleton /> :
           toBuyLoaded && toBuyItems.length === 0 ? (
-            <div className="text-center py-20"><p className="text-gray-500 dark:text-gray-400">No items yet.</p></div>
+            <div className="text-center py-16 sm:py-20"><p className="text-gray-500 dark:text-gray-400">No items yet.</p></div>
           ) : toBuyLoaded ? (
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -755,7 +755,7 @@ export default function StatsPage() {
               {toBuyStats.pending.length > 0 && (
                 <>
                   <div>
-                    <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">By Urgency</h2>
+                    <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Urgency</h2>
                     <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-xl space-y-4">
                       {(["critical", "high", "medium", "low"] as const).filter(u => toBuyStats.urgencyCounts[u] > 0).map((u, idx) => {
                         const count = toBuyStats.urgencyCounts[u]
@@ -768,8 +768,8 @@ export default function StatsPage() {
 
                   {toBuyStats.expensive.some(i => i.price > 0) && (
                     <div>
-                      <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Most Expensive Pending</h2>
-                      <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                      <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">Most Expensive Pending</h2>
+                      <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                         <div className="divide-y divide-gray-100 dark:divide-gray-900">
                           {toBuyStats.expensive.filter(i => i.price > 0).map((item, i) => (
                             <div key={item.id} className="flex items-center justify-between px-4 py-3">
@@ -794,7 +794,7 @@ export default function StatsPage() {
         {activeTab === "debts" && (
           debtsLoading ? <SectionSkeleton /> :
           debtsLoaded && debts.length === 0 ? (
-            <div className="text-center py-20"><p className="text-gray-500 dark:text-gray-400">No debts recorded yet.</p></div>
+            <div className="text-center py-16 sm:py-20"><p className="text-gray-500 dark:text-gray-400">No debts recorded yet.</p></div>
           ) : debtsLoaded ? (() => {
             const s = financeStats(debts)
             return (
@@ -807,8 +807,8 @@ export default function StatsPage() {
                 </div>
 
                 <div>
-                  <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">By Status</h2>
-                  <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                  <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Status</h2>
+                  <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                     {([["Unpaid", s.unpaid, "bg-red-400", "text-red-600 dark:text-red-400"], ["Partial", s.partial, "bg-yellow-400", "text-yellow-600 dark:text-yellow-400"], ["Paid", s.paid, "bg-green-500", "text-green-600 dark:text-green-400"]] as [string, number, string, string][]).map(([label, count, bar, text], idx, arr) => (
                       <div key={label} className={`px-5 py-4 ${idx < arr.length - 1 ? "border-b border-gray-100 dark:border-gray-900" : ""}`}>
                         <RankBar label={label} labelRight={`${count} item${count !== 1 ? "s" : ""}`} value={count} max={Math.max(s.total, 1)} barClass={bar} />
@@ -819,8 +819,8 @@ export default function StatsPage() {
 
                 {s.personRanking.length > 0 && (
                   <div>
-                    <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">By Person (Outstanding)</h2>
-                    <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                    <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Person (Outstanding)</h2>
+                    <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                       <div className="divide-y divide-gray-100 dark:divide-gray-900">
                         {s.personRanking.filter(p => p.outstanding > 0).map(p => (
                           <div key={p.name} className="flex items-center justify-between px-4 py-3 gap-3">
@@ -859,7 +859,7 @@ export default function StatsPage() {
         {activeTab === "lending" && (
           lendingLoading ? <SectionSkeleton /> :
           lendingLoaded && lendings.length === 0 ? (
-            <div className="text-center py-20"><p className="text-gray-500 dark:text-gray-400">No lendings recorded yet.</p></div>
+            <div className="text-center py-16 sm:py-20"><p className="text-gray-500 dark:text-gray-400">No lendings recorded yet.</p></div>
           ) : lendingLoaded ? (() => {
             const s = financeStats(lendings)
             return (
@@ -872,8 +872,8 @@ export default function StatsPage() {
                 </div>
 
                 <div>
-                  <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">By Status</h2>
-                  <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                  <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Status</h2>
+                  <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                     {([["Not Returned", s.unpaid, "bg-blue-400", "text-blue-600 dark:text-blue-400"], ["Partial", s.partial, "bg-yellow-400", "text-yellow-600 dark:text-yellow-400"], ["Returned", s.paid, "bg-green-500", "text-green-600 dark:text-green-400"]] as [string, number, string, string][]).map(([label, count, bar, text], idx, arr) => (
                       <div key={label} className={`px-5 py-4 ${idx < arr.length - 1 ? "border-b border-gray-100 dark:border-gray-900" : ""}`}>
                         <RankBar label={label} labelRight={`${count} item${count !== 1 ? "s" : ""}`} value={count} max={Math.max(s.total, 1)} barClass={bar} />
@@ -884,8 +884,8 @@ export default function StatsPage() {
 
                 {s.personRanking.length > 0 && (
                   <div>
-                    <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">By Person (Outstanding)</h2>
-                    <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                    <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Person (Outstanding)</h2>
+                    <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                       <div className="divide-y divide-gray-100 dark:divide-gray-900">
                         {s.personRanking.filter(p => p.outstanding > 0).map(p => (
                           <div key={p.name} className="flex items-center justify-between px-4 py-3 gap-3">

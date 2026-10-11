@@ -85,18 +85,18 @@ export default function FriendsPage() {
   }
 
   return (
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pt-10">
         <div className="animate-slide-in-down">
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-black dark:bg-volt rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-black dark:bg-volt rounded-2xl flex items-center justify-center shrink-0 -rotate-3 shadow-lg shadow-black/15 dark:shadow-volt/20">
               <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-black dark:text-white">Friends</h1>
+              <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Friends</h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">Used for debts &amp; lending</p>
             </div>
           </div>
@@ -104,7 +104,7 @@ export default function FriendsPage() {
           {/* Search (only show if there are friends) */}
           {friends.length > 3 && (
             <div className="relative mb-4">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
               </svg>
               <input
@@ -112,7 +112,7 @@ export default function FriendsPage() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search friends…"
-                className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all"
+                className="w-full pl-11 pr-10 h-12 bg-white dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] rounded-2xl shadow-sm text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt transition-all"
               />
               {search && (
                 <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -127,7 +127,7 @@ export default function FriendsPage() {
             <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="skeleton rounded-2xl h-16" />)}</div>
           ) : friends.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-14 h-14 bg-gray-100 dark:bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-white dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08] shadow-sm rounded-3xl flex items-center justify-center mx-auto mb-5 rotate-3">
                 <svg className="w-7 h-7 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                 </svg>
@@ -140,7 +140,7 @@ export default function FriendsPage() {
               <p className="text-gray-500 dark:text-gray-400">No friends match &ldquo;{search}&rdquo;</p>
             </div>
           ) : (
-            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
               {filtered.map((friend, idx) => (
                 <div
                   key={friend.id}

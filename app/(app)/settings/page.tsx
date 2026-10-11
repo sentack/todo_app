@@ -200,12 +200,12 @@ export default function SettingsPage() {
                 />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-black dark:text-white">Settings</h1>
+            <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Settings</h1>
           </div>
 
           <div className="space-y-8">
             {/* Profile Section */}
-            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-xl">
+            <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
@@ -221,7 +221,7 @@ export default function SettingsPage() {
 
               <form onSubmit={handleProfileSave} className="space-y-6">
                 <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-black dark:text-white mb-2">
+                  <label htmlFor="username" className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path
@@ -238,13 +238,13 @@ export default function SettingsPage() {
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-volt focus:border-transparent bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-white/[0.08] rounded-2xl focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt bg-gray-50 dark:bg-white/[0.04] focus:bg-white dark:focus:bg-white/[0.06] text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
                     placeholder="Enter your username"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-black dark:text-white mb-2">
+                  <label htmlFor="email" className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -259,7 +259,7 @@ export default function SettingsPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-volt focus:border-transparent bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-white/[0.08] rounded-2xl focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt bg-gray-50 dark:bg-white/[0.04] focus:bg-white dark:focus:bg-white/[0.06] text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
                     placeholder="Enter your email"
                   />
                 </div>
@@ -324,7 +324,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Preferences Section */}
-            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-xl">
+            <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
@@ -335,7 +335,7 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-black dark:text-white mb-2">Currency</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Currency</label>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Used across expenses, debts, and lending.</p>
                   <div className="flex items-center gap-3">
                     <select
@@ -354,7 +354,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Spending Budgets Section */}
-            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-xl">
+            <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="currentColor" viewBox="0 0 20 20">
@@ -367,7 +367,7 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {CATEGORIES.map(cat => (
                   <div key={cat}>
-                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{cat}</label>
+                    <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{cat}</label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium">{currency}</span>
                       <input
@@ -398,7 +398,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Change Password Section */}
-            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-xl">
+            <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
@@ -414,7 +414,7 @@ export default function SettingsPage() {
 
               <form onSubmit={handlePasswordChange} className="space-y-6">
                 <div>
-                  <label htmlFor="newPassword" className="block text-sm font-medium text-black dark:text-white mb-2">
+                  <label htmlFor="newPassword" className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">
                     New Password
                   </label>
                   <input
@@ -424,7 +424,7 @@ export default function SettingsPage() {
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
                     minLength={6}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-volt focus:border-transparent bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-white/[0.08] rounded-2xl focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt bg-gray-50 dark:bg-white/[0.04] focus:bg-white dark:focus:bg-white/[0.06] text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
                     placeholder="Enter new password"
                   />
                 </div>
@@ -432,7 +432,7 @@ export default function SettingsPage() {
                 <div>
                   <label
                     htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-black dark:text-white mb-2"
+                    className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2"
                   >
                     Confirm New Password
                   </label>
@@ -443,7 +443,7 @@ export default function SettingsPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     minLength={6}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-volt focus:border-transparent bg-white dark:bg-black text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-white/[0.08] rounded-2xl focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt bg-gray-50 dark:bg-white/[0.04] focus:bg-white dark:focus:bg-white/[0.06] text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
                     placeholder="Confirm new password"
                   />
                 </div>

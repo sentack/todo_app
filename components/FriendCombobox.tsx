@@ -61,7 +61,7 @@ export default function FriendCombobox({
 
   return (
     <div ref={containerRef} className="relative">
-      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
+      <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{label}</label>
       <input
         type="text"
         value={value}

@@ -116,7 +116,7 @@ export default function ExpenseStatsPage() {
   }
 
   return (
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pt-10">
         <div className="animate-slide-in-down">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
@@ -126,7 +126,7 @@ export default function ExpenseStatsPage() {
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                 </svg>
               </div>
-              <h1 className="text-3xl font-bold text-black dark:text-white">Expense Stats</h1>
+              <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Expense Stats</h1>
             </div>
             <Link
               href="/expenses"
@@ -144,8 +144,8 @@ export default function ExpenseStatsPage() {
               {[1, 2, 3, 4].map(i => <div key={i} className="skeleton rounded-2xl h-24" />)}
             </div>
           ) : expenses.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="w-14 h-14 bg-gray-100 dark:bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="text-center py-16 sm:py-20">
+              <div className="w-16 h-16 bg-white dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08] shadow-sm rounded-3xl flex items-center justify-center mx-auto mb-5 rotate-3">
                 <svg className="w-7 h-7 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                 </svg>
@@ -191,7 +191,7 @@ export default function ExpenseStatsPage() {
               {(biggest || mostExpensiveDay) && (
                 <div>
                   <h2 className="text-xl font-semibold text-black dark:text-white mb-4">Highlights</h2>
-                  <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+                  <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                     {biggest && (
                       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-900">
                         <div>
