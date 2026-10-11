@@ -6,6 +6,7 @@ import Link from "next/link"
 import Sidebar from "@/components/Sidebar"
 import ThemeToggle from "@/components/ThemeToggle"
 import SignOutButton from "@/components/SignOutButton"
+import { BrandMark, Wordmark } from "@/components/BrandMark"
 import type { User } from "@supabase/supabase-js"
 
 export default function NotFound() {
@@ -34,7 +35,7 @@ export default function NotFound() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="skeleton rounded-2xl h-20 w-20"></div>
       </div>
     )
@@ -42,25 +43,25 @@ export default function NotFound() {
 
   if (user) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black flex">
+      <div className="min-h-screen flex">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userId={user.id} />
 
         <div className="h-screen w-full overflow-y-auto">
-          <header className="bg-white dark:bg-black shadow-lg border-b border-gray-200 dark:border-gray-800 backdrop-blur-md">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-20">
-                <div className="flex items-center gap-3">
+          <header className="sticky top-0 z-[160]">
+            <div aria-hidden className="absolute inset-0 -z-10 chrome border-b border-black/[0.06] dark:border-white/[0.06]" />
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16 lg:h-[4.5rem]">
+                <div className="flex items-center gap-2.5">
                   <button
                     onClick={() => setSidebarOpen(true)}
-                    className="lg:hidden p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900 focus-ring transition-all duration-200"
+                    aria-label="Open menu"
+                    className="lg:hidden rounded-[32%] focus-ring transition-all duration-200"
                   >
-                    <svg className="w-10 h-10 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
+                    <BrandMark className="w-9 h-9" />
                   </button>
-                  <h1 className="text-2xl font-bold text-black dark:text-white">TodoFlow</h1>
+                  <h1><Wordmark className="text-xl" /></h1>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                   <ThemeToggle />
                   <SignOutButton user={user} />
                 </div>
@@ -68,10 +69,10 @@ export default function NotFound() {
             </div>
           </header>
 
-          <main className="flex items-center justify-center min-h-[calc(100vh-5rem)]">
+          <main className="flex items-center justify-center px-4 min-h-[calc(100dvh-4.5rem)]">
             <div className="text-center animate-slide-in-up">
-              <div className="w-20 h-20 bg-gray-100 dark:bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <svg className="w-10 h-10 text-gray-400 dark:text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+              <div className="w-20 h-20 bg-white dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08] shadow-lg rounded-[1.75rem] flex items-center justify-center mx-auto mb-6 -rotate-6">
+                <svg className="w-10 h-10 text-volt-600 dark:text-volt" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
                     d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
@@ -79,11 +80,11 @@ export default function NotFound() {
                   />
                 </svg>
               </div>
-              <h1 className="text-4xl font-bold text-black dark:text-white mb-4">404</h1>
-              <p className="text-gray-600 dark:text-gray-400 mb-8">Page not found</p>
+              <h1 className="text-[7rem] sm:text-[9rem] leading-none font-extrabold text-black dark:text-white mb-2">4<span className="text-volt-600 dark:text-volt">0</span>4</h1>
+              <p className="text-lg font-semibold text-gray-500 dark:text-gray-400 mb-8">Page not found</p>
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white dark:text-black bg-black dark:bg-volt rounded-xl hover:bg-gray-800 dark:hover:bg-volt-300 shadow-lg shadow-black/10 dark:shadow-volt/10 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200"
+                className="inline-flex items-center gap-2 h-12 px-7 text-sm font-bold text-white dark:text-black bg-black dark:bg-volt rounded-full hover:bg-gray-800 dark:hover:bg-volt-300 shadow-lg shadow-black/10 dark:shadow-volt/10 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path
@@ -102,10 +103,10 @@ export default function NotFound() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center animate-slide-in-up">
-        <div className="w-20 h-20 bg-gray-100 dark:bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <svg className="w-10 h-10 text-gray-400 dark:text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+        <div className="w-20 h-20 bg-white dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08] shadow-lg rounded-[1.75rem] flex items-center justify-center mx-auto mb-6 -rotate-6">
+          <svg className="w-10 h-10 text-volt-600 dark:text-volt" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
               d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
@@ -113,11 +114,11 @@ export default function NotFound() {
             />
           </svg>
         </div>
-        <h1 className="text-4xl font-bold text-black dark:text-white mb-4">404</h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">Page not found</p>
+        <h1 className="text-[7rem] sm:text-[9rem] leading-none font-extrabold text-black dark:text-white mb-2">4<span className="text-volt-600 dark:text-volt">0</span>4</h1>
+        <p className="text-lg font-semibold text-gray-500 dark:text-gray-400 mb-8">Page not found</p>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white dark:text-black bg-black dark:bg-volt rounded-xl hover:bg-gray-800 dark:hover:bg-volt-300 shadow-lg shadow-black/10 dark:shadow-volt/10 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200"
+          className="inline-flex items-center gap-2 h-12 px-7 text-sm font-bold text-white dark:text-black bg-black dark:bg-volt rounded-full hover:bg-gray-800 dark:hover:bg-volt-300 shadow-lg shadow-black/10 dark:shadow-volt/10 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path

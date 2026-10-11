@@ -30,11 +30,11 @@ function StatCard({
 }) {
   return (
     <div
-      className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-xl animate-slide-in-up"
+      className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm animate-slide-in-up"
       style={{ animationDelay: `${(delay ?? 0) * 0.1}s` }}
     >
-      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">{label}</p>
-      <p className="text-2xl font-bold text-black dark:text-white">{value}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{label}</p>
+      <p className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-black dark:text-white">{value}</p>
       {sub && <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">{sub}</p>}
     </div>
   )
@@ -121,7 +121,7 @@ export default function ExpenseStatsPage() {
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-black dark:bg-volt rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-black dark:bg-volt rounded-2xl flex items-center justify-center shrink-0 -rotate-3 shadow-lg shadow-black/15 dark:shadow-volt/20">
                 <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                 </svg>
@@ -130,7 +130,7 @@ export default function ExpenseStatsPage() {
             </div>
             <Link
               href="/expenses"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors duration-200"
+              className="flex items-center gap-2 h-10 px-4 rounded-full bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] shadow-sm text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors duration-200"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -151,7 +151,7 @@ export default function ExpenseStatsPage() {
                 </svg>
               </div>
               <p className="text-gray-500 dark:text-gray-400 mb-4">No expense data yet.</p>
-              <Link href="/expenses" className="text-sm font-semibold text-black dark:text-white underline underline-offset-2">
+              <Link href="/expenses" className="inline-flex h-10 items-center px-5 rounded-full text-sm font-bold bg-black dark:bg-volt text-white dark:text-black">
                 Add your first expense
               </Link>
             </div>
@@ -159,7 +159,7 @@ export default function ExpenseStatsPage() {
             <div className="space-y-8">
               {/* Summary cards */}
               <div>
-                <h2 className="text-xl font-semibold text-black dark:text-white mb-4">Totals</h2>
+                <h2 className="text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white mb-3 px-1">Totals</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <StatCard label="Today" value={`${currency} ${formatMoney(todayTotal)}`} delay={0} />
                   <StatCard label="Past 7 Days" value={`${currency} ${formatMoney(weekTotal)}`} delay={1} />
@@ -170,7 +170,7 @@ export default function ExpenseStatsPage() {
 
               {/* Averages */}
               <div>
-                <h2 className="text-xl font-semibold text-black dark:text-white mb-4">Averages</h2>
+                <h2 className="text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white mb-3 px-1">Averages</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <StatCard
                     label="Avg per spending day"
@@ -190,27 +190,27 @@ export default function ExpenseStatsPage() {
               {/* Highlights */}
               {(biggest || mostExpensiveDay) && (
                 <div>
-                  <h2 className="text-xl font-semibold text-black dark:text-white mb-4">Highlights</h2>
+                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white mb-3 px-1">Highlights</h2>
                   <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                     {biggest && (
-                      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-900">
+                      <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.05] dark:border-white/[0.05]">
                         <div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-0.5">Biggest Single Expense</p>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Biggest Single Expense</p>
                           <p className="font-semibold text-black dark:text-white">
                             {biggest.description || biggest.category}
                           </p>
                           <p className="text-xs text-gray-400 mt-0.5">{formatDateLabel(biggest.date)}</p>
                         </div>
-                        <span className="text-xl font-bold text-black dark:text-white">{currency} {formatMoney(Number(biggest.amount))}</span>
+                        <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white shrink-0">{currency} {formatMoney(Number(biggest.amount))}</span>
                       </div>
                     )}
                     {mostExpensiveDay && (
                       <div className="flex items-center justify-between px-5 py-4">
                         <div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-0.5">Most Expensive Day</p>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Most Expensive Day</p>
                           <p className="font-semibold text-black dark:text-white">{formatDateLabel(mostExpensiveDay)}</p>
                         </div>
-                        <span className="text-xl font-bold text-black dark:text-white">{currency} {formatMoney(mostExpensiveDayTotal as number)}</span>
+                        <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white shrink-0">{currency} {formatMoney(mostExpensiveDayTotal as number)}</span>
                       </div>
                     )}
                   </div>
@@ -220,8 +220,8 @@ export default function ExpenseStatsPage() {
               {/* Category breakdown */}
               {sortedCategories.length > 0 && (
                 <div>
-                  <h2 className="text-xl font-semibold text-black dark:text-white mb-4">By Category</h2>
-                  <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-xl space-y-4">
+                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white mb-3 px-1">By Category</h2>
+                  <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
                     {sortedCategories.map(([cat, total], idx) => {
                       const pct = Math.round((total / maxCategoryTotal) * 100)
                       const count = expenses.filter(e => e.category === cat).length
@@ -234,7 +234,7 @@ export default function ExpenseStatsPage() {
                               <span className="text-xs text-gray-400 ml-2">{count} item{count !== 1 ? "s" : ""}</span>
                             </div>
                           </div>
-                          <div className="h-2 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                          <div className="h-2.5 bg-gray-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-500 ${CATEGORY_COLORS[cat] || CATEGORY_COLORS["Other"]}`}
                               style={{ width: `${pct}%` }}

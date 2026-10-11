@@ -18,8 +18,8 @@ const PAGE_SIZE = 15
 const URGENCY_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
 
 const URGENCY_META: Record<string, { label: string; badge: string; dot: string }> = {
-  critical: { label: "Critical", badge: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",           dot: "bg-red-500"    },
-  high:     { label: "High",     badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400", dot: "bg-orange-400" },
+  critical: { label: "Critical", badge: "bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300",           dot: "bg-red-500"    },
+  high:     { label: "High",     badge: "bg-orange-100 text-orange-700 dark:bg-orange-400/10 dark:text-orange-300", dot: "bg-orange-400" },
   medium:   { label: "Medium",   badge: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400", dot: "bg-yellow-400" },
   low:      { label: "Low",      badge: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",           dot: "bg-gray-400"   },
 }
@@ -204,12 +204,12 @@ export default function ToBuyPage() {
             <div className="hero-card rounded-3xl p-6 mb-6 shadow-xl">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-gray-400 dark:text-gray-600 text-sm font-medium mb-1">Pending</p>
-                  <p className="text-3xl font-bold text-white dark:text-black">{summary.pendingCount} item{summary.pendingCount !== 1 ? "s" : ""}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-2">Pending</p>
+                  <p className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-white dark:text-black">{summary.pendingCount} item{summary.pendingCount !== 1 ? "s" : ""}</p>
                   {summary.pendingTotal > 0 && <p className="text-gray-400 dark:text-gray-600 text-sm mt-1">≈ {currency} {formatMoney(summary.pendingTotal)}</p>}
                 </div>
                 <div className="text-right">
-                  <p className="text-gray-400 dark:text-gray-600 text-sm font-medium mb-1">Bought</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-2">Bought</p>
                   <p className="text-2xl font-bold text-white dark:text-black">{summary.boughtCount}</p>
                 </div>
               </div>
@@ -337,8 +337,8 @@ export default function ToBuyPage() {
 // ── ItemRow ───────────────────────────────────────────────────────────────────
 
 const BADGE: Record<string, string> = {
-  critical: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  high:     "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  critical: "bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300",
+  high:     "bg-orange-100 text-orange-700 dark:bg-orange-400/10 dark:text-orange-300",
   medium:   "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
   low:      "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
 }
@@ -346,7 +346,7 @@ const URGENCY_ACTIVE: Record<string, string> = {
   critical: "bg-red-500 text-white", high: "bg-orange-400 text-white",
   medium: "bg-yellow-400 text-black", low: "bg-gray-400 text-white",
 }
-const ITEM_INPUT = "w-full px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all text-sm"
+const ITEM_INPUT = "w-full px-4 py-2.5 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]"
 
 function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpdated }: {
   item: ToBuyItem; isLast: boolean; togglingId: string | null; currency: string
@@ -381,7 +381,7 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
 
   const itemTotal = Number(item.price) * Number(item.quantity)
   const qtyStr    = Number(item.quantity) % 1 === 0 ? String(Number(item.quantity)) : Number(item.quantity).toFixed(2)
-  const borderCls = !isLast ? "border-b border-gray-100 dark:border-gray-900" : ""
+  const borderCls = !isLast ? "border-b border-black/[0.05] dark:border-white/[0.05]" : ""
   const inactiveCls = "bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800"
 
   if (isEditing) {
@@ -438,10 +438,10 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
           {item.name}
         </p>
         <div className="flex items-center gap-1 shrink-0">
-          <button onClick={startEdit} className="p-1.5 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+          <button onClick={startEdit} className="w-9 h-9 shrink-0 grid place-items-center text-gray-400 hover:text-black dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
           </button>
-          <button onClick={() => onDelete(item.id)} className="p-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors">
+          <button onClick={() => onDelete(item.id)} className="w-9 h-9 shrink-0 grid place-items-center text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
           </button>
         </div>

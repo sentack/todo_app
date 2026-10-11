@@ -120,7 +120,7 @@ export default function ProfilePage() {
         <div className="animate-slide-in-down">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-black dark:bg-volt rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-black dark:bg-volt rounded-2xl flex items-center justify-center shrink-0 -rotate-3 shadow-lg shadow-black/15 dark:shadow-volt/20">
               <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
               </svg>

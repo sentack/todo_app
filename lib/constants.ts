@@ -40,16 +40,16 @@ export const CATEGORY_TEXT: Record<string, string> = {
 }
 
 export const CATEGORY_BADGE: Record<string, string> = {
-  "Food & Drinks": "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  "Coffee":        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-  "Transport":     "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  "Shopping":      "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
-  "Entertainment": "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  "Health":        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  "Bills":         "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  "Mobile Card":   "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
-  "Cosmetics":     "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
-  "Other":         "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
+  "Food & Drinks": "bg-orange-100 text-orange-700 dark:bg-orange-400/10 dark:text-orange-300",
+  "Coffee":        "bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-300",
+  "Transport":     "bg-blue-100 text-blue-700 dark:bg-blue-400/10 dark:text-blue-300",
+  "Shopping":      "bg-pink-100 text-pink-700 dark:bg-pink-400/10 dark:text-pink-300",
+  "Entertainment": "bg-purple-100 text-purple-700 dark:bg-purple-400/10 dark:text-purple-300",
+  "Health":        "bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300",
+  "Bills":         "bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300",
+  "Mobile Card":   "bg-indigo-100 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-300",
+  "Cosmetics":     "bg-rose-100 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300",
+  "Other":         "bg-gray-100 text-gray-700 dark:bg-white/[0.06] dark:text-gray-300",
 }
 
 export const CURRENCIES = [

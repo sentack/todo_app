@@ -36,9 +36,9 @@ function getStatus(item: { amount: number; amount_paid: number }): "paid" | "par
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  paid:    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  paid:    "bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300",
   partial: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  unpaid:  "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  unpaid:  "bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300",
 }
 const STATUS_DOT: Record<string, string> = {
   paid: "bg-green-500", partial: "bg-yellow-400", unpaid: "bg-red-400",
@@ -179,15 +179,15 @@ export default function DebtsPage() {
           <div className="hero-card rounded-3xl p-6 mb-6 shadow-xl">
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <p className="text-gray-400 dark:text-gray-600 text-xs font-medium mb-1">You Owe</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">You Owe</p>
                 <p className="text-lg font-bold text-white dark:text-black">{currency} {formatMoney(summary.youOwe)}</p>
               </div>
               <div>
-                <p className="text-gray-400 dark:text-gray-600 text-xs font-medium mb-1">Owed to You</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Owed to You</p>
                 <p className="text-lg font-bold text-white dark:text-black">{currency} {formatMoney(summary.theyOwe)}</p>
               </div>
               <div>
-                <p className="text-gray-400 dark:text-gray-600 text-xs font-medium mb-1">Net</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Net</p>
                 <p className={`text-lg font-bold ${summary.net >= 0 ? "text-green-400 dark:text-green-500" : "text-red-400"}`}>
                   {summary.net >= 0 ? "+" : ""}{currency} {formatMoney(Math.abs(summary.net))}
                 </p>
@@ -276,7 +276,7 @@ function PersonCard({ group, currency, userId, onDebtUpdated, onDebtDelete, onLe
     <>
       <button
         onClick={() => setModalOpen(true)}
-        className="w-full text-left bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-4 shadow-sm hover:border-gray-400 dark:hover:border-gray-600 hover:shadow-md transition-all duration-150 active:scale-[0.99]"
+        className="w-full text-left bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-4 shadow-sm hover:border-gray-400 dark:hover:border-gray-600 hover:shadow-md transition-all duration-150 active:scale-[0.99]"
       >
         <div className="flex items-center gap-3">
           {/* Avatar */}
@@ -385,7 +385,7 @@ function PersonModal({ group, currency, userId, onClose, onDebtUpdated, onDebtDe
         style={{ height: "70vh" }}>
 
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-gray-900 shrink-0">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-black/[0.05] dark:border-white/[0.05] shrink-0">
           <div className="w-9 h-9 rounded-full bg-black dark:bg-volt flex items-center justify-center shrink-0">
             <span className="text-white dark:text-black font-bold text-base leading-none">
               {group.name.charAt(0).toUpperCase()}
@@ -421,7 +421,7 @@ function PersonModal({ group, currency, userId, onClose, onDebtUpdated, onDebtDe
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-100 dark:border-gray-900 shrink-0">
+        <div className="flex border-b border-black/[0.05] dark:border-white/[0.05] shrink-0">
           <button onClick={() => setTab("debt")}
             className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === "debt" ? "text-red-500 dark:text-red-400 border-b-2 border-red-500 dark:border-red-400" : "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
             I Owe ({group.debts.length})
@@ -438,7 +438,7 @@ function PersonModal({ group, currency, userId, onClose, onDebtUpdated, onDebtDe
             group.debts.length === 0 ? (
               <div className="flex items-center justify-center h-full text-sm text-gray-400">No debts with {group.name}</div>
             ) : (
-              <div className="divide-y divide-gray-100 dark:divide-gray-900">
+              <div className="divide-y divide-black/[0.05] dark:divide-white/[0.05]">
                 {pagedDebts.map(d => (
                   <DebtRow key={d.id} item={d} currency={currency} userId={userId} onUpdated={onDebtUpdated} onDelete={onDebtDelete} />
                 ))}
@@ -448,7 +448,7 @@ function PersonModal({ group, currency, userId, onClose, onDebtUpdated, onDebtDe
             group.lendings.length === 0 ? (
               <div className="flex items-center justify-center h-full text-sm text-gray-400">No lendings with {group.name}</div>
             ) : (
-              <div className="divide-y divide-gray-100 dark:divide-gray-900">
+              <div className="divide-y divide-black/[0.05] dark:divide-white/[0.05]">
                 {pagedLendings.map(l => (
                   <LendingRow key={l.id} item={l} currency={currency} userId={userId} onUpdated={onLendingUpdated} onDelete={onLendingDelete} />
                 ))}
