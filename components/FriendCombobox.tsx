@@ -70,7 +70,7 @@ export default function FriendCombobox({
         placeholder={placeholder}
         required={required}
         autoComplete="off"
-        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all"
       />
 
       {open && (filtered.length > 0 || (value.trim() && !exactMatch)) && (
@@ -82,7 +82,7 @@ export default function FriendCombobox({
               onMouseDown={() => selectFriend(f.name)}
               className="w-full px-3 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-950 flex items-center gap-2 transition-colors"
             >
-              <div className="w-6 h-6 rounded-full bg-black dark:bg-white flex items-center justify-center shrink-0">
+              <div className="w-6 h-6 rounded-full bg-black dark:bg-volt flex items-center justify-center shrink-0">
                 <span className="text-xs font-bold text-white dark:text-black">
                   {f.name.charAt(0).toUpperCase()}
                 </span>

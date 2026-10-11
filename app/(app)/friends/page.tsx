@@ -90,8 +90,8 @@ export default function FriendsPage() {
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-black dark:bg-white rounded-xl flex items-center justify-center shrink-0">
-              <svg className="w-6 h-6 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-10 h-10 bg-black dark:bg-volt rounded-xl flex items-center justify-center shrink-0">
+              <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
               </svg>
             </div>
@@ -112,7 +112,7 @@ export default function FriendsPage() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search friends…"
-                className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+                className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all"
               />
               {search && (
                 <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -147,7 +147,7 @@ export default function FriendsPage() {
                   className={`flex items-center gap-4 px-5 py-4 ${idx < filtered.length - 1 ? "border-b border-gray-100 dark:border-gray-900" : ""}`}
                 >
                   {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full bg-black dark:bg-white flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-black dark:bg-volt flex items-center justify-center shrink-0">
                     <span className="text-sm font-bold text-white dark:text-black">
                       {friend.name.charAt(0).toUpperCase()}
                     </span>
@@ -161,9 +161,9 @@ export default function FriendsPage() {
                         value={editName}
                         onChange={e => setEditName(e.target.value)}
                         autoFocus
-                        className="flex-1 px-3 py-1.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm"
+                        className="flex-1 px-3 py-1.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all text-sm"
                       />
-                      <button type="submit" disabled={saving} className="px-3 py-1.5 bg-black dark:bg-white text-white dark:text-black text-xs font-semibold rounded-xl hover:opacity-80 disabled:opacity-40 transition-all">
+                      <button type="submit" disabled={saving} className="px-3 py-1.5 bg-black dark:bg-volt text-white dark:text-black text-xs font-semibold rounded-xl hover:opacity-80 disabled:opacity-40 transition-all">
                         {saving ? "…" : "Save"}
                       </button>
                       <button type="button" onClick={cancelEdit} className="px-3 py-1.5 bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 transition-all">

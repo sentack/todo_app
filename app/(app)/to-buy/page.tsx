@@ -191,8 +191,8 @@ export default function ToBuyPage() {
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-black dark:bg-white rounded-xl flex items-center justify-center shrink-0">
-              <svg className="w-6 h-6 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-10 h-10 bg-black dark:bg-volt rounded-xl flex items-center justify-center shrink-0">
+              <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
               </svg>
             </div>
@@ -201,7 +201,7 @@ export default function ToBuyPage() {
 
           {/* Summary banner */}
           {(summary.pendingCount > 0 || summary.boughtCount > 0) && (
-            <div className="bg-black dark:bg-white rounded-2xl p-5 mb-6 shadow-xl">
+            <div className="bg-black dark:bg-volt rounded-2xl p-5 mb-6 shadow-xl">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-gray-400 dark:text-gray-600 text-sm font-medium mb-1">Pending</p>
@@ -241,7 +241,7 @@ export default function ToBuyPage() {
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
               </svg>
-              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search items..." className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all" />
+              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search items..." className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all" />
               {search && (
                 <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
@@ -250,7 +250,7 @@ export default function ToBuyPage() {
             </div>
             <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1 w-fit">
               {(["pending", "all", "bought"] as ViewFilter[]).map(f => (
-                <button key={f} onClick={() => setViewFilter(f)} className={`px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all duration-150 ${viewFilter === f ? "bg-black dark:bg-white text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
+                <button key={f} onClick={() => setViewFilter(f)} className={`px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all duration-150 ${viewFilter === f ? "bg-black dark:bg-volt text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
                   {f === "pending" ? `Pending${summary.pendingCount > 0 ? ` (${summary.pendingCount})` : ""}` : f === "bought" ? `Bought${summary.boughtCount > 0 ? ` (${summary.boughtCount})` : ""}` : "All"}
                 </button>
               ))}
@@ -346,7 +346,7 @@ const URGENCY_ACTIVE: Record<string, string> = {
   critical: "bg-red-500 text-white", high: "bg-orange-400 text-white",
   medium: "bg-yellow-400 text-black", low: "bg-gray-400 text-white",
 }
-const ITEM_INPUT = "w-full px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm"
+const ITEM_INPUT = "w-full px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all text-sm"
 
 function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpdated }: {
   item: ToBuyItem; isLast: boolean; togglingId: string | null; currency: string
@@ -413,7 +413,7 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
           </div>
           <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)" className={ITEM_INPUT} />
           <div className="flex gap-2">
-            <button type="submit" disabled={saving} className="flex-1 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">
+            <button type="submit" disabled={saving} className="flex-1 py-2 bg-black dark:bg-volt text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">
               {saving ? "Saving..." : "Save"}
             </button>
             <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm font-semibold rounded-xl hover:opacity-80">
@@ -430,7 +430,7 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
       <div className="flex items-center gap-3">
         <button
           onClick={() => onToggle(item)} disabled={togglingId === item.id}
-          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 disabled:opacity-50 ${item.bought ? "bg-black dark:bg-white border-black dark:border-white" : "border-gray-300 dark:border-gray-700 hover:border-black dark:hover:border-white"}`}
+          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 disabled:opacity-50 ${item.bought ? "bg-black dark:bg-volt border-black dark:border-volt" : "border-gray-300 dark:border-gray-700 hover:border-black dark:hover:border-white"}`}
         >
           {item.bought && <svg className="w-3 h-3 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
         </button>

@@ -169,8 +169,8 @@ export default function ExpensesPage() {
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-black dark:bg-white rounded-xl flex items-center justify-center shrink-0">
-              <svg className="w-6 h-6 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-10 h-10 bg-black dark:bg-volt rounded-xl flex items-center justify-center shrink-0">
+              <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
                 <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
               </svg>
@@ -180,7 +180,7 @@ export default function ExpensesPage() {
 
           {/* Today's total banner */}
           {!hasActiveFilters && (
-            <div className="bg-black dark:bg-white rounded-2xl p-5 mb-6 shadow-xl">
+            <div className="bg-black dark:bg-volt rounded-2xl p-5 mb-6 shadow-xl">
               <p className="text-gray-400 dark:text-gray-600 text-sm font-medium mb-1">Today&apos;s Total</p>
               <p className="text-3xl font-bold text-white dark:text-black">{currency} {formatMoney(todayTotal)}</p>
             </div>
@@ -192,7 +192,7 @@ export default function ExpensesPage() {
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
               </svg>
-              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search expenses..." className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all" />
+              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search expenses..." className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all" />
               {search && (
                 <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
@@ -203,7 +203,7 @@ export default function ExpensesPage() {
             <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
               <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1 w-fit min-w-full">
                 {(["all", "today", "7d", "30d"] as TimeFilter[]).map(t => (
-                  <button key={t} onClick={() => setTimeFilter(t)} className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 ${timeFilter === t ? "bg-black dark:bg-white text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
+                  <button key={t} onClick={() => setTimeFilter(t)} className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 ${timeFilter === t ? "bg-black dark:bg-volt text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
                     {t === "all" ? "All time" : t === "today" ? "Today" : t === "7d" ? "7 days" : "30 days"}
                   </button>
                 ))}
@@ -211,11 +211,11 @@ export default function ExpensesPage() {
             </div>
             {/* Category + sort — one row, each takes half */}
             <div className="flex gap-2">
-              <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="flex-1 px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-semibold text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all">
+              <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="flex-1 px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-semibold text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all">
                 <option value="all">All categories</option>
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <select value={sortKey} onChange={e => setSortKey(e.target.value as SortKey)} className="flex-1 px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-semibold text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all">
+              <select value={sortKey} onChange={e => setSortKey(e.target.value as SortKey)} className="flex-1 px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-semibold text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all">
                 <option value="date-desc">Newest first</option>
                 <option value="date-asc">Oldest first</option>
                 <option value="amount-desc">High → low</option>
@@ -307,7 +307,7 @@ export default function ExpensesPage() {
 
 // ── ExpenseRow ────────────────────────────────────────────────────────────────
 
-const ROW_INPUT = "w-full px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm"
+const ROW_INPUT = "w-full px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all text-sm"
 
 function ExpenseRow({ exp, isLast, onDelete, onUpdated, showDate = false, currency }: {
   exp: Expense; isLast: boolean; currency: string; showDate?: boolean
@@ -359,7 +359,7 @@ function ExpenseRow({ exp, isLast, onDelete, onUpdated, showDate = false, curren
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <div className="flex gap-2">
-            <button type="submit" disabled={saving} className="flex-1 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50 transition-all">
+            <button type="submit" disabled={saving} className="flex-1 py-2 bg-black dark:bg-volt text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50 transition-all">
               {saving ? "Saving..." : "Save"}
             </button>
             <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm font-semibold rounded-xl hover:opacity-80 transition-all">

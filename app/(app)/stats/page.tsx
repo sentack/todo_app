@@ -411,8 +411,8 @@ export default function StatsPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-black dark:bg-white rounded-xl flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20">
+          <div className="w-10 h-10 bg-black dark:bg-volt rounded-xl flex items-center justify-center shrink-0">
+            <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
               <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
             </svg>
           </div>
@@ -423,7 +423,7 @@ export default function StatsPage() {
         <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1 mb-8 overflow-x-auto">
           {([["todo", "Todo"], ["expenses", "Expenses"], ["to-buy", "To Buy"], ["debts", "Debts"], ["lending", "Lending"]] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => setActiveTab(t)}
-              className={`shrink-0 px-3 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-150 ${activeTab === t ? "bg-black dark:bg-white text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
+              className={`shrink-0 px-3 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-150 ${activeTab === t ? "bg-black dark:bg-volt text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
               {label}
             </button>
           ))}
@@ -495,7 +495,7 @@ export default function StatsPage() {
               <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1">
                 {(["all", "30d", "7d"] as ExpPeriod[]).map(p => (
                   <button key={p} onClick={() => { setExpPeriod(p); setShowAllDesc(false); setShowAllCat(false); setShowAllDays(false) }}
-                    className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${expPeriod === p ? "bg-black dark:bg-white text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
+                    className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${expPeriod === p ? "bg-black dark:bg-volt text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
                     {PERIOD_LABELS[p]}
                   </button>
                 ))}
@@ -507,7 +507,7 @@ export default function StatsPage() {
                   <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                 </svg>
                 <input type="text" value={descRaw} onChange={e => setDescRaw(e.target.value)} placeholder="Search description or category…"
-                  className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm" />
+                  className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all text-sm" />
                 {descRaw && (
                   <button onClick={() => { setDescRaw(""); setDescQuery("") }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
@@ -521,7 +521,7 @@ export default function StatsPage() {
                   <div className="space-y-4">
 
                     {/* Aggregate card */}
-                    <div className="bg-black dark:bg-white rounded-2xl p-5 shadow-xl">
+                    <div className="bg-black dark:bg-volt rounded-2xl p-5 shadow-xl">
                       <p className="text-gray-400 dark:text-gray-600 text-xs font-medium mb-3">Results for "{descQuery}" — all time</p>
                       <div className="grid grid-cols-3 gap-3 mb-4">
                         <div>
@@ -824,7 +824,7 @@ export default function StatsPage() {
                       <div className="divide-y divide-gray-100 dark:divide-gray-900">
                         {s.personRanking.filter(p => p.outstanding > 0).map(p => (
                           <div key={p.name} className="flex items-center justify-between px-4 py-3 gap-3">
-                            <div className="w-8 h-8 rounded-full bg-black dark:bg-white flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-black dark:bg-volt flex items-center justify-center shrink-0">
                               <span className="text-white dark:text-black font-bold text-sm leading-none">{p.name.charAt(0).toUpperCase()}</span>
                             </div>
                             <div className="flex-1 min-w-0">
@@ -889,7 +889,7 @@ export default function StatsPage() {
                       <div className="divide-y divide-gray-100 dark:divide-gray-900">
                         {s.personRanking.filter(p => p.outstanding > 0).map(p => (
                           <div key={p.name} className="flex items-center justify-between px-4 py-3 gap-3">
-                            <div className="w-8 h-8 rounded-full bg-black dark:bg-white flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-black dark:bg-volt flex items-center justify-center shrink-0">
                               <span className="text-white dark:text-black font-bold text-sm leading-none">{p.name.charAt(0).toUpperCase()}</span>
                             </div>
                             <div className="flex-1 min-w-0">

@@ -63,19 +63,19 @@ export default function UndoToast() {
   }
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] animate-slide-in-up pointer-events-auto">
-      <div className="bg-black dark:bg-white rounded-2xl shadow-2xl overflow-hidden min-w-[280px] max-w-sm">
-        <div className="px-5 py-4 flex items-center gap-4">
+    <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+6rem)] lg:bottom-8 left-1/2 -translate-x-1/2 z-[200] w-[calc(100vw-2rem)] sm:w-auto animate-slide-in-up pointer-events-auto">
+      <div className="bg-black dark:bg-white rounded-2xl shadow-2xl ring-1 ring-white/10 dark:ring-black/5 overflow-hidden sm:min-w-[320px] sm:max-w-sm">
+        <div className="pl-5 pr-3 py-3 flex items-center gap-3">
           <span className="flex-1 text-sm font-medium text-white dark:text-black">{toast.message}</span>
           <button
             onClick={handleUndo}
-            className="shrink-0 px-3 py-1.5 text-xs font-bold text-black dark:text-white bg-white dark:bg-black rounded-xl hover:opacity-80 transition-all"
+            className="shrink-0 h-9 px-4 text-xs font-bold text-black bg-volt rounded-full shadow-md shadow-volt/30 hover:brightness-95 transition-all"
           >
             Undo
           </button>
           <button
             onClick={dismiss}
-            className="shrink-0 text-gray-400 dark:text-gray-600 hover:text-white dark:hover:text-black transition-colors"
+            className="shrink-0 w-9 h-9 grid place-items-center rounded-full text-gray-400 dark:text-gray-500 hover:text-white dark:hover:text-black hover:bg-white/10 dark:hover:bg-black/5 transition-colors"
             aria-label="Dismiss"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -83,9 +83,9 @@ export default function UndoToast() {
             </svg>
           </button>
         </div>
-        <div className="h-1 bg-gray-800 dark:bg-gray-200">
+        <div className="h-1 bg-white/10 dark:bg-black/5">
           <div
-            className="h-full bg-white dark:bg-black"
+            className="h-full bg-volt dark:bg-volt-600 rounded-r-full"
             style={{ width: `${progress}%`, transition: "width 100ms linear" }}
           />
         </div>

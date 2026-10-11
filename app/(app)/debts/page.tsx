@@ -44,7 +44,7 @@ const STATUS_DOT: Record<string, string> = {
   paid: "bg-green-500", partial: "bg-yellow-400", unpaid: "bg-red-400",
 }
 
-const CARD_INPUT = "w-full px-3 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm"
+const CARD_INPUT = "w-full px-3 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all text-sm"
 
 function groupByPerson(debts: DebtItem[], lendings: LendingItem[]): PersonGroup[] {
   const map = new Map<string, PersonGroup>()
@@ -165,8 +165,8 @@ export default function DebtsPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-black dark:bg-white rounded-xl flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20">
+          <div className="w-10 h-10 bg-black dark:bg-volt rounded-xl flex items-center justify-center shrink-0">
+            <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
               <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
             </svg>
@@ -176,7 +176,7 @@ export default function DebtsPage() {
 
         {/* Summary banner */}
         {hasAny && (
-          <div className="bg-black dark:bg-white rounded-2xl p-5 mb-6 shadow-xl">
+          <div className="bg-black dark:bg-volt rounded-2xl p-5 mb-6 shadow-xl">
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <p className="text-gray-400 dark:text-gray-600 text-xs font-medium mb-1">You Owe</p>
@@ -203,7 +203,7 @@ export default function DebtsPage() {
               <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
             </svg>
             <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name…"
-              className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all" />
+              className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all" />
             {search && (
               <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
@@ -211,7 +211,7 @@ export default function DebtsPage() {
             )}
           </div>
           <button onClick={() => setHideSettled(v => !v)}
-            className={`shrink-0 px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all ${hideSettled ? "bg-black dark:bg-white text-white dark:text-black border-black dark:border-white" : "bg-white dark:bg-black text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:border-black dark:hover:border-white"}`}>
+            className={`shrink-0 px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all ${hideSettled ? "bg-black dark:bg-volt text-white dark:text-black border-black dark:border-volt" : "bg-white dark:bg-black text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:border-black dark:hover:border-white"}`}>
             {hideSettled ? "All" : "Active"}
           </button>
         </div>
@@ -280,7 +280,7 @@ function PersonCard({ group, currency, userId, onDebtUpdated, onDebtDelete, onLe
       >
         <div className="flex items-center gap-3">
           {/* Avatar */}
-          <div className="w-10 h-10 rounded-full bg-black dark:bg-white flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-full bg-black dark:bg-volt flex items-center justify-center shrink-0">
             <span className="text-white dark:text-black font-bold text-base leading-none">
               {group.name.charAt(0).toUpperCase()}
             </span>
@@ -386,7 +386,7 @@ function PersonModal({ group, currency, userId, onClose, onDebtUpdated, onDebtDe
 
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-gray-900 shrink-0">
-          <div className="w-9 h-9 rounded-full bg-black dark:bg-white flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-full bg-black dark:bg-volt flex items-center justify-center shrink-0">
             <span className="text-white dark:text-black font-bold text-base leading-none">
               {group.name.charAt(0).toUpperCase()}
             </span>
@@ -567,7 +567,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
             <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className={CARD_INPUT} />
           </div>
           <div className="flex gap-2">
-            <button type="submit" disabled={saving} className="flex-1 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">{saving ? "Saving…" : "Save"}</button>
+            <button type="submit" disabled={saving} className="flex-1 py-2 bg-black dark:bg-volt text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">{saving ? "Saving…" : "Save"}</button>
             <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white text-sm font-semibold rounded-xl hover:opacity-80">Cancel</button>
           </div>
         </form>
@@ -630,7 +630,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
               </div>
             </div>
             <div className="flex gap-2">
-              <button type="submit" disabled={submittingPay} className="flex-1 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">{submittingPay ? "Saving…" : "Save Payment"}</button>
+              <button type="submit" disabled={submittingPay} className="flex-1 py-2 bg-black dark:bg-volt text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">{submittingPay ? "Saving…" : "Save Payment"}</button>
               <button type="button" onClick={() => { setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }} className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-900 text-black dark:text-white rounded-xl hover:opacity-80">Cancel</button>
             </div>
           </form>
@@ -741,7 +741,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
             <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className={CARD_INPUT} />
           </div>
           <div className="flex gap-2">
-            <button type="submit" disabled={saving} className="flex-1 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">{saving ? "Saving…" : "Save"}</button>
+            <button type="submit" disabled={saving} className="flex-1 py-2 bg-black dark:bg-volt text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">{saving ? "Saving…" : "Save"}</button>
             <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white text-sm font-semibold rounded-xl hover:opacity-80">Cancel</button>
           </div>
         </form>
@@ -804,7 +804,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
               </div>
             </div>
             <div className="flex gap-2">
-              <button type="submit" disabled={submittingPay} className="flex-1 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">{submittingPay ? "Saving…" : "Save Receipt"}</button>
+              <button type="submit" disabled={submittingPay} className="flex-1 py-2 bg-black dark:bg-volt text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-80 disabled:opacity-50">{submittingPay ? "Saving…" : "Save Receipt"}</button>
               <button type="button" onClick={() => { setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }} className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-900 text-black dark:text-white rounded-xl hover:opacity-80">Cancel</button>
             </div>
           </form>

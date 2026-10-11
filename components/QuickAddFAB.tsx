@@ -19,9 +19,9 @@ const SECTIONS: { label: string; modal: ModalType; icon: string }[] = [
 ]
 
 // Shared input/label/submit CSS strings
-const INPUT = "w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm"
-const LABEL = "block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5"
-const SUBMIT = "w-full py-3 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-xl hover:opacity-80 disabled:opacity-50 transition-all duration-200 text-sm"
+const INPUT = "w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]"
+const LABEL = "block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2"
+const SUBMIT = "w-full h-12 mt-2 bg-black dark:bg-volt text-white dark:text-black font-bold rounded-2xl shadow-lg shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40 disabled:shadow-none transition-all duration-200 text-[15px]"
 
 function todayStr() { return new Date().toISOString().split("T")[0] }
 
@@ -94,11 +94,11 @@ function AddTodoForm({ onDone }: { onDone: () => void }) {
               </div>
               <input type="number" min="1" max="5" value={s.weight} onChange={e => {
                 const next = [...subtasks]; next[i] = { ...next[i], weight: parseInt(e.target.value) || 1 }; setSubtasks(next)
-              }} className="w-12 shrink-0 px-2 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white text-center focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm" />
+              }} className="w-14 shrink-0 px-2 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white text-center font-semibold focus:outline-none focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]" />
             </div>
           ))}
         </div>
-        <button type="button" onClick={() => setSubtasks(prev => [...prev, { title: "", weight: 1 }])} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">
+        <button type="button" onClick={() => setSubtasks(prev => [...prev, { title: "", weight: 1 }])} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-volt-800 dark:text-volt bg-volt-100 dark:bg-volt/10 hover:bg-volt-200 dark:hover:bg-volt/20 transition-colors">
           + Add subtask
         </button>
       </div>
@@ -217,8 +217,8 @@ function AddToBuyForm({ onDone }: { onDone: () => void }) {
     setLoading(false)
   }
 
-  const urgencyMeta = { critical: "bg-red-500 text-white", high: "bg-orange-400 text-white", medium: "bg-yellow-400 text-black", low: "bg-gray-400 text-white" }
-  const inactiveCls = "bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800"
+  const urgencyMeta = { critical: "bg-rose-500 text-white shadow-md shadow-rose-500/30", high: "bg-orange-400 text-white shadow-md shadow-orange-400/30", medium: "bg-amber-300 text-black shadow-md shadow-amber-300/30", low: "bg-gray-500 text-white shadow-md shadow-gray-500/30" }
+  const inactiveCls = "bg-gray-100 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/[0.09]"
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -244,7 +244,7 @@ function AddToBuyForm({ onDone }: { onDone: () => void }) {
         <div className="grid grid-cols-4 gap-2">
           {(["low","medium","high","critical"] as const).map(u => (
             <button key={u} type="button" onClick={() => setUrgency(u)}
-              className={`py-2 rounded-xl text-xs font-semibold capitalize transition-all duration-150 ${urgency === u ? urgencyMeta[u] : inactiveCls}`}
+              className={`py-2.5 rounded-2xl text-xs font-bold capitalize transition-all duration-150 ${urgency === u ? urgencyMeta[u] : inactiveCls}`}
             >{u}</button>
           ))}
         </div>
@@ -459,20 +459,22 @@ export default function QuickAddFAB() {
     <>
       {/* Backdrop to close the section picker */}
       {open && (
-        <div className="fixed inset-0 z-[90]" onClick={() => setOpen(false)} />
+        <div className="fixed inset-0 z-[90] bg-black/25 dark:bg-black/50 backdrop-blur-[3px] animate-fade-in" onClick={() => setOpen(false)} />
       )}
 
-      <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3">
+      <div className="fixed z-[100] left-1/2 -translate-x-1/2 bottom-[calc(env(safe-area-inset-bottom)+1.125rem)] lg:left-auto lg:translate-x-0 lg:right-8 lg:bottom-8 flex flex-col items-center lg:items-end gap-3">
         {/* Section buttons */}
         {open && (
-          <div className="flex flex-col items-end gap-2 animate-slide-in-up">
-            {SECTIONS.map(s => (
+          <div className="w-[min(21rem,calc(100vw-2rem))] grid grid-cols-3 gap-1 p-2 bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] rounded-[1.75rem] shadow-2xl animate-pop-in">
+            <p className="col-span-3 px-3 pt-2 pb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">Quick add</p>
+            {SECTIONS.map((s, i) => (
               <button
                 key={s.modal}
                 onClick={() => handleSection(s.modal)}
-                className="w-36 flex items-center gap-2 px-4 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg text-sm font-semibold text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 transition-all"
+                style={{ animationDelay: `${i * 35}ms` }}
+                className="group animate-pop-in flex flex-col items-center gap-2 py-3.5 rounded-2xl text-xs font-bold text-black dark:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
               >
-                <span>{s.icon}</span>
+                <span className="w-12 h-12 grid place-items-center rounded-2xl bg-gray-100 dark:bg-white/[0.06] group-hover:bg-volt group-hover:text-black text-lg font-bold transition-colors">{s.icon}</span>
                 {s.label}
               </button>
             ))}
@@ -482,11 +484,11 @@ export default function QuickAddFAB() {
         {/* FAB button */}
         <button
           onClick={() => setOpen(o => !o)}
-          className="w-14 h-14 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-2xl flex items-center justify-center hover:opacity-80 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2"
+          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/20 dark:focus-visible:ring-white/30 ${open ? "bg-black text-white dark:bg-white dark:text-black shadow-xl" : "bg-volt text-black shadow-[0_10px_28px_-6px_rgb(200_244_58/0.75)] hover:shadow-[0_14px_34px_-6px_rgb(200_244_58/0.9)] hover:-translate-y-0.5"}`}
           aria-label="Quick add"
         >
           <svg
-            className={`w-6 h-6 transition-transform duration-200 ${open ? "rotate-45" : ""}`}
+            className={`w-6 h-6 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${open ? "rotate-[135deg]" : ""}`}
             fill="currentColor"
             viewBox="0 0 20 20"
           >

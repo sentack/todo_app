@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { BrandMark, Wordmark } from "./BrandMark"
 
 interface SidebarProps {
   isOpen: boolean
@@ -67,8 +68,8 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       href: "/",
       badge: badges.todos,
       icon: (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M9 6.75h10.5M9 12h10.5M9 17.25h10.5M4.5 6.75h.01M4.5 12h.01M4.5 17.25h.01" />
         </svg>
       ),
     },
@@ -77,9 +78,8 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       href: "/expenses",
       badge: 0,
       icon: (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-          <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M3 8.25h18M6 15.75h3M4.5 4.5h15A1.5 1.5 0 0121 6v12a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18V6a1.5 1.5 0 011.5-1.5z" />
         </svg>
       ),
     },
@@ -88,8 +88,8 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       href: "/to-buy",
       badge: 0,
       icon: (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M2.25 3h1.39c.51 0 .95.34 1.09.83l.38 1.42m0 0L6.75 12h10.5l2.25-6.75H5.11zM6.75 12l-1.5 3.75h13.5M8.25 20.25a.75.75 0 100-1.5.75.75 0 000 1.5zm9 0a.75.75 0 100-1.5.75.75 0 000 1.5z" />
         </svg>
       ),
     },
@@ -98,9 +98,8 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       href: "/debts",
       badge: badges.finances,
       icon: (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M7.5 7.5h11.25m0 0L15 3.75m3.75 3.75L15 11.25M16.5 16.5H5.25m0 0L9 12.75M5.25 16.5L9 20.25" />
         </svg>
       ),
     },
@@ -109,8 +108,8 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       href: "/friends",
       badge: 0,
       icon: (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M15 19.13a9.38 9.38 0 002.63.37 9.34 9.34 0 004.12-.95 4.13 4.13 0 00-7.53-2.49M15 19.13v-.01c0-1.12-.29-2.17-.78-3.08M15 19.13A12.32 12.32 0 018.62 21c-2.33 0-4.51-.65-6.37-1.77v-.11a6.37 6.37 0 0111.96-3.07M12 6.38a3.38 3.38 0 11-6.75 0 3.38 3.38 0 016.75 0zm8.25 2.25a2.63 2.63 0 11-5.25 0 2.63 2.63 0 015.25 0z" />
         </svg>
       ),
     },
@@ -119,8 +118,8 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       href: "/stats",
       badge: 0,
       icon: (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M3 20.25h18M6.75 16.5v-4.5M12 16.5V7.5M17.25 16.5v-7.5" />
         </svg>
       ),
     },
@@ -129,8 +128,8 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       href: "/settings",
       badge: 0,
       icon: (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M9.59 3.94c.09-.54.56-.94 1.11-.94h2.59c.55 0 1.02.4 1.11.94l.21 1.28c.06.37.31.68.64.87.07.04.15.09.22.13.32.2.72.26 1.07.13l1.22-.46a1.13 1.13 0 011.37.49l1.3 2.25c.27.47.16 1.07-.26 1.42l-1 .83c-.29.24-.43.6-.42.97v.26c-.01.37.13.73.42.97l1 .83c.42.35.53.95.26 1.42l-1.3 2.25a1.13 1.13 0 01-1.37.49l-1.22-.46c-.35-.13-.75-.07-1.07.13l-.22.13c-.33.19-.58.5-.64.87l-.21 1.28c-.09.54-.56.94-1.11.94h-2.59c-.55 0-1.02-.4-1.11-.94l-.21-1.28a1.24 1.24 0 00-.64-.87l-.22-.13a1.24 1.24 0 00-1.07-.13l-1.22.46a1.13 1.13 0 01-1.37-.49l-1.3-2.25a1.13 1.13 0 01.26-1.42l1-.83c.29-.24.43-.6.42-.97v-.26c.01-.37-.13-.73-.42-.97l-1-.83a1.13 1.13 0 01-.26-1.42l1.3-2.25c.27-.47.85-.68 1.37-.49l1.22.46c.35.13.75.07 1.07-.13l.22-.13c.33-.19.58-.5.64-.87l.21-1.28zM15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       ),
     },
@@ -140,38 +139,37 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-60 backdrop-blur-sm lg:hidden animate-fade-in"
+          className="fixed inset-0 z-[165] bg-black/50 backdrop-blur-sm lg:hidden animate-fade-in"
           onClick={onClose}
         />
       )}
 
       <div
         className={`
-          fixed top-0 left-0 z-50 h-screen w-64 bg-white dark:bg-black border-r border-gray-200 dark:border-gray-800 transform transition-transform duration-300 ease-in-out
-          lg:translate-x-0 lg:static lg:z-auto
+          fixed top-0 left-0 z-[170] h-[100dvh] w-[18rem] max-w-[85vw] bg-white dark:bg-gray-950 lg:bg-white/60 lg:dark:bg-white/[0.02] border-r border-black/[0.06] dark:border-white/[0.06] rounded-r-[2rem] lg:rounded-none shadow-2xl lg:shadow-none transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
+          lg:translate-x-0 lg:static lg:z-auto lg:h-screen lg:w-72 shrink-0
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-black dark:bg-white rounded-xl flex items-center justify-center">
-                <img className="w-full" src="/favicon.ico" alt="" />
-              </div>
-              <h2 className="text-lg font-bold text-black dark:text-white">TodoFlow</h2>
+        <div className="flex flex-col h-full pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+          <div className="flex items-center justify-between px-6 h-16 lg:h-[4.5rem]">
+            <div className="flex items-center gap-2.5">
+              <BrandMark className="w-9 h-9" />
+              <h2><Wordmark className="text-xl" /></h2>
             </div>
             <button
               onClick={onClose}
               aria-label="Close menu"
-              className="lg:hidden text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus-ring rounded-lg p-1 transition-colors duration-200"
+              className="lg:hidden w-9 h-9 grid place-items-center rounded-full bg-gray-100 dark:bg-gray-900 text-gray-500 hover:text-black dark:hover:text-white focus-ring transition-colors duration-200"
             >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </button>
           </div>
 
-          <nav className="flex-1 p-4 overflow-y-auto">
+          <nav className="flex-1 px-4 py-4 overflow-y-auto">
+            <p className="px-3 mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">Workspace</p>
             <ul className="space-y-1">
               {navigationItems.map((item) => {
                 const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) || (item.href === "/debts" && pathname.startsWith("/lending"))
@@ -181,16 +179,18 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
                       href={item.href}
                       onClick={() => { if (window.innerWidth < 1024) onClose() }}
                       className={`
-                        flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 focus-ring
+                        group flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-200 focus-ring
                         ${isActive
-                          ? "bg-black dark:bg-white text-white dark:text-black shadow-lg"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900"}
+                          ? "bg-black dark:bg-volt text-white dark:text-black shadow-lg shadow-black/10 dark:shadow-volt/15"
+                          : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.05]"}
                       `}
                     >
-                      {item.icon}
-                      <span className="font-medium flex-1">{item.name}</span>
+                      <span className={`w-9 h-9 grid place-items-center rounded-xl transition-colors ${isActive ? "bg-white/10 dark:bg-black/10 text-volt dark:text-black" : "bg-black/[0.04] dark:bg-white/[0.05] group-hover:bg-black/[0.07] dark:group-hover:bg-white/[0.09]"}`}>
+                        {item.icon}
+                      </span>
+                      <span className="font-semibold text-[15px] flex-1">{item.name}</span>
                       {item.badge > 0 && (
-                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white dark:bg-black text-black dark:text-white" : "bg-red-500 text-white"}`}>
+                        <span className={`min-w-[1.375rem] h-[1.375rem] px-1.5 grid place-items-center text-[11px] font-bold rounded-full ${isActive ? "bg-volt dark:bg-black text-black dark:text-volt" : "bg-rose-500 text-white shadow-sm shadow-rose-500/40"}`}>
                           {item.badge}
                         </span>
                       )}
@@ -201,8 +201,8 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
             </ul>
           </nav>
 
-          <div className="p-4 border-t border-gray-200 dark:border-gray-800">
-            <div className="text-xs text-gray-500 dark:text-gray-400 text-center">Made with ❤️ by SENTACK</div>
+          <div className="p-4">
+            <div className="rounded-2xl px-4 py-3 bg-black/[0.03] dark:bg-white/[0.04] text-xs text-gray-500 dark:text-gray-400 text-center">Made with ❤️ by <span className="font-bold text-black dark:text-white">SENTACK</span></div>
           </div>
         </div>
       </div>

@@ -66,7 +66,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-20">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center lg:hidden">
+                  <div className="w-10 h-10 bg-black dark:bg-volt rounded-full flex items-center justify-center lg:hidden">
                     <button
                       onClick={() => setSidebarOpen(true)}
                       className="rounded-full focus:outline-none transition-all duration-200"
