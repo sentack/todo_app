@@ -10,6 +10,17 @@ import { useRouter } from "next/navigation"
 import ClearDataModal from "@/components/ClearDataModal"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { CURRENCIES, CATEGORIES } from "@/lib/constants"
+import { FONT_SCALE_DEFAULT, FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP, readFontScale, saveFontScale } from "@/lib/fontScale"
+
+function fontScaleLabel(v: number) {
+  if (v <= 65) return "Tiny"
+  if (v <= 85) return "Small"
+  if (v < 100) return "Compact"
+  if (v === 100) return "Default"
+  if (v <= 125) return "Large"
+  if (v <= 160) return "Extra large"
+  return "Huge"
+}
 
 interface UserProfile {
   id: string
@@ -36,6 +47,11 @@ export default function SettingsPage() {
   const [budgets, setBudgets] = useState<Record<string, string>>({})
   const [savingBudgets, setSavingBudgets] = useState(false)
   const [budgetSuccess, setBudgetSuccess] = useState("")
+  const [fontScale, setFontScale] = useState(FONT_SCALE_DEFAULT)
+
+  useEffect(() => { setFontScale(readFontScale()) }, [])
+
+  const changeFontScale = (v: number) => { setFontScale(v); saveFontScale(v) }
 
   const supabase = createBrowserSupabaseClient()
   const router = useRouter()
@@ -221,7 +237,7 @@ export default function SettingsPage() {
 
               <form onSubmit={handleProfileSave} className="space-y-6">
                 <div>
-                  <label htmlFor="username" className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">
+                  <label htmlFor="username" className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path
@@ -244,7 +260,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">
+                  <label htmlFor="email" className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -335,7 +351,7 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Currency</label>
+                  <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Currency</label>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Used across expenses, debts, and lending.</p>
                   <div className="flex items-center gap-3">
                     <select
@@ -353,6 +369,56 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            {/* Display Section */}
+            <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-volt-100 dark:bg-volt/10 rounded-2xl flex items-center justify-center shrink-0">
+                  <span className="font-display text-base font-extrabold leading-none text-volt-800 dark:text-volt">Aa</span>
+                </div>
+                <h2 className="text-xl font-bold tracking-tight text-black dark:text-white">Display</h2>
+              </div>
+              <div className="flex items-end justify-between gap-3 mb-1">
+                <label htmlFor="font-scale" className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">Text size</label>
+                <span className="font-display text-2xl font-extrabold tracking-tight leading-none text-black dark:text-white tabular-nums">{fontScale}%</span>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{fontScaleLabel(fontScale)} · saved on this device. Release the slider to apply.</p>
+              <div className="flex items-center gap-3">
+                <span aria-hidden className="text-xs font-bold text-gray-400 w-4 text-center">A</span>
+                <input
+                  id="font-scale"
+                  type="range"
+                  min={FONT_SCALE_MIN}
+                  max={FONT_SCALE_MAX}
+                  step={FONT_SCALE_STEP}
+                  value={fontScale}
+                  onChange={e => setFontScale(Number(e.target.value))}
+                  onPointerUp={e => saveFontScale(Number(e.currentTarget.value))}
+                  onKeyUp={e => saveFontScale(Number(e.currentTarget.value))}
+                  onBlur={e => saveFontScale(Number(e.currentTarget.value))}
+                  aria-valuetext={`${fontScale}% – ${fontScaleLabel(fontScale)}`}
+                  className="range-volt flex-1"
+                  style={{ "--fill": `${((fontScale - FONT_SCALE_MIN) / (FONT_SCALE_MAX - FONT_SCALE_MIN)) * 100}%` } as React.CSSProperties}
+                />
+                <span aria-hidden className="text-xl font-bold text-gray-400 w-4 text-center">A</span>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-6">
+                {([["Tiny", 60], ["Small", 85], ["Default", 100], ["Large", 125], ["Huge", 175]] as [string, number][]).map(([label, v]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => changeFontScale(v)}
+                    className={`h-9 px-4 rounded-full text-xs font-bold transition-all ${fontScale === v ? "bg-black dark:bg-volt text-white dark:text-black shadow-md" : "bg-gray-100 dark:bg-white/[0.06] text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-6 p-4 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.05] overflow-hidden" style={{ fontSize: `${(fontScale / 100) * 16}px` }}>
+                <p className="font-display font-bold tracking-tight text-black dark:text-white" style={{ fontSize: "1.25em" }}>Preview heading</p>
+                <p className="text-gray-500 dark:text-gray-400 mt-1" style={{ fontSize: "0.875em" }}>The quick brown fox jumps over the lazy dog.</p>
+              </div>
+            </div>
+
             {/* Spending Budgets Section */}
             <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
@@ -367,7 +433,7 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {CATEGORIES.map(cat => (
                   <div key={cat}>
-                    <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{cat}</label>
+                    <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{cat}</label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium">{currency}</span>
                       <input
@@ -414,7 +480,7 @@ export default function SettingsPage() {
 
               <form onSubmit={handlePasswordChange} className="space-y-6">
                 <div>
-                  <label htmlFor="newPassword" className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">
+                  <label htmlFor="newPassword" className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">
                     New Password
                   </label>
                   <input
@@ -432,7 +498,7 @@ export default function SettingsPage() {
                 <div>
                   <label
                     htmlFor="confirmPassword"
-                    className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2"
+                    className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2"
                   >
                     Confirm New Password
                   </label>

@@ -64,7 +64,7 @@ export default function UndoToast() {
 
   return (
     <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+6rem)] lg:bottom-8 left-1/2 -translate-x-1/2 z-[200] w-[calc(100vw-2rem)] sm:w-auto animate-slide-in-up pointer-events-auto">
-      <div className="bg-black dark:bg-white rounded-2xl shadow-2xl ring-1 ring-white/10 dark:ring-black/5 overflow-hidden sm:min-w-[320px] sm:max-w-sm">
+      <div className="bg-black dark:bg-white rounded-2xl shadow-2xl ring-1 ring-white/10 dark:ring-black/5 overflow-hidden sm:min-w-[20rem] sm:max-w-sm">
         <div className="pl-5 pr-3 py-3 flex items-center gap-3">
           <span className="flex-1 text-sm font-medium text-white dark:text-black">{toast.message}</span>
           <button

@@ -141,7 +141,7 @@ export default function GlobalSearch({ userId }: GlobalSearchProps) {
           <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
         </svg>
         <span className="hidden lg:inline text-sm font-medium text-gray-500 dark:text-gray-400 pr-6">Search…</span>
-        <kbd className="hidden lg:inline text-[10px] font-semibold text-gray-500 dark:text-gray-400 bg-black/[0.05] dark:bg-white/[0.08] px-1.5 py-0.5 rounded-md">Ctrl K</kbd>
+        <kbd className="hidden lg:inline text-[0.625rem] font-semibold text-gray-500 dark:text-gray-400 bg-black/[0.05] dark:bg-white/[0.08] px-1.5 py-0.5 rounded-md">Ctrl K</kbd>
       </button>
     )
   }
@@ -172,7 +172,7 @@ export default function GlobalSearch({ userId }: GlobalSearchProps) {
               <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
           )}
-          <kbd className="shrink-0 text-[10px] font-semibold text-gray-500 bg-gray-100 dark:bg-white/[0.08] px-2 py-1 rounded-lg">Esc</kbd>
+          <kbd className="shrink-0 text-[0.625rem] font-semibold text-gray-500 bg-gray-100 dark:bg-white/[0.08] px-2 py-1 rounded-lg">Esc</kbd>
         </div>
 
         {/* Results */}
@@ -189,7 +189,7 @@ export default function GlobalSearch({ userId }: GlobalSearchProps) {
           )}
           {Object.entries(grouped).map(([section, items]) => (
             <div key={section}>
-              <div className="px-3 pt-3 pb-1.5 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.14em]">
+              <div className="px-3 pt-3 pb-1.5 text-[0.6875rem] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.14em]">
                 {section}
               </div>
               {items.map(item => (

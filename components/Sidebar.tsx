@@ -169,7 +169,7 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
           </div>
 
           <nav className="flex-1 px-4 py-4 overflow-y-auto">
-            <p className="px-3 mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">Workspace</p>
+            <p className="px-3 mb-2 text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">Workspace</p>
             <ul className="space-y-1">
               {navigationItems.map((item) => {
                 const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href)) || (item.href === "/debts" && pathname.startsWith("/lending"))
@@ -188,9 +188,9 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
                       <span className={`w-9 h-9 grid place-items-center rounded-xl transition-colors ${isActive ? "bg-white/10 dark:bg-black/10 text-volt dark:text-black" : "bg-black/[0.04] dark:bg-white/[0.05] group-hover:bg-black/[0.07] dark:group-hover:bg-white/[0.09]"}`}>
                         {item.icon}
                       </span>
-                      <span className="font-semibold text-[15px] flex-1">{item.name}</span>
+                      <span className="font-semibold text-[0.9375rem] flex-1">{item.name}</span>
                       {item.badge > 0 && (
-                        <span className={`min-w-[1.375rem] h-[1.375rem] px-1.5 grid place-items-center text-[11px] font-bold rounded-full ${isActive ? "bg-volt dark:bg-black text-black dark:text-volt" : "bg-rose-500 text-white shadow-sm shadow-rose-500/40"}`}>
+                        <span className={`min-w-[1.375rem] h-[1.375rem] px-1.5 grid place-items-center text-[0.6875rem] font-bold rounded-full ${isActive ? "bg-volt dark:bg-black text-black dark:text-volt" : "bg-rose-500 text-white shadow-sm shadow-rose-500/40"}`}>
                           {item.badge}
                         </span>
                       )}

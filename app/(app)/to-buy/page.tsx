@@ -197,7 +197,7 @@ export default function ToBuyPage() {
               </svg>
             </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-1.5">Shopping list</p>
+              <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-1.5">Shopping list</p>
               <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">To Buy</h1>
             </div>
           </div>
@@ -207,12 +207,12 @@ export default function ToBuyPage() {
             <div className="hero-card rounded-3xl p-6 mb-6 shadow-xl">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-2">Pending</p>
+                  <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-2">Pending</p>
                   <p className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-white dark:text-black">{summary.pendingCount} item{summary.pendingCount !== 1 ? "s" : ""}</p>
                   {summary.pendingTotal > 0 && <p className="text-white/60 dark:text-black/60 text-sm font-semibold mt-2">≈ {currency} {formatMoney(summary.pendingTotal)}</p>}
                 </div>
                 <div className="text-right">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-2">Bought</p>
+                  <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-2">Bought</p>
                   <p className="font-display text-3xl font-extrabold tracking-tight text-volt dark:text-black">{summary.boughtCount}</p>
                 </div>
               </div>
@@ -281,8 +281,8 @@ export default function ToBuyPage() {
                 <div key={u}>
                   <div className="flex items-center gap-2 mb-2 px-1">
                     <div className={`w-2.5 h-2.5 rounded-full ring-4 ring-black/[0.03] dark:ring-white/[0.04] ${URGENCY_META[u].dot}`} />
-                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">{URGENCY_META[u].label}</span>
-                    <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 ml-auto">{urgencyGroups[u].length} item{urgencyGroups[u].length !== 1 ? "s" : ""}</span>
+                    <span className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">{URGENCY_META[u].label}</span>
+                    <span className="text-[0.6875rem] font-semibold text-gray-400 dark:text-gray-500 ml-auto">{urgencyGroups[u].length} item{urgencyGroups[u].length !== 1 ? "s" : ""}</span>
                   </div>
                   <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                     {urgencyGroups[u].map((item, idx) => (
@@ -298,7 +298,7 @@ export default function ToBuyPage() {
                   {viewFilter === "all" && (
                     <div className="flex items-center gap-2 mb-2 px-1">
                       <svg className="w-4 h-4 text-volt-600 dark:text-volt" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">Bought</span>
+                      <span className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">Bought</span>
                     </div>
                   )}
                   <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
@@ -349,7 +349,7 @@ const URGENCY_ACTIVE: Record<string, string> = {
   critical: "bg-rose-500 text-white shadow-md shadow-rose-500/30", high: "bg-orange-400 text-white shadow-md shadow-orange-400/30",
   medium: "bg-amber-300 text-black shadow-md shadow-amber-300/30", low: "bg-gray-500 text-white shadow-md shadow-gray-500/30",
 }
-const ITEM_INPUT = "w-full px-4 py-2.5 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]"
+const ITEM_INPUT = "w-full px-4 py-2.5 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[0.9375rem]"
 
 function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpdated }: {
   item: ToBuyItem; isLast: boolean; togglingId: string | null; currency: string
@@ -399,11 +399,11 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Qty</label>
+              <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Qty</label>
               <input type="number" step="0.01" min="0.01" value={quantity} onChange={e => setQuantity(e.target.value)} className={ITEM_INPUT} />
             </div>
             <div className="flex-1">
-              <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Price ({currency})</label>
+              <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Price ({currency})</label>
               <input type="number" step="0.01" min="0" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" className={ITEM_INPUT} />
             </div>
           </div>
@@ -453,11 +453,11 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Qty: {qtyStr}</span>
           {Number(item.price) > 0 && <span className="text-xs text-gray-500 dark:text-gray-400">· {currency} {formatMoney(Number(item.price))} each</span>}
-          {item.notes && <span className="text-xs text-gray-400 dark:text-gray-600 truncate max-w-[100px]">· {item.notes}</span>}
+          {item.notes && <span className="text-xs text-gray-400 dark:text-gray-600 truncate max-w-[6.25rem]">· {item.notes}</span>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {itemTotal > 0 && <span className={`font-display text-sm sm:text-base font-bold tracking-tight ${item.bought ? "text-gray-400 dark:text-gray-600 line-through" : "text-black dark:text-white"}`}>{currency} {formatMoney(itemTotal)}</span>}
-          {!item.bought && <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full capitalize ${BADGE[item.urgency]}`}>{item.urgency}</span>}
+          {!item.bought && <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full capitalize ${BADGE[item.urgency]}`}>{item.urgency}</span>}
         </div>
       </div>
     </div>

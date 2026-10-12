@@ -176,7 +176,7 @@ export default function ExpensesPage() {
               </svg>
             </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-1.5">Spending</p>
+              <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-1.5">Spending</p>
               <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Expenses</h1>
             </div>
           </div>
@@ -184,7 +184,7 @@ export default function ExpensesPage() {
           {/* Today's total banner */}
           {!hasActiveFilters && (
             <div className="hero-card rounded-3xl p-6 mb-6 shadow-xl">
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-2">Today&apos;s Total</p>
+              <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-2">Today&apos;s Total</p>
               <p className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-white dark:text-black">{currency} {formatMoney(todayTotal)}</p>
             </div>
           )}
@@ -230,7 +230,7 @@ export default function ExpensesPage() {
           {/* Results count */}
           {!loading && (
             <div className="flex items-center justify-between mb-4 px-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+              <span className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                 {filtered.length === 0
                   ? "No results"
                   : `${filtered.length} expense${filtered.length !== 1 ? "s" : ""}${hasActiveFilters ? " found" : ""}`}
@@ -262,7 +262,7 @@ export default function ExpensesPage() {
                 return (
                   <div key={dateKey}>
                     <div className="flex items-center justify-between mb-2 px-1">
-                      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">{formatDateLabel(dateKey)}</span>
+                      <span className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">{formatDateLabel(dateKey)}</span>
                       <span className="text-sm font-bold text-black dark:text-white px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06]">{currency} {formatMoney(dayTotal)}</span>
                     </div>
                     <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
@@ -310,7 +310,7 @@ export default function ExpensesPage() {
 
 // ── ExpenseRow ────────────────────────────────────────────────────────────────
 
-const ROW_INPUT = "w-full px-4 py-2.5 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]"
+const ROW_INPUT = "w-full px-4 py-2.5 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[0.9375rem]"
 
 function ExpenseRow({ exp, isLast, onDelete, onUpdated, showDate = false, currency }: {
   exp: Expense; isLast: boolean; currency: string; showDate?: boolean
@@ -349,11 +349,11 @@ function ExpenseRow({ exp, isLast, onDelete, onUpdated, showDate = false, curren
         <form onSubmit={handleSave} className="space-y-3">
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">{currency} Amount *</label>
+              <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">{currency} Amount *</label>
               <input type="number" step="0.01" min="0.01" value={amount} onChange={e => setAmount(e.target.value)} required autoFocus className={ROW_INPUT} />
             </div>
             <div>
-              <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Date</label>
+              <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Date</label>
               <input type="date" value={date} onChange={e => setDate(e.target.value)} className={ROW_INPUT} />
             </div>
           </div>
@@ -380,7 +380,7 @@ function ExpenseRow({ exp, isLast, onDelete, onUpdated, showDate = false, curren
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-black dark:text-white truncate">{exp.description || exp.category}</p>
         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-          {exp.description && <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${CATEGORY_BADGE[exp.category] || CATEGORY_BADGE["Other"]}`}>{exp.category}</span>}
+          {exp.description && <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full ${CATEGORY_BADGE[exp.category] || CATEGORY_BADGE["Other"]}`}>{exp.category}</span>}
           {showDate && <span className="text-xs text-gray-400 dark:text-gray-600">{formatDateLabel(exp.date)}</span>}
         </div>
       </div>

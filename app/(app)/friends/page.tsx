@@ -161,7 +161,7 @@ export default function FriendsPage() {
                         value={editName}
                         onChange={e => setEditName(e.target.value)}
                         autoFocus
-                        className="flex-1 min-w-0 px-4 h-10 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-full text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]"
+                        className="flex-1 min-w-0 px-4 h-10 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-full text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[0.9375rem]"
                       />
                       <button type="submit" disabled={saving} className="h-10 px-4 bg-black dark:bg-volt text-white dark:text-black text-xs font-bold rounded-full hover:opacity-90 disabled:opacity-40 transition-all">
                         {saving ? "…" : "Save"}

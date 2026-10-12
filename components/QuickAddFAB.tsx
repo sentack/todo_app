@@ -19,9 +19,9 @@ const SECTIONS: { label: string; modal: ModalType; icon: string }[] = [
 ]
 
 // Shared input/label/submit CSS strings
-const INPUT = "w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]"
-const LABEL = "block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2"
-const SUBMIT = "w-full h-12 mt-2 bg-black dark:bg-volt text-white dark:text-black font-bold rounded-2xl shadow-lg shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40 disabled:shadow-none transition-all duration-200 text-[15px]"
+const INPUT = "w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[0.9375rem]"
+const LABEL = "block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2"
+const SUBMIT = "w-full h-12 mt-2 bg-black dark:bg-volt text-white dark:text-black font-bold rounded-2xl shadow-lg shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40 disabled:shadow-none transition-all duration-200 text-[0.9375rem]"
 
 function todayStr() { return new Date().toISOString().split("T")[0] }
 
@@ -94,7 +94,7 @@ function AddTodoForm({ onDone }: { onDone: () => void }) {
               </div>
               <input type="number" min="1" max="5" value={s.weight} onChange={e => {
                 const next = [...subtasks]; next[i] = { ...next[i], weight: parseInt(e.target.value) || 1 }; setSubtasks(next)
-              }} className="w-14 shrink-0 px-2 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white text-center font-semibold focus:outline-none focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]" />
+              }} className="w-14 shrink-0 px-2 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white text-center font-semibold focus:outline-none focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[0.9375rem]" />
             </div>
           ))}
         </div>
@@ -466,7 +466,7 @@ export default function QuickAddFAB() {
         {/* Section buttons */}
         {open && (
           <div className="w-[min(21rem,calc(100vw-2rem))] grid grid-cols-3 gap-1 p-2 bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] rounded-[1.75rem] shadow-2xl animate-pop-in">
-            <p className="col-span-3 px-3 pt-2 pb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">Quick add</p>
+            <p className="col-span-3 px-3 pt-2 pb-1 text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">Quick add</p>
             {SECTIONS.map((s, i) => (
               <button
                 key={s.modal}

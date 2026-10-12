@@ -28,7 +28,7 @@ interface TodoItemProps {
   onTodoUpdated: () => void;
 }
 
-const INPUT = "w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]";
+const INPUT = "w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[0.9375rem]";
 
 export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -181,17 +181,17 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Title *</label>
+            <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Title *</label>
             <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} required autoFocus className={INPUT} />
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Description</label>
+            <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Description</label>
             <input type="text" value={editDesc} onChange={e => setEditDesc(e.target.value)} placeholder="Brief description" className={INPUT} />
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Subtasks ({editSubtasks.length})</label>
+            <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Subtasks ({editSubtasks.length})</label>
             <div className="space-y-2 mb-2">
               {editSubtasks.map((s, i) => (
                 <div key={i} className="flex gap-2 items-center">
@@ -218,17 +218,17 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Notes</label>
+            <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Notes</label>
             <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={2} placeholder="Additional notes" className={`${INPUT} resize-none`} />
           </div>
 
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Due date</label>
+              <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Due date</label>
               <input type="date" value={editDueDate} onChange={e => setEditDueDate(e.target.value)} className={INPUT} />
             </div>
             <div className="flex-1">
-              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Status</label>
+              <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Status</label>
               <select value={editStatusId} onChange={e => setEditStatusId(Number(e.target.value))} className={INPUT}>
                 <option value={1}>📋 Pending</option>
                 <option value={2}>⚡ In Progress</option>
@@ -278,11 +278,11 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
         {/* Main content */}
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 mb-2">
-            <h3 className={`font-bold text-[17px] sm:text-lg leading-snug tracking-tight break-words ${todo.completed ? "line-through decoration-2 decoration-volt-500 text-gray-500 dark:text-gray-400" : "text-black dark:text-white"}`}>
+            <h3 className={`font-bold text-[1.0625rem] sm:text-lg leading-snug tracking-tight break-words ${todo.completed ? "line-through decoration-2 decoration-volt-500 text-gray-500 dark:text-gray-400" : "text-black dark:text-white"}`}>
               {todo.title}
             </h3>
             <div className="flex items-center justify-start sm:justify-end gap-1 flex-wrap">
-              <span className={`px-2.5 py-1 mr-1 text-[11px] font-bold rounded-full flex items-center gap-1 ${statusInfo.color}`}>
+              <span className={`px-2.5 py-1 mr-1 text-[0.6875rem] font-bold rounded-full flex items-center gap-1 ${statusInfo.color}`}>
                 <span>{statusInfo.icon}</span>
                 <span>{statusInfo.name}</span>
               </span>
@@ -312,7 +312,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           {/* Due date badge */}
           {isDueToday && (
             <div className="mb-2">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-300 ring-1 ring-inset ring-amber-300/50 dark:ring-amber-400/20">
+              <span className="inline-flex items-center gap-1 text-[0.6875rem] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-300 ring-1 ring-inset ring-amber-300/50 dark:ring-amber-400/20">
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>
                 Due today
               </span>
@@ -320,7 +320,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           )}
           {isOverdue && (
             <div className="mb-2">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 ring-1 ring-inset ring-rose-300/50 dark:ring-rose-500/20">
+              <span className="inline-flex items-center gap-1 text-[0.6875rem] font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 ring-1 ring-inset ring-rose-300/50 dark:ring-rose-500/20">
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
                 Overdue · {overdueDays} day{overdueDays !== 1 ? "s" : ""}
               </span>
@@ -336,7 +336,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           {todo.subtasks && todo.subtasks.length > 0 && (
             <div className="mt-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">Progress</span>
+                <span className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">Progress</span>
                 <span className="text-xs sm:text-sm font-bold text-black dark:text-white">{progress}%</span>
               </div>
               <div className="w-full bg-gray-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
@@ -378,7 +378,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
                         </span>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">W</span>
+                        <span className="text-[0.625rem] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">W</span>
                         <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{subtask.weight}</span>
                       </div>
                     </div>

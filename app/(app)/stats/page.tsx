@@ -34,7 +34,7 @@ function StatCard({ label, value, sub, delay, accent }: {
       className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm animate-slide-in-up"
       style={{ animationDelay: `${(delay ?? 0) * 0.07}s` }}
     >
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{label}</p>
+      <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{label}</p>
       <p className={`font-display text-xl sm:text-2xl font-extrabold tracking-tight ${accent ?? "text-black dark:text-white"}`}>{value}</p>
       {sub && <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">{sub}</p>}
     </div>
@@ -89,7 +89,7 @@ function SpendingLineChart({ expenses, currency }: { expenses: Expense[]; curren
 
   return (
     <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm">
-      <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-4">30-Day Spending</h3>
+      <h3 className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-4">30-Day Spending</h3>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" preserveAspectRatio="none">
         <defs>
           <linearGradient id="sf-grad" x1="0" y1="0" x2="0" y2="1">
@@ -119,7 +119,7 @@ function CompletionBarChart({ completions }: { completions: { date: string; coun
 
   return (
     <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm">
-      <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-4">7-Day Completions</h3>
+      <h3 className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-4">7-Day Completions</h3>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" preserveAspectRatio="none">
         {completions.map((c, i) => {
           const bw = barW * 0.65, x = i * barW + (barW - bw) / 2
@@ -417,7 +417,7 @@ export default function StatsPage() {
             </svg>
           </div>
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-1.5">Insights</p>
+            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-1.5">Insights</p>
             <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Statistics</h1>
           </div>
         </div>
@@ -441,7 +441,7 @@ export default function StatsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {periodStats.map((stat, i) => (
                     <div key={stat.period} className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm animate-slide-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
-                      <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-4">{stat.period}</h3>
+                      <h3 className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-4">{stat.period}</h3>
                       <div className="space-y-2">
                         {[["Created", stat.created, "bg-sky-400", "text-sky-600 dark:text-sky-400"], ["In Progress", stat.inProgress, "bg-amber-400", "text-amber-600 dark:text-amber-400"], ["Completed", stat.completed, "bg-green-400", "text-emerald-600 dark:text-emerald-400"]].map(([label, val, dot, tc]) => (
                           <div key={label as string} className="flex items-center justify-between">
@@ -528,29 +528,29 @@ export default function StatsPage() {
                       <p className="text-xs font-semibold text-white/60 dark:text-black/60 mb-4">Results for "{descQuery}" — all time</p>
                       <div className="grid grid-cols-3 gap-3 mb-4">
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Total Spent</p>
+                          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Total Spent</p>
                           <p className="font-display text-lg sm:text-xl font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{currency} {formatMoney(descAggregate.total)}</p>
                         </div>
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Occurrences</p>
+                          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Occurrences</p>
                           <p className="font-display text-lg sm:text-xl font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{descAggregate.count}</p>
                         </div>
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Average</p>
+                          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Average</p>
                           <p className="font-display text-lg sm:text-xl font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{currency} {formatMoney(descAggregate.avg)}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-3 border-t border-white/10 dark:border-black/10 pt-4">
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Min</p>
+                          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Min</p>
                           <p className="text-sm font-bold text-white dark:text-black">{currency} {formatMoney(descAggregate.min)}</p>
                         </div>
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Max</p>
+                          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Max</p>
                           <p className="text-sm font-bold text-white dark:text-black">{currency} {formatMoney(descAggregate.max)}</p>
                         </div>
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Since</p>
+                          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Since</p>
                           <p className="text-sm font-bold text-white dark:text-black">{fmtDate(descAggregate.firstDate)}</p>
                         </div>
                       </div>
@@ -559,7 +559,7 @@ export default function StatsPage() {
                     {/* Category breakdown for this search */}
                     {descAggregate.catBreakdown.length > 1 && (
                       <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm space-y-3">
-                        <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em]">By Category</p>
+                        <p className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em]">By Category</p>
                         {descAggregate.catBreakdown.map(([cat, tot]) => (
                           <RankBar key={cat} label={cat} labelRight={`${currency} ${formatMoney(tot)}`} value={tot} max={descAggregate.catBreakdown[0][1]} barClass={CATEGORY_COLORS[cat] || CATEGORY_COLORS["Other"]} />
                         ))}
@@ -569,7 +569,7 @@ export default function StatsPage() {
                     {/* Matching expense list */}
                     <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                       <div className="px-4 py-3 border-b border-black/[0.05] dark:border-white/[0.05] flex items-center justify-between">
-                        <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em]">Matching Expenses</p>
+                        <p className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em]">Matching Expenses</p>
                         <span className="text-xs text-gray-400">{descAggregate.count} found</span>
                       </div>
                       <div className="divide-y divide-black/[0.05] dark:divide-white/[0.05]">
@@ -606,7 +606,7 @@ export default function StatsPage() {
                 <>
                   {/* Summary cards */}
                   <div>
-                    <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">{PERIOD_LABELS[expPeriod]} — Summary</h2>
+                    <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">{PERIOD_LABELS[expPeriod]} — Summary</h2>
                     <div className="grid grid-cols-2 gap-4">
                       {expPeriod === "all" ? (
                         <>
@@ -632,7 +632,7 @@ export default function StatsPage() {
                       {expStats.biggest && (
                         <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.05] dark:border-white/[0.05]">
                           <div className="min-w-0 flex-1">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Biggest Single Expense</p>
+                            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Biggest Single Expense</p>
                             <p className="font-semibold text-black dark:text-white truncate">{expStats.biggest.description || expStats.biggest.category}</p>
                             <p className="text-xs text-gray-400 mt-0.5">{fmtShort(expStats.biggest.date)} · {expStats.biggest.category}</p>
                           </div>
@@ -642,7 +642,7 @@ export default function StatsPage() {
                       {expStats.bigDay && (
                         <div className="flex items-center justify-between px-5 py-4">
                           <div>
-                            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Busiest Day</p>
+                            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Busiest Day</p>
                             <p className="font-semibold text-black dark:text-white">{fmtShort(expStats.bigDay)}</p>
                           </div>
                           <span className="text-lg font-bold text-black dark:text-white ml-4 shrink-0">{currency} {formatMoney(expStats.bigDayTotal)}</span>
@@ -657,7 +657,7 @@ export default function StatsPage() {
                   {/* By Category */}
                   {expStats.sortedCats.length > 0 && (
                     <div>
-                      <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Category</h2>
+                      <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Category</h2>
                       <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
                         {(showAllCat ? expStats.sortedCats : expStats.sortedCats.slice(0, 6)).map(([cat, { total, count }]) => (
                           <RankBar
@@ -682,7 +682,7 @@ export default function StatsPage() {
                   {/* By Description / Reason */}
                   {descRanking.length > 0 && (
                     <div>
-                      <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Description / Reason</h2>
+                      <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Description / Reason</h2>
                       <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
                         {(showAllDesc ? descRanking : descRanking.slice(0, 8)).map((item, idx) => (
                           <RankBar
@@ -707,7 +707,7 @@ export default function StatsPage() {
                   {/* Top spending days */}
                   {expStats.sortedDays.length > 0 && (
                     <div>
-                      <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">Top Spending Days</h2>
+                      <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">Top Spending Days</h2>
                       <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                         <div className="divide-y divide-black/[0.05] dark:divide-white/[0.05]">
                           {(showAllDays ? expStats.sortedDays : expStats.sortedDays.slice(0, 5)).map(([day, total], idx) => {
@@ -758,7 +758,7 @@ export default function StatsPage() {
               {toBuyStats.pending.length > 0 && (
                 <>
                   <div>
-                    <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Urgency</h2>
+                    <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Urgency</h2>
                     <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
                       {(["critical", "high", "medium", "low"] as const).filter(u => toBuyStats.urgencyCounts[u] > 0).map((u, idx) => {
                         const count = toBuyStats.urgencyCounts[u]
@@ -771,7 +771,7 @@ export default function StatsPage() {
 
                   {toBuyStats.expensive.some(i => i.price > 0) && (
                     <div>
-                      <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">Most Expensive Pending</h2>
+                      <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">Most Expensive Pending</h2>
                       <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                         <div className="divide-y divide-black/[0.05] dark:divide-white/[0.05]">
                           {toBuyStats.expensive.filter(i => i.price > 0).map((item, i) => (
@@ -810,7 +810,7 @@ export default function StatsPage() {
                 </div>
 
                 <div>
-                  <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Status</h2>
+                  <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Status</h2>
                   <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                     {([["Unpaid", s.unpaid, "bg-rose-500", "text-rose-600 dark:text-rose-400"], ["Partial", s.partial, "bg-amber-400", "text-amber-600 dark:text-amber-400"], ["Paid", s.paid, "bg-emerald-500", "text-emerald-600 dark:text-emerald-400"]] as [string, number, string, string][]).map(([label, count, bar, text], idx, arr) => (
                       <div key={label} className={`px-5 py-4 ${idx < arr.length - 1 ? "border-b border-black/[0.05] dark:border-white/[0.05]" : ""}`}>
@@ -822,7 +822,7 @@ export default function StatsPage() {
 
                 {s.personRanking.length > 0 && (
                   <div>
-                    <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Person (Outstanding)</h2>
+                    <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Person (Outstanding)</h2>
                     <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                       <div className="divide-y divide-black/[0.05] dark:divide-white/[0.05]">
                         {s.personRanking.filter(p => p.outstanding > 0).map(p => (
@@ -846,7 +846,7 @@ export default function StatsPage() {
                               <p className="text-sm font-medium text-black dark:text-white truncate">{p.name}</p>
                               <p className="text-xs text-gray-400">{p.count} debt{p.count !== 1 ? "s" : ""}</p>
                             </div>
-                            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2.5 py-1 rounded-full">Settled</span>
+                            <span className="text-[0.6875rem] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2.5 py-1 rounded-full">Settled</span>
                           </div>
                         ))}
                       </div>
@@ -875,7 +875,7 @@ export default function StatsPage() {
                 </div>
 
                 <div>
-                  <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Status</h2>
+                  <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Status</h2>
                   <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                     {([["Not Returned", s.unpaid, "bg-sky-400", "text-sky-600 dark:text-sky-400"], ["Partial", s.partial, "bg-amber-400", "text-amber-600 dark:text-amber-400"], ["Returned", s.paid, "bg-emerald-500", "text-emerald-600 dark:text-emerald-400"]] as [string, number, string, string][]).map(([label, count, bar, text], idx, arr) => (
                       <div key={label} className={`px-5 py-4 ${idx < arr.length - 1 ? "border-b border-black/[0.05] dark:border-white/[0.05]" : ""}`}>
@@ -887,7 +887,7 @@ export default function StatsPage() {
 
                 {s.personRanking.length > 0 && (
                   <div>
-                    <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Person (Outstanding)</h2>
+                    <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Person (Outstanding)</h2>
                     <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                       <div className="divide-y divide-black/[0.05] dark:divide-white/[0.05]">
                         {s.personRanking.filter(p => p.outstanding > 0).map(p => (
@@ -911,7 +911,7 @@ export default function StatsPage() {
                               <p className="text-sm font-medium text-black dark:text-white truncate">{p.name}</p>
                               <p className="text-xs text-gray-400">{p.count} lending{p.count !== 1 ? "s" : ""}</p>
                             </div>
-                            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2.5 py-1 rounded-full">Returned</span>
+                            <span className="text-[0.6875rem] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2.5 py-1 rounded-full">Returned</span>
                           </div>
                         ))}
                       </div>

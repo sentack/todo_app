@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Bricolage_Grotesque, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { FONT_SCALE_SCRIPT } from "@/lib/fontScale";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -44,7 +45,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${bricolage.variable} ${geistMono.variable} h-full`}>
+    <html lang="en" className={`${jakarta.variable} ${bricolage.variable} ${geistMono.variable} h-full`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: FONT_SCALE_SCRIPT }} />
+      </head>
       <body
         className="font-sans h-full"
       >

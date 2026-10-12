@@ -128,7 +128,7 @@ const TodoList: React.FC<TodoListProps> = ({ setLoading }) => {
       <div className="hero-card rounded-3xl p-6 sm:p-7 shadow-xl animate-slide-in-down">
         <div className="flex items-center justify-between gap-5">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-3">Your tasks</p>
+            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-3">Your tasks</p>
             <p className="font-display text-5xl sm:text-6xl font-extrabold leading-none tracking-tight text-white dark:text-black">
               {counts.pending}
               <span className="ml-2 text-base sm:text-lg font-bold tracking-normal text-white/60 dark:text-black/60">open</span>

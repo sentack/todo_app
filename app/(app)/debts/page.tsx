@@ -45,7 +45,7 @@ const STATUS_DOT: Record<string, string> = {
   paid: "bg-emerald-500", partial: "bg-amber-400", unpaid: "bg-rose-500",
 }
 
-const CARD_INPUT = "w-full px-4 py-2.5 bg-white dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]"
+const CARD_INPUT = "w-full px-4 py-2.5 bg-white dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[0.9375rem]"
 
 function groupByPerson(debts: DebtItem[], lendings: LendingItem[]): PersonGroup[] {
   const map = new Map<string, PersonGroup>()
@@ -173,7 +173,7 @@ export default function DebtsPage() {
             </svg>
           </div>
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-1.5">Debts &amp; lending</p>
+            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-1.5">Debts &amp; lending</p>
             <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Finances</h1>
           </div>
         </div>
@@ -183,15 +183,15 @@ export default function DebtsPage() {
           <div className="hero-card rounded-3xl p-6 mb-6 shadow-xl">
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">You Owe</p>
+                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">You Owe</p>
                 <p className="font-display text-lg sm:text-2xl font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{currency} {formatMoney(summary.youOwe)}</p>
               </div>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Owed to You</p>
+                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Owed to You</p>
                 <p className="font-display text-lg sm:text-2xl font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{currency} {formatMoney(summary.theyOwe)}</p>
               </div>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Net</p>
+                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Net</p>
                 <p className={`font-display text-lg sm:text-2xl font-extrabold tracking-tight leading-tight break-words ${summary.net >= 0 ? "text-volt dark:text-black" : "text-rose-400 dark:text-rose-700"}`}>
                   {summary.net >= 0 ? "+" : ""}{currency} {formatMoney(Math.abs(summary.net))}
                 </p>
@@ -293,8 +293,8 @@ function PersonCard({ group, currency, userId, onDebtUpdated, onDebtDelete, onLe
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <p className="font-bold text-[15px] text-black dark:text-white truncate">{group.name}</p>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] shrink-0">{totalTx} tx</span>
+              <p className="font-bold text-[0.9375rem] text-black dark:text-white truncate">{group.name}</p>
+              <span className="text-[0.625rem] font-bold uppercase tracking-wider text-gray-400 px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] shrink-0">{totalTx} tx</span>
             </div>
 
             {/* Last 5 mini chips */}
@@ -302,7 +302,7 @@ function PersonCard({ group, currency, userId, onDebtUpdated, onDebtDelete, onLe
               {recentItems.map((item, i) => {
                 const st = getStatus(item)
                 return (
-                  <span key={i} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] text-gray-700 dark:text-gray-300">
+                  <span key={i} className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] text-gray-700 dark:text-gray-300">
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${item._type === "debt" ? "bg-rose-500" : "bg-emerald-500"}`} />
                     {currency} {formatMoney(Number(item.amount))}
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[st]}`} />
@@ -310,7 +310,7 @@ function PersonCard({ group, currency, userId, onDebtUpdated, onDebtDelete, onLe
                 )
               })}
               {totalTx > 5 && (
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] text-gray-400">
+                <span className="text-[0.6875rem] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] text-gray-400">
                   +{totalTx - 5} more
                 </span>
               )}
@@ -320,10 +320,10 @@ function PersonCard({ group, currency, userId, onDebtUpdated, onDebtDelete, onLe
           {/* Net */}
           <div className="text-right shrink-0 ml-2">
             {net === 0 ? (
-              <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2.5 py-1 rounded-full">Settled</span>
+              <span className="text-[0.6875rem] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2.5 py-1 rounded-full">Settled</span>
             ) : (
               <>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">{net > 0 ? "Owed to you" : "You owe"}</p>
+                <p className="text-[0.625rem] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">{net > 0 ? "Owed to you" : "You owe"}</p>
                 <p className={`font-display text-base font-bold tracking-tight ${net > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                   {currency} {formatMoney(Math.abs(net))}
                 </p>
@@ -410,17 +410,17 @@ function PersonModal({ group, currency, userId, onClose, onDebtUpdated, onDebtDe
         {/* Net summary strip */}
         <div className="grid grid-cols-3 gap-2 px-4 pb-4 shrink-0">
           <div className="bg-gray-50 dark:bg-white/[0.04] rounded-2xl px-2 py-3 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">You Owe</p>
+            <p className="text-[0.625rem] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">You Owe</p>
             <p className="text-sm font-bold text-rose-600 dark:text-rose-400">{youOweTotal > 0 ? `${currency} ${formatMoney(youOweTotal)}` : "—"}</p>
           </div>
           <div className="bg-gray-50 dark:bg-white/[0.04] rounded-2xl px-2 py-3 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Net</p>
+            <p className="text-[0.625rem] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Net</p>
             <p className={`font-display text-base font-bold tracking-tight ${net > 0 ? "text-emerald-600 dark:text-emerald-400" : net < 0 ? "text-rose-600 dark:text-rose-400" : "text-gray-500"}`}>
               {net === 0 ? "Settled" : `${net > 0 ? "+" : ""}${currency} ${formatMoney(Math.abs(net))}`}
             </p>
           </div>
           <div className="bg-gray-50 dark:bg-white/[0.04] rounded-2xl px-2 py-3 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">They Owe</p>
+            <p className="text-[0.625rem] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">They Owe</p>
             <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{theyOweTotal > 0 ? `${currency} ${formatMoney(theyOweTotal)}` : "—"}</p>
           </div>
         </div>
@@ -560,16 +560,16 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
           <FriendCombobox value={person} onChange={setPerson} userId={userId} label="Lender (who you owe)" placeholder="Name" required />
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">{currency} Amount *</label>
+              <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">{currency} Amount *</label>
               <input type="number" step="0.01" min="0.01" value={amount} onChange={e => setAmount(e.target.value)} required className={CARD_INPUT} />
             </div>
             <div className="flex-1">
-              <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Date</label>
+              <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Date</label>
               <input type="date" value={date} onChange={e => setDate(e.target.value)} className={CARD_INPUT} />
             </div>
           </div>
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Deadline (optional)</label>
+            <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Deadline (optional)</label>
             <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className={CARD_INPUT} />
           </div>
           <div className="flex gap-2">
@@ -587,8 +587,8 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="font-display text-base font-bold tracking-tight text-black dark:text-white">{currency} {formatMoney(Number(item.amount))}</span>
-            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
-            {isOverdue && <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full">Overdue</span>}
+            <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
+            {isOverdue && <span className="text-[0.6875rem] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full">Overdue</span>}
           </div>
           <div className="flex flex-wrap gap-x-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             <span>Borrowed {fmtDate(item.date)}</span>
@@ -734,16 +734,16 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
           <FriendCombobox value={person} onChange={setPerson} userId={userId} label="Borrower (who owes you)" placeholder="Name" required />
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">{currency} Amount *</label>
+              <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">{currency} Amount *</label>
               <input type="number" step="0.01" min="0.01" value={amount} onChange={e => setAmount(e.target.value)} required className={CARD_INPUT} />
             </div>
             <div className="flex-1">
-              <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Date</label>
+              <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Date</label>
               <input type="date" value={date} onChange={e => setDate(e.target.value)} className={CARD_INPUT} />
             </div>
           </div>
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Deadline (optional)</label>
+            <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400 mb-1.5">Deadline (optional)</label>
             <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className={CARD_INPUT} />
           </div>
           <div className="flex gap-2">
@@ -761,8 +761,8 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="font-display text-base font-bold tracking-tight text-black dark:text-white">{currency} {formatMoney(Number(item.amount))}</span>
-            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
-            {isOverdue && <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full">Overdue</span>}
+            <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
+            {isOverdue && <span className="text-[0.6875rem] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full">Overdue</span>}
           </div>
           <div className="flex flex-wrap gap-x-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             <span>Lent {fmtDate(item.date)}</span>

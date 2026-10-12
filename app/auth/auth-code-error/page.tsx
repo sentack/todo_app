@@ -11,7 +11,7 @@ export default function AuthCodeError() {
         <div className="text-center">
           <BrandMark className="w-14 h-14 mx-auto -rotate-6" />
           <h2 className="mt-6 text-3xl font-extrabold text-black dark:text-white">Authentication Error</h2>
-          <p className="mt-2 text-[15px] text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-[0.9375rem] text-gray-500 dark:text-gray-400">
             Sorry, we couldn't sign you in. Please try again.
           </p>
           <Link

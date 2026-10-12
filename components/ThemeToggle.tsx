@@ -44,7 +44,7 @@ export default function ThemeToggle() {
           />
         </svg>
       ) : (
-        <svg className="w-[18px] h-[18px] text-gray-800 animate-fade-in" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="w-[1.125rem] h-[1.125rem] text-gray-800 animate-fade-in" fill="currentColor" viewBox="0 0 20 20">
           <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
         </svg>
       )}

@@ -39,11 +39,11 @@ export default function MobileTabBar({ onMenu }: MobileTabBarProps) {
           active ? "bg-volt text-black shadow-md shadow-volt/30" : "text-gray-500 dark:text-gray-400"
         }`}
       >
-        <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+        <svg className="w-[1.375rem] h-[1.375rem]" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
           {icon}
         </svg>
       </span>
-      <span className={`text-[10.5px] font-semibold leading-none ${active ? "text-black dark:text-white" : "text-gray-500 dark:text-gray-400"}`}>
+      <span className={`text-[0.65625rem] font-semibold leading-none ${active ? "text-black dark:text-white" : "text-gray-500 dark:text-gray-400"}`}>
         {label}
       </span>
     </span>

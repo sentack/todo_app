@@ -442,6 +442,54 @@
   background-image: radial-gradient(rgb(15 16 20 / 0.08) 1px, transparent 1px);
 }
 
+/* Brand range slider (text size) — set --fill to the filled percentage */
+.range-volt {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--color-volt-500) 0 var(--fill, 50%), rgb(15 16 20 / 0.08) var(--fill, 50%) 100%);
+  outline: none;
+  touch-action: pan-y;
+}
+
+.dark .range-volt {
+  background: linear-gradient(to right, var(--color-volt) 0 var(--fill, 50%), rgb(255 255 255 / 0.1) var(--fill, 50%) 100%);
+}
+
+.range-volt::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: var(--color-black);
+  border: 0.3rem solid var(--color-volt);
+  box-shadow: 0 4px 14px -2px rgb(15 16 20 / 0.35);
+  cursor: grab;
+  transition: scale 0.15s ease;
+}
+
+.range-volt::-moz-range-thumb {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  background: var(--color-black);
+  border: 0.3rem solid var(--color-volt);
+  box-shadow: 0 4px 14px -2px rgb(15 16 20 / 0.35);
+  cursor: grab;
+}
+
+.range-volt:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  scale: 1.12;
+}
+
+.range-volt:focus-visible::-webkit-slider-thumb {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+
 /* Gradient backgrounds */
 .gradient-primary {
   background: linear-gradient(135deg, #d2f665 0%, #84ad10 100%);

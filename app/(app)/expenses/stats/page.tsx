@@ -33,7 +33,7 @@ function StatCard({
       className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm animate-slide-in-up"
       style={{ animationDelay: `${(delay ?? 0) * 0.1}s` }}
     >
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{label}</p>
+      <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{label}</p>
       <p className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-black dark:text-white">{value}</p>
       {sub && <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">{sub}</p>}
     </div>
@@ -195,7 +195,7 @@ export default function ExpenseStatsPage() {
                     {biggest && (
                       <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.05] dark:border-white/[0.05]">
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Biggest Single Expense</p>
+                          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Biggest Single Expense</p>
                           <p className="font-semibold text-black dark:text-white">
                             {biggest.description || biggest.category}
                           </p>
@@ -207,7 +207,7 @@ export default function ExpenseStatsPage() {
                     {mostExpensiveDay && (
                       <div className="flex items-center justify-between px-5 py-4">
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Most Expensive Day</p>
+                          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Most Expensive Day</p>
                           <p className="font-semibold text-black dark:text-white">{formatDateLabel(mostExpensiveDay)}</p>
                         </div>
                         <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white shrink-0">{currency} {formatMoney(mostExpensiveDayTotal as number)}</span>
