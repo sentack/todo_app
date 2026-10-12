@@ -17,7 +17,7 @@ interface TimedTodo    { id: string; title: string; days: number; hours: number 
 interface Expense      { id: string; amount: number; description: string | null; category: string; date: string }
 interface ToBuyItem    { id: string; name: string; quantity: number; price: number; urgency: "low"|"medium"|"high"|"critical"; bought: boolean }
 interface FinanceItem  {
-  id: string; amount: number; amount_paid: number; deadline: string | null
+  id: string; amount: number; amount_paid: number; date: string; deadline: string | null
   person: string; paid_history: { amount: number; date: string }[]
 }
 
@@ -35,7 +35,7 @@ function StatCard({ label, value, sub, delay, accent }: {
       style={{ animationDelay: `${(delay ?? 0) * 0.07}s` }}
     >
       <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{label}</p>
-      <p className={`font-display text-xl sm:text-2xl font-extrabold tracking-tight ${accent ?? "text-black dark:text-white"}`}>{value}</p>
+      <p className={`font-display text-xl sm:text-2xl font-extrabold tracking-tight leading-tight break-words ${accent ?? "text-black dark:text-white"}`}>{value}</p>
       {sub && <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">{sub}</p>}
     </div>
   )
@@ -139,7 +139,210 @@ function CompletionBarChart({ completions }: { completions: { date: string; coun
   )
 }
 
+// ─── Insight helpers ─────────────────────────────────────────────────
+
+const DAY_MS = 86400000
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+const parseDay = (s: string) => new Date(s + "T00:00:00")
+const fmtDay = (s: string) => parseDay(s).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+const fmtCompact = (v: number) => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e4 ? `${Math.round(v / 1e3)}k` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : String(Math.round(v))
+const lastMonths = (n: number) => {
+  const now = new Date()
+  return Array.from({ length: n }, (_, k) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (n - 1 - k), 1)
+    return { key: ymd(d).slice(0, 7), label: d.toLocaleDateString("en-US", { month: "short" }) }
+  })
+}
+
+function ColumnChart({ data, format }: {
+  data: { label: string; value: number; current?: boolean }[]; format: (v: number) => string
+}) {
+  const max = Math.max(...data.map(d => d.value), 0)
+  const maxIdx = max > 0 ? data.findIndex(d => d.value === max) : -1
+  return (
+    <div className="flex items-stretch gap-1.5 sm:gap-2 h-44">
+      {data.map((d, i) => {
+        const hot = i === maxIdx
+        return (
+          <div key={i} className="flex-1 min-w-0 flex flex-col items-center gap-1.5">
+            <span className={`text-[0.625rem] font-bold tabular-nums truncate max-w-full ${hot ? "text-black dark:text-white" : "text-gray-400 dark:text-gray-500"}`}>
+              {d.value > 0 ? format(d.value) : "–"}
+            </span>
+            <div className="flex-1 w-full flex items-end">
+              <div
+                className={`w-full rounded-xl transition-all duration-700 ease-out ${hot ? "bg-volt-500 dark:bg-volt shadow-md shadow-volt/30" : d.current ? "bg-black dark:bg-white" : "bg-black/[0.08] dark:bg-white/[0.1]"}`}
+                style={{ height: `${max > 0 ? Math.max((d.value / max) * 100, d.value > 0 ? 5 : 2) : 2}%` }}
+              />
+            </div>
+            <span className={`text-[0.6875rem] font-semibold ${d.current ? "text-black dark:text-white" : "text-gray-500 dark:text-gray-400"}`}>{d.label}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// Extra debt / lending insights
+function financeInsights(items: FinanceItem[]) {
+  const today = parseDay(ymd(new Date()))
+  const in7 = new Date(today.getTime() + 7 * DAY_MS)
+  const outOf = (i: FinanceItem) => Math.max(0, Number(i.amount) - Number(i.amount_paid))
+  const open = items.filter(i => outOf(i) > 0)
+  const sum = (l: FinanceItem[], f: (i: FinanceItem) => number) => l.reduce((s, i) => s + f(i), 0)
+
+  const overdue = open.filter(i => i.deadline && parseDay(i.deadline) < today)
+  const dueSoon = open.filter(i => i.deadline && parseDay(i.deadline) >= today && parseDay(i.deadline) <= in7)
+  const nextDue = open.filter(i => i.deadline && parseDay(i.deadline) >= today).sort((a, b) => a.deadline!.localeCompare(b.deadline!))[0] ?? null
+  const oldestOpen = [...open].filter(i => i.date).sort((a, b) => a.date.localeCompare(b.date))[0] ?? null
+
+  const settleDays = items
+    .filter(i => outOf(i) === 0 && i.date && (i.paid_history ?? []).length > 0)
+    .map(i => {
+      const last = [...i.paid_history].map(p => p.date).sort()[i.paid_history.length - 1]
+      return Math.max(0, (parseDay(last).getTime() - parseDay(i.date).getTime()) / DAY_MS)
+    })
+
+  const payments = items
+    .flatMap(i => (i.paid_history ?? []).map(p => ({ amount: Number(p.amount), date: p.date, person: i.person })))
+    .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))
+
+  const months = lastMonths(6).map(m => ({ ...m, out: 0, back: 0 }))
+  const idx = new Map(months.map((m, i) => [m.key, i]))
+  for (const i of items) { const k = idx.get(i.date?.slice(0, 7)); if (k !== undefined) months[k].out += Number(i.amount) }
+  for (const p of payments) { const k = idx.get(p.date?.slice(0, 7)); if (k !== undefined) months[k].back += p.amount }
+
+  const totalAmount = sum(items, i => Number(i.amount))
+  const totalPaid = sum(items, i => Math.min(Number(i.amount_paid), Number(i.amount)))
+  return {
+    rate:          totalAmount > 0 ? totalPaid / totalAmount : 0,
+    totalAmount,   totalPaid,
+    overdueAmount: sum(overdue, outOf), overdueCount: overdue.length,
+    dueSoonAmount: sum(dueSoon, outOf), dueSoonCount: dueSoon.length,
+    nextDue,       nextDueAmount: nextDue ? outOf(nextDue) : 0,
+    oldestOpen,    oldestOpenDays: oldestOpen ? Math.floor((today.getTime() - parseDay(oldestOpen.date).getTime()) / DAY_MS) : 0,
+    avgAmount:     items.length ? totalAmount / items.length : 0,
+    people:        new Set(items.map(i => (i.person || "Unknown").trim().toLowerCase())).size,
+    avgSettleDays: settleDays.length ? settleDays.reduce((a, b) => a + b, 0) / settleDays.length : null,
+    settledCount:  settleDays.length,
+    largest:       [...items].sort((a, b) => Number(b.amount) - Number(a.amount))[0] ?? null,
+    payments,      lastPayment: payments[0] ?? null,
+    months,        monthMax: Math.max(...months.map(m => Math.max(m.out, m.back)), 0),
+  }
+}
+
+function FinanceInsights({ items, currency, kind }: { items: FinanceItem[]; currency: string; kind: "debt" | "lending" }) {
+  const f = financeInsights(items)
+  const L = kind === "debt"
+    ? { item: "debt", out: "Borrowed", back: "Repaid", rate: "Repaid", pay: "Payments Made", outBar: "bg-rose-400 dark:bg-rose-500", accent: "text-rose-600 dark:text-rose-400" }
+    : { item: "lending", out: "Lent", back: "Received", rate: "Returned", pay: "Payments Received", outBar: "bg-emerald-400 dark:bg-emerald-500", accent: "text-emerald-600 dark:text-emerald-400" }
+  const money = (v: number) => `${currency} ${formatMoney(v)}`
+  const plural = (n: number, w: string) => `${n} ${w}${n !== 1 ? "s" : ""}`
+
+  return (
+    <>
+      {/* Repayment progress */}
+      <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl shadow-sm p-5 sm:p-6">
+        <div className="flex items-end justify-between gap-3 mb-4">
+          <div>
+            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{L.rate} so far</p>
+            <p className="font-display text-4xl font-extrabold tracking-tight leading-none text-black dark:text-white">{Math.round(f.rate * 100)}%</p>
+          </div>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 text-right">{money(f.totalPaid)}<br />of {money(f.totalAmount)}</p>
+        </div>
+        <div className="h-3 rounded-full bg-gray-100 dark:bg-white/[0.06] overflow-hidden">
+          <div className="h-full rounded-full bg-volt-500 dark:bg-volt transition-all duration-700 ease-out" style={{ width: `${Math.min(f.rate * 100, 100)}%` }} />
+        </div>
+      </div>
+
+      {/* Insight cards */}
+      <div>
+        <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">Insights</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+          <StatCard label="Overdue Amount" value={money(f.overdueAmount)} sub={f.overdueCount > 0 ? plural(f.overdueCount, kind) : "nothing overdue"} accent={f.overdueAmount > 0 ? "text-rose-600 dark:text-rose-400" : undefined} delay={0} />
+          <StatCard label="Due in 7 Days" value={money(f.dueSoonAmount)} sub={f.dueSoonCount > 0 ? plural(f.dueSoonCount, kind) : "none due soon"} accent={f.dueSoonAmount > 0 ? "text-amber-600 dark:text-amber-400" : undefined} delay={1} />
+          <StatCard label={`Avg per ${L.item}`} value={money(f.avgAmount)} sub={plural(f.people, "person").replace("persons", "people")} delay={2} />
+          <StatCard label="Avg Time to Settle" value={f.avgSettleDays !== null ? `${Math.round(f.avgSettleDays)}d` : "—"} sub={f.settledCount > 0 ? `${f.settledCount} settled with payments` : "no settled history"} delay={3} />
+          <StatCard label="Oldest Open" value={f.oldestOpen ? `${f.oldestOpenDays}d` : "—"} sub={f.oldestOpen ? f.oldestOpen.person : "all settled"} delay={4} />
+          <StatCard label={L.pay} value={String(f.payments.length)} sub={f.lastPayment ? `last ${fmtDay(f.lastPayment.date)}` : "none yet"} delay={5} />
+        </div>
+      </div>
+
+      {/* Highlights */}
+      {(f.nextDue || f.largest || f.lastPayment) && (
+        <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl shadow-sm overflow-hidden divide-y divide-black/[0.05] dark:divide-white/[0.05]">
+          {f.nextDue && (
+            <div className="flex items-center justify-between gap-3 px-5 py-4">
+              <div className="min-w-0">
+                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Next Deadline</p>
+                <p className="font-semibold text-black dark:text-white truncate">{f.nextDue.person}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{fmtDay(f.nextDue.deadline!)}</p>
+              </div>
+              <span className={`font-display text-lg font-bold tracking-tight shrink-0 ${L.accent}`}>{money(f.nextDueAmount)}</span>
+            </div>
+          )}
+          {f.largest && (
+            <div className="flex items-center justify-between gap-3 px-5 py-4">
+              <div className="min-w-0">
+                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Largest {L.item}</p>
+                <p className="font-semibold text-black dark:text-white truncate">{f.largest.person}</p>
+                {f.largest.date && <p className="text-xs text-gray-400 mt-0.5">{fmtDay(f.largest.date)}</p>}
+              </div>
+              <span className="font-display text-lg font-bold tracking-tight shrink-0 text-black dark:text-white">{money(Number(f.largest.amount))}</span>
+            </div>
+          )}
+          {f.lastPayment && (
+            <div className="flex items-center justify-between gap-3 px-5 py-4">
+              <div className="min-w-0">
+                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">Latest Payment</p>
+                <p className="font-semibold text-black dark:text-white truncate">{f.lastPayment.person}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{fmtDay(f.lastPayment.date)}</p>
+              </div>
+              <span className="font-display text-lg font-bold tracking-tight shrink-0 text-black dark:text-white">{money(f.lastPayment.amount)}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 6-month flow */}
+      <div>
+        <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">Last 6 Months</h2>
+        <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl shadow-sm p-5 sm:p-6">
+          <div className="flex items-center gap-4 mb-5 text-xs font-semibold text-gray-500 dark:text-gray-400">
+            <span className="inline-flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-full ${L.outBar}`} />{L.out}</span>
+            <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-volt-500 dark:bg-volt" />{L.back}</span>
+          </div>
+          <div className="flex items-stretch gap-2 sm:gap-3 h-44">
+            {f.months.map((m, i) => (
+              <div key={m.key} className="flex-1 min-w-0 flex flex-col items-center gap-1.5">
+                <div className="flex-1 w-full flex items-end justify-center gap-1">
+                  {[[m.out, L.outBar], [m.back, "bg-volt-500 dark:bg-volt"]].map(([v, cls], j) => (
+                    <div key={j} title={money(v as number)} className={`flex-1 max-w-4 rounded-full transition-all duration-700 ease-out ${(v as number) > 0 ? cls : "bg-black/[0.06] dark:bg-white/[0.08]"}`}
+                      style={{ height: `${f.monthMax > 0 ? Math.max(((v as number) / f.monthMax) * 100, (v as number) > 0 ? 5 : 2) : 2}%` }} />
+                  ))}
+                </div>
+                <span className={`text-[0.6875rem] font-semibold ${i === f.months.length - 1 ? "text-black dark:text-white" : "text-gray-500 dark:text-gray-400"}`}>{m.label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-3 mt-5 pt-4 border-t border-black/[0.05] dark:border-white/[0.05]">
+            <div>
+              <p className="text-[0.625rem] font-bold uppercase tracking-wider text-gray-400 mb-1">{L.out} · 6 mo</p>
+              <p className="font-display text-base font-bold tracking-tight text-black dark:text-white">{money(f.months.reduce((s, m) => s + m.out, 0))}</p>
+            </div>
+            <div>
+              <p className="text-[0.625rem] font-bold uppercase tracking-wider text-gray-400 mb-1">{L.back} · 6 mo</p>
+              <p className="font-display text-base font-bold tracking-tight text-black dark:text-white">{money(f.months.reduce((s, m) => s + m.back, 0))}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
 // ─── Constants ───────────────────────────────────────────────────────
+
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 const URGENCY_META = {
   critical: { label: "Critical", color: "bg-rose-500",    text: "text-rose-600 dark:text-rose-400"       },
@@ -261,14 +464,14 @@ export default function StatsPage() {
 
   const loadDebtsData = async (uid: string) => {
     setDebtsLoading(true)
-    const { data } = await supabase.from("debts").select("id, amount, amount_paid, deadline, person, paid_history").eq("user_id", uid)
+    const { data } = await supabase.from("debts").select("id, amount, amount_paid, date, deadline, person, paid_history").eq("user_id", uid)
     if (data) setDebts(data as FinanceItem[])
     setDebtsLoaded(true); setDebtsLoading(false)
   }
 
   const loadLendingData = async (uid: string) => {
     setLendingLoading(true)
-    const { data } = await supabase.from("lendings").select("id, amount, amount_paid, deadline, person, paid_history").eq("user_id", uid)
+    const { data } = await supabase.from("lendings").select("id, amount, amount_paid, date, deadline, person, paid_history").eq("user_id", uid)
     if (data) setLendings(data as FinanceItem[])
     setLendingLoaded(true); setLendingLoading(false)
   }
@@ -306,6 +509,33 @@ export default function StatsPage() {
     }
     const sortedCats = Object.entries(catTotals).sort((a, b) => b[1].total - a[1].total)
 
+    // Transaction size
+    const amounts  = list.map(e => Number(e.amount)).sort((a, b) => a - b)
+    const mid      = Math.floor(amounts.length / 2)
+    const avgTx    = allTotal / list.length
+    const medianTx = amounts.length % 2 ? amounts[mid] : (amounts[mid - 1] + amounts[mid]) / 2
+
+    // Calendar coverage + streaks
+    const todayKey  = ymd(new Date())
+    const ascDays   = [...allDays].sort()
+    const calendarSpan = expPeriod === "7d" ? 7 : expPeriod === "30d" ? 30
+      : Math.max(1, Math.round((parseDay(todayKey).getTime() - parseDay(ascDays[0]).getTime()) / DAY_MS) + 1)
+    let longestStreak = 0, run = 0
+    for (let i = 0; i < ascDays.length; i++) {
+      run = i > 0 && Math.round((parseDay(ascDays[i]).getTime() - parseDay(ascDays[i - 1]).getTime()) / DAY_MS) === 1 ? run + 1 : 1
+      longestStreak = Math.max(longestStreak, run)
+    }
+    const daySet = new Set(allDays)
+    let currentStreak = 0
+    const cursor = parseDay(todayKey)
+    if (!daySet.has(todayKey)) cursor.setDate(cursor.getDate() - 1)
+    while (daySet.has(ymd(cursor))) { currentStreak++; cursor.setDate(cursor.getDate() - 1) }
+
+    // Weekday pattern (Mon → Sun)
+    const weekdays = WEEKDAYS.map(label => ({ label, value: 0 }))
+    for (const exp of list) weekdays[(parseDay(exp.date).getDay() + 6) % 7].value += Number(exp.amount)
+    const weekdayMax = Math.max(...weekdays.map(w => w.value), 0)
+
     return {
       todayTotal:  sum(expenses.filter(e => e.date === today)),
       weekTotal:   sum(expenses.filter(e => e.date >= start(7))),
@@ -320,8 +550,36 @@ export default function StatsPage() {
       sortedDays,
       bigDay:      sortedDays[0]?.[0] ?? null,
       bigDayTotal: (sortedDays[0]?.[1] ?? 0) as number,
+      avgTx,       medianTx,
+      calendarSpan, noSpendDays: Math.max(0, calendarSpan - allDays.length),
+      longestStreak, currentStreak,
+      topCatShare: allTotal > 0 ? (sortedCats[0]?.[1].total ?? 0) / allTotal : 0,
+      weekdays,
+      topWeekday:  weekdayMax > 0 ? WEEKDAYS[weekdays.findIndex(w => w.value === weekdayMax)] : null,
     }
   }, [periodExpenses, expenses, expPeriod])
+
+  // Last 6 months — always from all expenses
+  const expMonthly = useMemo(() => {
+    if (expenses.length === 0) return null
+    const now = new Date()
+    const months = lastMonths(6).map((m, i, arr) => ({ ...m, value: 0, current: i === arr.length - 1 }))
+    const idx = new Map(months.map((m, i) => [m.key, i]))
+    for (const e of expenses) { const k = idx.get(e.date.slice(0, 7)); if (k !== undefined) months[k].value += Number(e.amount) }
+    const thisMonth = months[5].value
+    const dayOfMonth = now.getDate()
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+    const lastSamePoint = expenses
+      .filter(e => e.date.slice(0, 7) === months[4].key && Number(e.date.slice(8, 10)) <= dayOfMonth)
+      .reduce((s, e) => s + Number(e.amount), 0)
+    return {
+      months,
+      thisMonth,
+      projected: (thisMonth / dayOfMonth) * daysInMonth,
+      change:    lastSamePoint > 0 ? ((thisMonth - lastSamePoint) / lastSamePoint) * 100 : null,
+      avg:       months.reduce((s, m) => s + m.value, 0) / months.length,
+    }
+  }, [expenses])
 
   // Description search aggregate — always searches ALL time
   const descAggregate = useMemo(() => {
@@ -525,7 +783,7 @@ export default function StatsPage() {
 
                     {/* Aggregate card */}
                     <div className="hero-card rounded-3xl p-6 shadow-xl">
-                      <p className="text-xs font-semibold text-white/60 dark:text-black/60 mb-4">Results for "{descQuery}" — all time</p>
+                      <p className="text-xs font-semibold text-white/60 dark:text-black/60 mb-4">Results for &ldquo;{descQuery}&rdquo; — all time</p>
                       <div className="grid grid-cols-3 gap-3 mb-4">
                         <div>
                           <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Total Spent</p>
@@ -596,7 +854,7 @@ export default function StatsPage() {
                   </div>
                 ) : (
                   <div className="text-center py-10 bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl">
-                    <p className="text-gray-500 dark:text-gray-400">No expenses match "{descQuery}"</p>
+                    <p className="text-gray-500 dark:text-gray-400">No expenses match &ldquo;{descQuery}&rdquo;</p>
                   </div>
                 )
               )}
@@ -623,6 +881,19 @@ export default function StatsPage() {
                           <StatCard label="Transactions"     value={String(periodExpenses.length)} sub="within period" delay={3} />
                         </>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Insights */}
+                  <div>
+                    <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">Insights</h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                      <StatCard label="Avg / Transaction" value={`${currency} ${formatMoney(expStats.avgTx)}`} sub={`median ${currency} ${formatMoney(expStats.medianTx)}`} delay={0} />
+                      <StatCard label="No-Spend Days" value={String(expStats.noSpendDays)} sub={`of ${expStats.calendarSpan} days`} delay={1} />
+                      <StatCard label="Longest Streak" value={`${expStats.longestStreak}d`} sub={expStats.currentStreak > 0 ? `current ${expStats.currentStreak}d` : "no active streak"} delay={2} />
+                      <StatCard label="Top Category" value={`${Math.round(expStats.topCatShare * 100)}%`} sub={expStats.sortedCats[0]?.[0] ?? "—"} delay={3} />
+                      <StatCard label="Tx / Active Day" value={(periodExpenses.length / Math.max(expStats.allDays.length, 1)).toFixed(1)} sub={`${periodExpenses.length} transactions`} delay={4} />
+                      <StatCard label="Categories Used" value={String(expStats.sortedCats.length)} sub="in this period" delay={5} />
                     </div>
                   </div>
 
@@ -653,6 +924,52 @@ export default function StatsPage() {
 
                   {/* Line chart */}
                   <SpendingLineChart expenses={expenses} currency={currency} />
+
+                  {/* Monthly trend */}
+                  {expMonthly && (
+                    <div>
+                      <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">Monthly Trend</h2>
+                      <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl shadow-sm p-5 sm:p-6">
+                        <div className="grid grid-cols-3 gap-3 mb-6">
+                          <div className="min-w-0">
+                            <p className="text-[0.625rem] font-bold uppercase tracking-wider text-gray-400 mb-1">This month</p>
+                            <p className="font-display text-base sm:text-lg font-bold tracking-tight text-black dark:text-white break-words">{currency} {formatMoney(expMonthly.thisMonth)}</p>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[0.625rem] font-bold uppercase tracking-wider text-gray-400 mb-1">Projected</p>
+                            <p className="font-display text-base sm:text-lg font-bold tracking-tight text-black dark:text-white break-words">{currency} {formatMoney(expMonthly.projected)}</p>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[0.625rem] font-bold uppercase tracking-wider text-gray-400 mb-1">vs last month</p>
+                            {expMonthly.change === null ? (
+                              <p className="font-display text-base sm:text-lg font-bold text-gray-400">—</p>
+                            ) : (
+                              <p className={`font-display text-base sm:text-lg font-bold tracking-tight ${expMonthly.change > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                                {expMonthly.change > 0 ? "▲" : "▼"} {Math.abs(Math.round(expMonthly.change))}%
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <ColumnChart data={expMonthly.months} format={fmtCompact} />
+                        <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mt-4 text-center">
+                          6-month avg {currency} {formatMoney(expMonthly.avg)} · compared to same point last month
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Weekday pattern */}
+                  <div>
+                    <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Weekday</h2>
+                    <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl shadow-sm p-5 sm:p-6">
+                      <ColumnChart data={expStats.weekdays} format={fmtCompact} />
+                      {expStats.topWeekday && (
+                        <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mt-4 text-center">
+                          You spend most on <span className="font-bold text-black dark:text-white">{expStats.topWeekday}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
                   {/* By Category */}
                   {expStats.sortedCats.length > 0 && (
@@ -809,6 +1126,8 @@ export default function StatsPage() {
                   <StatCard label="Outstanding"  value={`${currency} ${formatMoney(s.outstanding)}`}   sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} accent={s.outstanding > 0 ? "text-rose-600 dark:text-rose-400" : undefined} delay={3} />
                 </div>
 
+                <FinanceInsights items={debts} currency={currency} kind="debt" />
+
                 <div>
                   <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Status</h2>
                   <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
@@ -873,6 +1192,8 @@ export default function StatsPage() {
                   <StatCard label="Total Received"  value={`${currency} ${formatMoney(s.totalPaid)}`}    sub="amount returned"             delay={2} />
                   <StatCard label="Outstanding"     value={`${currency} ${formatMoney(s.outstanding)}`}  sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} accent={s.outstanding > 0 ? "text-emerald-600 dark:text-emerald-400" : undefined} delay={3} />
                 </div>
+
+                <FinanceInsights items={lendings} currency={currency} kind="lending" />
 
                 <div>
                   <h2 className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Status</h2>
