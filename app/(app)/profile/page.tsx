@@ -103,7 +103,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black">
+      <div className="min-h-screen">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pt-10">
           <div className="space-y-6">
             <div className="skeleton rounded-2xl h-8 w-48"></div>
@@ -115,11 +115,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black">
+    <div className="min-h-screen">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pt-10">
         <div className="animate-slide-in-down">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3 mb-8">
+            <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 bg-black dark:bg-volt rounded-2xl flex items-center justify-center shrink-0 -rotate-3 shadow-lg shadow-black/15 dark:shadow-volt/20">
               <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
@@ -128,7 +128,7 @@ export default function ProfilePage() {
             <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Profile</h1>
           </div>
 
-          <Link  href="/" className="text-xl font-bold text-black dark:text-white">
+          <Link  href="/" className="mb-8 h-10 px-4 inline-flex items-center rounded-full bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] shadow-sm text-sm font-bold text-black dark:text-white hover:bg-gray-50 dark:hover:bg-white/10 transition-colors">
             Back
           </Link>
           </div>
@@ -176,7 +176,7 @@ export default function ProfilePage() {
               </div>
 
               {error && (
-                <div className="text-sm p-4 rounded-xl text-red-800 bg-red-100 dark:text-red-300 dark:bg-red-900/20 border border-red-200 dark:border-red-800 animate-slide-in-down">
+                <div className="text-sm font-medium p-4 rounded-2xl text-rose-800 bg-rose-50 dark:text-rose-300 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 animate-slide-in-down">
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -187,7 +187,7 @@ export default function ProfilePage() {
               )}
 
               {success && (
-                <div className="text-sm p-4 rounded-xl text-green-800 bg-green-100 dark:text-green-300 dark:bg-green-900/20 border border-green-200 dark:border-green-800 animate-slide-in-down">
+                <div className="text-sm font-medium p-4 rounded-2xl text-volt-900 bg-volt-100 dark:text-volt-200 dark:bg-volt/10 border border-volt-300/70 dark:border-volt/20 animate-slide-in-down">
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -200,7 +200,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full px-6 py-3 text-sm font-semibold text-white dark:text-black bg-black dark:bg-volt rounded-xl hover:bg-gray-800 dark:hover:bg-volt-300 shadow-lg shadow-black/10 dark:shadow-volt/10 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200    flex items-center justify-center gap-2"
+                className="w-full h-12 px-6 text-sm font-bold text-white dark:text-black bg-black dark:bg-volt rounded-2xl hover:bg-gray-800 dark:hover:bg-volt-300 shadow-lg shadow-black/10 dark:shadow-volt/10 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200    flex items-center justify-center gap-2"
               >
                 {saving ? (
                   <>

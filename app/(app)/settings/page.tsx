@@ -207,7 +207,7 @@ export default function SettingsPage() {
             {/* Profile Section */}
             <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-400/10 rounded-2xl flex items-center justify-center shrink-0">
                   <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
@@ -216,7 +216,7 @@ export default function SettingsPage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-black dark:text-white">Profile</h2>
+                <h2 className="text-xl font-bold tracking-tight text-black dark:text-white">Profile</h2>
               </div>
 
               <form onSubmit={handleProfileSave} className="space-y-6">
@@ -265,7 +265,7 @@ export default function SettingsPage() {
                 </div>
 
                 {profileError && (
-                  <div className="text-sm p-4 rounded-xl text-red-800 bg-red-100 dark:text-red-300 dark:bg-red-900/20 border border-red-200 dark:border-red-800 animate-slide-in-down">
+                  <div className="text-sm font-medium p-4 rounded-2xl text-rose-800 bg-rose-50 dark:text-rose-300 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 animate-slide-in-down">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path
@@ -280,7 +280,7 @@ export default function SettingsPage() {
                 )}
 
                 {profileSuccess && (
-                  <div className="text-sm p-4 rounded-xl text-green-800 bg-green-100 dark:text-green-300 dark:bg-green-900/20 border border-green-200 dark:border-green-800 animate-slide-in-down">
+                  <div className="text-sm font-medium p-4 rounded-2xl text-volt-900 bg-volt-100 dark:text-volt-200 dark:bg-volt/10 border border-volt-300/70 dark:border-volt/20 animate-slide-in-down">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path
@@ -297,7 +297,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={savingProfile}
-                  className="w-full px-6 py-3 text-sm font-semibold text-white dark:text-black bg-black dark:bg-volt rounded-xl hover:bg-gray-800 dark:hover:bg-volt-300 shadow-lg shadow-black/10 dark:shadow-volt/10 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200    flex items-center justify-center gap-2"
+                  className="w-full h-12 px-6 text-sm font-bold text-white dark:text-black bg-black dark:bg-volt rounded-2xl hover:bg-gray-800 dark:hover:bg-volt-300 shadow-lg shadow-black/10 dark:shadow-volt/10 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200    flex items-center justify-center gap-2"
                 >
                   {savingProfile ? (
                     <>
@@ -326,28 +326,28 @@ export default function SettingsPage() {
             {/* Preferences Section */}
             <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-400/10 rounded-2xl flex items-center justify-center shrink-0">
                   <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-black dark:text-white">Preferences</h2>
+                <h2 className="text-xl font-bold tracking-tight text-black dark:text-white">Preferences</h2>
               </div>
               <div className="space-y-4">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Currency</label>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Used across expenses, debts, and lending.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Used across expenses, debts, and lending.</p>
                   <div className="flex items-center gap-3">
                     <select
                       value={currency}
                       onChange={e => setCurrencyPref(e.target.value)}
-                      className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-black text-black dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-volt focus:border-transparent transition-all"
+                      className="flex-1 px-4 h-12 border border-gray-200 dark:border-white/[0.08] rounded-2xl bg-gray-50 dark:bg-white/[0.04] text-black dark:text-white font-semibold focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt transition-all"
                     >
                       {CURRENCIES.map(c => (
                         <option key={c.code} value={c.code}>{c.code} – {c.name}</option>
                       ))}
                     </select>
-                    <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Current: {currency}</span>
+                    <span className="text-xs font-bold text-volt-800 dark:text-volt bg-volt-100 dark:bg-volt/10 px-3 py-1.5 rounded-full whitespace-nowrap">Current: {currency}</span>
                   </div>
                 </div>
               </div>
@@ -356,12 +356,12 @@ export default function SettingsPage() {
             {/* Spending Budgets Section */}
             <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-orange-100 dark:bg-orange-400/10 rounded-2xl flex items-center justify-center shrink-0">
                   <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-black dark:text-white">Spending Budgets</h2>
+                <h2 className="text-xl font-bold tracking-tight text-black dark:text-white">Spending Budgets</h2>
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Set monthly limits per category. Leave blank for no limit.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -377,21 +377,21 @@ export default function SettingsPage() {
                         value={budgets[cat] ?? ""}
                         onChange={e => setBudgets(prev => ({ ...prev, [cat]: e.target.value }))}
                         placeholder="No limit"
-                        className="w-full pl-11 pr-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-950 text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all"
+                        className="w-full pl-12 pr-3 py-3 border border-gray-200 dark:border-white/[0.08] rounded-2xl bg-gray-50 dark:bg-white/[0.04] text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt transition-all"
                       />
                     </div>
                   </div>
                 ))}
               </div>
               {budgetSuccess && (
-                <div className="text-sm p-3 rounded-xl text-green-800 bg-green-100 dark:text-green-300 dark:bg-green-900/20 border border-green-200 dark:border-green-800 mb-4 animate-slide-in-down">
+                <div className="text-sm font-medium p-3 rounded-2xl text-volt-900 bg-volt-100 dark:text-volt-200 dark:bg-volt/10 border border-volt-300/70 dark:border-volt/20 mb-4 animate-slide-in-down">
                   {budgetSuccess}
                 </div>
               )}
               <button
                 onClick={handleSaveBudgets}
                 disabled={savingBudgets}
-                className="w-full px-6 py-3 text-sm font-semibold text-white dark:text-black bg-black dark:bg-volt rounded-xl hover:opacity-80 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                className="w-full h-12 px-6 text-sm font-bold text-white dark:text-black bg-black dark:bg-volt rounded-2xl hover:opacity-80 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
               >
                 {savingBudgets ? "Saving..." : "Save Budgets"}
               </button>
@@ -400,7 +400,7 @@ export default function SettingsPage() {
             {/* Change Password Section */}
             <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-400/10 rounded-2xl flex items-center justify-center shrink-0">
                   <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
@@ -409,7 +409,7 @@ export default function SettingsPage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-black dark:text-white">Change Password</h2>
+                <h2 className="text-xl font-bold tracking-tight text-black dark:text-white">Change Password</h2>
               </div>
 
               <form onSubmit={handlePasswordChange} className="space-y-6">
@@ -449,7 +449,7 @@ export default function SettingsPage() {
                 </div>
 
                 {error && (
-                  <div className="text-sm p-4 rounded-xl text-red-800 bg-red-100 dark:text-red-300 dark:bg-red-900/20 border border-red-200 dark:border-red-800 animate-slide-in-down">
+                  <div className="text-sm font-medium p-4 rounded-2xl text-rose-800 bg-rose-50 dark:text-rose-300 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 animate-slide-in-down">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path
@@ -464,7 +464,7 @@ export default function SettingsPage() {
                 )}
 
                 {success && (
-                  <div className="text-sm p-4 rounded-xl text-green-800 bg-green-100 dark:text-green-300 dark:bg-green-900/20 border border-green-200 dark:border-green-800 animate-slide-in-down">
+                  <div className="text-sm font-medium p-4 rounded-2xl text-volt-900 bg-volt-100 dark:text-volt-200 dark:bg-volt/10 border border-volt-300/70 dark:border-volt/20 animate-slide-in-down">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path
@@ -481,7 +481,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full px-6 py-3 text-sm font-semibold text-white dark:text-black bg-black dark:bg-volt rounded-xl hover:bg-gray-800 dark:hover:bg-volt-300 shadow-lg shadow-black/10 dark:shadow-volt/10 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200    flex items-center justify-center gap-2"
+                  className="w-full h-12 px-6 text-sm font-bold text-white dark:text-black bg-black dark:bg-volt rounded-2xl hover:bg-gray-800 dark:hover:bg-volt-300 shadow-lg shadow-black/10 dark:shadow-volt/10 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200    flex items-center justify-center gap-2"
                 >
                   {saving ? (
                     <>
@@ -512,10 +512,10 @@ export default function SettingsPage() {
             </div>
 
             {/* Danger Zone */}
-            <div className="bg-white dark:bg-black border border-red-200 dark:border-red-800 rounded-2xl p-8 shadow-xl">
+            <div className="bg-white dark:bg-black border border-rose-200 dark:border-rose-500/25 rounded-3xl p-5 sm:p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-10 h-10 bg-rose-100 dark:bg-rose-400/10 rounded-2xl flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-rose-600 dark:text-rose-400" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
                       d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
@@ -523,18 +523,18 @@ export default function SettingsPage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-red-600 dark:text-red-400">Danger Zone</h2>
+                <h2 className="text-xl font-bold tracking-tight text-rose-600 dark:text-rose-400">Danger Zone</h2>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-medium text-black dark:text-white mb-2">Clear All Data</h3>
+                  <h3 className="text-base font-bold text-black dark:text-white mb-1.5">Clear All Data</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     Permanently delete all your todos, notes, and progress. This action cannot be undone.
                   </p>
                   <button
                     onClick={() => setShowClearModal(true)}
-                    className="px-6 py-3 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200    flex items-center gap-2"
+                    className="h-12 px-6 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-2xl shadow-lg shadow-rose-600/25 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black transition-all duration-200    flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd" />
