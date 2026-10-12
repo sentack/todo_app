@@ -18,10 +18,10 @@ const PAGE_SIZE = 15
 const URGENCY_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
 
 const URGENCY_META: Record<string, { label: string; badge: string; dot: string }> = {
-  critical: { label: "Critical", badge: "bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300",           dot: "bg-red-500"    },
+  critical: { label: "Critical", badge: "bg-rose-100 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300",           dot: "bg-rose-500"    },
   high:     { label: "High",     badge: "bg-orange-100 text-orange-700 dark:bg-orange-400/10 dark:text-orange-300", dot: "bg-orange-400" },
-  medium:   { label: "Medium",   badge: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400", dot: "bg-yellow-400" },
-  low:      { label: "Low",      badge: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",           dot: "bg-gray-400"   },
+  medium:   { label: "Medium",   badge: "bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-300", dot: "bg-amber-400" },
+  low:      { label: "Low",      badge: "bg-gray-100 text-gray-600 dark:bg-white/[0.06] dark:text-gray-300",           dot: "bg-gray-400"   },
 }
 
 interface LogPrompt { itemId: string; name: string; amount: number }
@@ -190,13 +190,16 @@ export default function ToBuyPage() {
         <div className="animate-slide-in-down">
 
           {/* Header */}
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-4 mb-7">
             <div className="w-12 h-12 bg-black dark:bg-volt rounded-2xl flex items-center justify-center shrink-0 -rotate-3 shadow-lg shadow-black/15 dark:shadow-volt/20">
               <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
               </svg>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">To Buy</h1>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-1.5">Shopping list</p>
+              <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">To Buy</h1>
+            </div>
           </div>
 
           {/* Summary banner */}
@@ -206,11 +209,11 @@ export default function ToBuyPage() {
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-2">Pending</p>
                   <p className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-white dark:text-black">{summary.pendingCount} item{summary.pendingCount !== 1 ? "s" : ""}</p>
-                  {summary.pendingTotal > 0 && <p className="text-gray-400 dark:text-gray-600 text-sm mt-1">≈ {currency} {formatMoney(summary.pendingTotal)}</p>}
+                  {summary.pendingTotal > 0 && <p className="text-white/60 dark:text-black/60 text-sm font-semibold mt-2">≈ {currency} {formatMoney(summary.pendingTotal)}</p>}
                 </div>
                 <div className="text-right">
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-2">Bought</p>
-                  <p className="text-2xl font-bold text-white dark:text-black">{summary.boughtCount}</p>
+                  <p className="font-display text-3xl font-extrabold tracking-tight text-volt dark:text-black">{summary.boughtCount}</p>
                 </div>
               </div>
             </div>
@@ -218,19 +221,19 @@ export default function ToBuyPage() {
 
           {/* Log-as-expense prompt */}
           {logPrompt && (
-            <div className="animate-slide-in-down bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-2xl p-4 mb-6 flex items-center justify-between gap-3">
+            <div className="animate-slide-in-down bg-volt-50 dark:bg-volt/[0.08] border border-volt-300/70 dark:border-volt/20 rounded-3xl p-4 mb-6 shadow-sm flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 bg-green-500 rounded-xl flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 bg-volt text-black rounded-2xl flex items-center justify-center shrink-0 shadow-md shadow-volt/30">
                   <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-green-900 dark:text-green-100 truncate">Bought: {logPrompt.name}</p>
-                  <p className="text-xs text-green-700 dark:text-green-300">Log {currency} {formatMoney(logPrompt.amount)} as expense?</p>
+                  <p className="text-sm font-bold text-black dark:text-white truncate">Bought: {logPrompt.name}</p>
+                  <p className="text-xs font-medium text-volt-800 dark:text-volt-300">Log {currency} {formatMoney(logPrompt.amount)} as expense?</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={logAsExpense} className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-xl transition-colors">Log</button>
-                <button onClick={() => setLogPrompt(null)} className="px-3 py-1.5 bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 text-green-800 dark:text-green-200 text-xs font-semibold rounded-xl transition-colors">Skip</button>
+                <button onClick={logAsExpense} className="h-9 px-4 bg-black dark:bg-volt text-white dark:text-black text-xs font-bold rounded-full hover:opacity-90 transition-all">Log</button>
+                <button onClick={() => setLogPrompt(null)} className="h-9 px-4 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/10 text-black dark:text-white text-xs font-bold rounded-full hover:bg-gray-50 dark:hover:bg-white/10 transition-colors">Skip</button>
               </div>
             </div>
           )}
@@ -243,14 +246,14 @@ export default function ToBuyPage() {
               </svg>
               <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search items..." className="w-full pl-11 pr-10 h-12 bg-white dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] rounded-2xl shadow-sm text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt transition-all" />
               {search && (
-                <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <button onClick={() => setSearch("")} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 grid place-items-center rounded-full text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06]">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                 </button>
               )}
             </div>
-            <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1 w-fit">
+            <div className="flex gap-1 bg-black/[0.04] dark:bg-white/[0.05] rounded-full p-1 w-fit">
               {(["pending", "all", "bought"] as ViewFilter[]).map(f => (
-                <button key={f} onClick={() => setViewFilter(f)} className={`px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all duration-150 ${viewFilter === f ? "bg-black dark:bg-volt text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
+                <button key={f} onClick={() => setViewFilter(f)} className={`px-5 h-9 rounded-full text-xs font-bold capitalize transition-all duration-150 ${viewFilter === f ? "bg-black dark:bg-volt text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
                   {f === "pending" ? `Pending${summary.pendingCount > 0 ? ` (${summary.pendingCount})` : ""}` : f === "bought" ? `Bought${summary.boughtCount > 0 ? ` (${summary.boughtCount})` : ""}` : "All"}
                 </button>
               ))}
@@ -267,7 +270,7 @@ export default function ToBuyPage() {
                   <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
                 </svg>
               </div>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="font-medium text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
                 {search ? "No items match your search." : viewFilter === "bought" ? "Nothing bought yet." : "Your list is empty. Use the + button to add something."}
               </p>
             </div>
@@ -277,9 +280,9 @@ export default function ToBuyPage() {
               {pendingPaged.length > 0 && (["critical","high","medium","low"] as ToBuyItem["urgency"][]).filter(u => urgencyGroups[u]?.length).map(u => (
                 <div key={u}>
                   <div className="flex items-center gap-2 mb-2 px-1">
-                    <div className={`w-2 h-2 rounded-full ${URGENCY_META[u].dot}`} />
-                    <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{URGENCY_META[u].label}</span>
-                    <span className="text-xs text-gray-400 dark:text-gray-600">{urgencyGroups[u].length} item{urgencyGroups[u].length !== 1 ? "s" : ""}</span>
+                    <div className={`w-2.5 h-2.5 rounded-full ring-4 ring-black/[0.03] dark:ring-white/[0.04] ${URGENCY_META[u].dot}`} />
+                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">{URGENCY_META[u].label}</span>
+                    <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 ml-auto">{urgencyGroups[u].length} item{urgencyGroups[u].length !== 1 ? "s" : ""}</span>
                   </div>
                   <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                     {urgencyGroups[u].map((item, idx) => (
@@ -294,8 +297,8 @@ export default function ToBuyPage() {
                 <div>
                   {viewFilter === "all" && (
                     <div className="flex items-center gap-2 mb-2 px-1">
-                      <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                      <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">Bought</span>
+                      <svg className="w-4 h-4 text-volt-600 dark:text-volt" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">Bought</span>
                     </div>
                   )}
                   <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
@@ -318,7 +321,7 @@ export default function ToBuyPage() {
               >
                 ← Prev
               </button>
-              <span className="text-sm text-gray-500 dark:text-gray-400">Page {page} of {totalPages}</span>
+              <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">Page {page} of {totalPages}</span>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
@@ -337,14 +340,14 @@ export default function ToBuyPage() {
 // ── ItemRow ───────────────────────────────────────────────────────────────────
 
 const BADGE: Record<string, string> = {
-  critical: "bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300",
+  critical: "bg-rose-100 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300",
   high:     "bg-orange-100 text-orange-700 dark:bg-orange-400/10 dark:text-orange-300",
-  medium:   "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  low:      "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+  medium:   "bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-300",
+  low:      "bg-gray-100 text-gray-600 dark:bg-white/[0.06] dark:text-gray-300",
 }
 const URGENCY_ACTIVE: Record<string, string> = {
-  critical: "bg-red-500 text-white", high: "bg-orange-400 text-white",
-  medium: "bg-yellow-400 text-black", low: "bg-gray-400 text-white",
+  critical: "bg-rose-500 text-white shadow-md shadow-rose-500/30", high: "bg-orange-400 text-white shadow-md shadow-orange-400/30",
+  medium: "bg-amber-300 text-black shadow-md shadow-amber-300/30", low: "bg-gray-500 text-white shadow-md shadow-gray-500/30",
 }
 const ITEM_INPUT = "w-full px-4 py-2.5 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]"
 
@@ -386,11 +389,11 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
 
   if (isEditing) {
     return (
-      <div className={`px-4 py-3 ${borderCls}`}>
+      <div className={`px-5 py-5 bg-volt/[0.06] ${borderCls}`}>
         <form onSubmit={handleSave} className="space-y-3">
           <div className="flex gap-2">
             <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Item name" autoFocus className={`${ITEM_INPUT} flex-1`} />
-            <button type="button" onClick={() => setIsEditing(false)} className="p-2 text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+            <button type="button" onClick={() => setIsEditing(false)} aria-label="Close" className="w-11 h-11 shrink-0 grid place-items-center rounded-full bg-white dark:bg-white/[0.06] text-gray-500 hover:text-black dark:hover:text-white transition-colors">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
             </button>
           </div>
@@ -407,7 +410,7 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
           <div className="grid grid-cols-4 gap-1.5">
             {(["low","medium","high","critical"] as const).map(u => (
               <button key={u} type="button" onClick={() => setUrgency(u)}
-                className={`py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${urgency === u ? URGENCY_ACTIVE[u] : inactiveCls}`}
+                className={`py-2.5 rounded-2xl text-xs font-bold capitalize transition-all ${urgency === u ? URGENCY_ACTIVE[u] : inactiveCls}`}
               >{u}</button>
             ))}
           </div>
@@ -416,7 +419,7 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
             <button type="submit" disabled={saving} className="flex-1 h-11 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl shadow-md shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40">
               {saving ? "Saving..." : "Save"}
             </button>
-            <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm font-semibold rounded-xl hover:opacity-80">
+            <button type="button" onClick={() => setIsEditing(false)} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">
               Cancel
             </button>
           </div>
@@ -426,15 +429,15 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
   }
 
   return (
-    <div className={`px-4 py-3 transition-colors ${item.bought ? "bg-gray-50 dark:bg-gray-950" : ""} ${borderCls}`}>
+    <div className={`pl-4 sm:pl-5 pr-2 sm:pr-3 py-3.5 transition-colors ${item.bought ? "bg-black/[0.015] dark:bg-white/[0.015]" : "hover:bg-black/[0.015] dark:hover:bg-white/[0.02]"} ${borderCls}`}>
       <div className="flex items-center gap-3">
         <button
           onClick={() => onToggle(item)} disabled={togglingId === item.id}
-          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 disabled:opacity-50 ${item.bought ? "bg-black dark:bg-volt border-black dark:border-volt" : "border-gray-300 dark:border-gray-700 hover:border-black dark:hover:border-white"}`}
+          className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-300 disabled:opacity-50 ${item.bought ? "bg-volt border-volt shadow-md shadow-volt/40" : "border-gray-300 dark:border-gray-600 hover:border-volt-500 dark:hover:border-volt hover:bg-volt/10"}`}
         >
-          {item.bought && <svg className="w-3 h-3 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
+          {item.bought && <svg className="w-4 h-4 text-black animate-pop-in" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
         </button>
-        <p className={`flex-1 min-w-0 font-medium truncate ${item.bought ? "line-through text-gray-400 dark:text-gray-600" : "text-black dark:text-white"}`}>
+        <p className={`flex-1 min-w-0 font-semibold truncate ${item.bought ? "line-through decoration-2 decoration-volt-500 text-gray-400 dark:text-gray-600" : "text-black dark:text-white"}`}>
           {item.name}
         </p>
         <div className="flex items-center gap-1 shrink-0">
@@ -446,15 +449,15 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
           </button>
         </div>
       </div>
-      <div className="flex items-center justify-between mt-1 pl-8 gap-2">
+      <div className="flex items-center justify-between mt-0.5 pl-10 pr-2 gap-2">
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
-          <span className="text-xs text-gray-500 dark:text-gray-400">Qty: {qtyStr}</span>
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Qty: {qtyStr}</span>
           {Number(item.price) > 0 && <span className="text-xs text-gray-500 dark:text-gray-400">· {currency} {formatMoney(Number(item.price))} each</span>}
           {item.notes && <span className="text-xs text-gray-400 dark:text-gray-600 truncate max-w-[100px]">· {item.notes}</span>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {itemTotal > 0 && <span className={`text-sm font-bold ${item.bought ? "text-gray-400 dark:text-gray-600 line-through" : "text-black dark:text-white"}`}>{currency} {formatMoney(itemTotal)}</span>}
-          {!item.bought && <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${BADGE[item.urgency]}`}>{item.urgency}</span>}
+          {itemTotal > 0 && <span className={`font-display text-sm sm:text-base font-bold tracking-tight ${item.bought ? "text-gray-400 dark:text-gray-600 line-through" : "text-black dark:text-white"}`}>{currency} {formatMoney(itemTotal)}</span>}
+          {!item.bought && <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full capitalize ${BADGE[item.urgency]}`}>{item.urgency}</span>}
         </div>
       </div>
     </div>

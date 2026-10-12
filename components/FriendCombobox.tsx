@@ -70,20 +70,20 @@ export default function FriendCombobox({
         placeholder={placeholder}
         required={required}
         autoComplete="off"
-        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all"
+        className="w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]"
       />
 
       {open && (filtered.length > 0 || (value.trim() && !exactMatch)) && (
-        <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
+        <div className="absolute top-full mt-2 left-0 right-0 z-50 p-1.5 bg-white dark:bg-gray-900 border border-black/[0.06] dark:border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden max-h-56 overflow-y-auto animate-pop-in">
           {filtered.map(f => (
             <button
               key={f.id}
               type="button"
               onMouseDown={() => selectFriend(f.name)}
-              className="w-full px-3 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-950 flex items-center gap-2 transition-colors"
+              className="w-full px-3 py-2.5 text-left text-sm font-medium rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.06] flex items-center gap-2.5 transition-colors"
             >
-              <div className="w-6 h-6 rounded-full bg-black dark:bg-volt flex items-center justify-center shrink-0">
-                <span className="text-xs font-bold text-white dark:text-black">
+              <div className="w-7 h-7 rounded-xl bg-black dark:bg-volt flex items-center justify-center shrink-0">
+                <span className="text-xs font-extrabold text-volt dark:text-black">
                   {f.name.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -94,7 +94,7 @@ export default function FriendCombobox({
             <button
               type="button"
               onMouseDown={() => selectFriend(value.trim())}
-              className="w-full px-3 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-950 flex items-center gap-2 text-blue-600 dark:text-blue-400 transition-colors border-t border-gray-100 dark:border-gray-900"
+              className="w-full px-3 py-2.5 mt-1 text-left text-sm font-bold rounded-xl hover:bg-volt/10 flex items-center gap-2.5 text-volt-800 dark:text-volt transition-colors"
             >
               <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />

@@ -89,7 +89,7 @@ export default function FriendsPage() {
         <div className="animate-slide-in-down">
 
           {/* Header */}
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-4 mb-7">
             <div className="w-12 h-12 bg-black dark:bg-volt rounded-2xl flex items-center justify-center shrink-0 -rotate-3 shadow-lg shadow-black/15 dark:shadow-volt/20">
               <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
@@ -97,7 +97,7 @@ export default function FriendsPage() {
             </div>
             <div>
               <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Friends</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Used for debts &amp; lending</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1.5">Used for debts &amp; lending</p>
             </div>
           </div>
 
@@ -115,7 +115,7 @@ export default function FriendsPage() {
                 className="w-full pl-11 pr-10 h-12 bg-white dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] rounded-2xl shadow-sm text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt transition-all"
               />
               {search && (
-                <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <button onClick={() => setSearch("")} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 grid place-items-center rounded-full text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06]">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                 </button>
               )}
@@ -132,23 +132,23 @@ export default function FriendsPage() {
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                 </svg>
               </div>
-              <p className="text-gray-500 dark:text-gray-400 font-medium mb-1">No friends yet</p>
-              <p className="text-sm text-gray-400 dark:text-gray-600">Use the + button to add one — they&apos;ll autocomplete in Debts &amp; Lending</p>
+              <p className="font-display text-xl font-bold tracking-tight text-black dark:text-white mb-1.5">No friends yet</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">Use the + button to add one — they&apos;ll autocomplete in Debts &amp; Lending</p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-gray-500 dark:text-gray-400">No friends match &ldquo;{search}&rdquo;</p>
+              <p className="font-medium text-gray-500 dark:text-gray-400">No friends match &ldquo;{search}&rdquo;</p>
             </div>
           ) : (
             <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
               {filtered.map((friend, idx) => (
                 <div
                   key={friend.id}
-                  className={`flex items-center gap-4 px-5 py-4 ${idx < filtered.length - 1 ? "border-b border-black/[0.05] dark:border-white/[0.05]" : ""}`}
+                  className={`flex items-center gap-3 sm:gap-4 pl-4 sm:pl-5 pr-2 sm:pr-3 py-3.5 hover:bg-black/[0.015] dark:hover:bg-white/[0.02] transition-colors ${idx < filtered.length - 1 ? "border-b border-black/[0.05] dark:border-white/[0.05]" : ""}`}
                 >
                   {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full bg-black dark:bg-volt flex items-center justify-center shrink-0">
-                    <span className="text-sm font-bold text-white dark:text-black">
+                  <div className="w-11 h-11 rounded-2xl bg-black dark:bg-volt flex items-center justify-center shrink-0">
+                    <span className="font-display text-base font-extrabold text-volt dark:text-black">
                       {friend.name.charAt(0).toUpperCase()}
                     </span>
                   </div>
@@ -161,17 +161,17 @@ export default function FriendsPage() {
                         value={editName}
                         onChange={e => setEditName(e.target.value)}
                         autoFocus
-                        className="flex-1 px-3 py-1.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all text-sm"
+                        className="flex-1 min-w-0 px-4 h-10 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-full text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]"
                       />
-                      <button type="submit" disabled={saving} className="px-3 py-1.5 bg-black dark:bg-volt text-white dark:text-black text-xs font-semibold rounded-xl hover:opacity-80 disabled:opacity-40 transition-all">
+                      <button type="submit" disabled={saving} className="h-10 px-4 bg-black dark:bg-volt text-white dark:text-black text-xs font-bold rounded-full hover:opacity-90 disabled:opacity-40 transition-all">
                         {saving ? "…" : "Save"}
                       </button>
-                      <button type="button" onClick={cancelEdit} className="px-3 py-1.5 bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 transition-all">
+                      <button type="button" onClick={cancelEdit} className="h-10 px-4 bg-gray-100 dark:bg-white/[0.06] text-gray-700 dark:text-gray-300 text-xs font-bold rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-all">
                         Cancel
                       </button>
                     </form>
                   ) : (
-                    <span className="flex-1 font-medium text-black dark:text-white">{friend.name}</span>
+                    <span className="flex-1 min-w-0 truncate font-semibold text-black dark:text-white">{friend.name}</span>
                   )}
 
                   {/* Actions (hidden while editing) */}
@@ -198,7 +198,7 @@ export default function FriendsPage() {
 
           {/* Count footer */}
           {!loading && friends.length > 0 && (
-            <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-4">
+            <p className="text-center text-xs font-medium text-gray-400 dark:text-gray-500 mt-5">
               {friends.length} friend{friends.length !== 1 ? "s" : ""}
             </p>
           )}
