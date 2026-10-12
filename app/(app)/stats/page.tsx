@@ -34,8 +34,8 @@ function StatCard({ label, value, sub, delay, accent }: {
       className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm animate-slide-in-up"
       style={{ animationDelay: `${(delay ?? 0) * 0.07}s` }}
     >
-      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${accent ?? "text-black dark:text-white"}`}>{value}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{label}</p>
+      <p className={`font-display text-xl sm:text-2xl font-extrabold tracking-tight ${accent ?? "text-black dark:text-white"}`}>{value}</p>
       {sub && <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">{sub}</p>}
     </div>
   )
@@ -54,13 +54,13 @@ function RankBar({
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1.5">
-        <span className="text-sm font-medium text-black dark:text-white truncate max-w-[60%]">{label}</span>
+        <span className="text-sm font-semibold text-black dark:text-white truncate max-w-[60%]">{label}</span>
         <div className="text-right shrink-0 ml-2">
           <span className="text-sm font-bold text-black dark:text-white">{labelRight}</span>
           {sub && <span className="text-xs text-gray-400 ml-1.5">{sub}</span>}
         </div>
       </div>
-      <div className="h-1.5 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+      <div className="h-2 bg-gray-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-500 ${barClass}`} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -89,16 +89,16 @@ function SpendingLineChart({ expenses, currency }: { expenses: Expense[]; curren
 
   return (
     <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">30-Day Spending</h3>
+      <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-4">30-Day Spending</h3>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" preserveAspectRatio="none">
         <defs>
           <linearGradient id="sf-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="currentColor" stopOpacity="0.12" />
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0.35" />
             <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
           </linearGradient>
         </defs>
-        <polygon points={area} fill="url(#sf-grad)" className="text-black dark:text-white" />
-        <polyline points={poly} fill="none" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" className="stroke-black dark:stroke-white" />
+        <polygon points={area} fill="url(#sf-grad)" className="text-volt-500 dark:text-volt" />
+        <polyline points={poly} fill="none" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" className="stroke-black dark:stroke-volt" />
         {days.map((d, i) => {
           if (i % 7 !== 0 && i !== 29) return null
           const x = padL + (i / (days.length - 1)) * chartW
@@ -107,7 +107,7 @@ function SpendingLineChart({ expenses, currency }: { expenses: Expense[]; curren
         })}
         <text x={padL} y={padT + 3} textAnchor="start" className="fill-gray-400 dark:fill-gray-600" fontSize="9">{currency} {maxVal.toFixed(0)}</text>
       </svg>
-      <p className="text-xs text-gray-400 dark:text-gray-600 mt-1 text-center">{activeDays} active days · avg {currency} {formatMoney(values.reduce((a, b) => a + b, 0) / 30)}/day</p>
+      <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mt-2 text-center">{activeDays} active days · avg {currency} {formatMoney(values.reduce((a, b) => a + b, 0) / 30)}/day</p>
     </div>
   )
 }
@@ -119,7 +119,7 @@ function CompletionBarChart({ completions }: { completions: { date: string; coun
 
   return (
     <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">7-Day Completions</h3>
+      <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-4">7-Day Completions</h3>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" preserveAspectRatio="none">
         {completions.map((c, i) => {
           const bw = barW * 0.65, x = i * barW + (barW - bw) / 2
@@ -127,14 +127,14 @@ function CompletionBarChart({ completions }: { completions: { date: string; coun
           const label = new Date(c.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short" })
           return (
             <g key={c.date}>
-              <rect x={x} y={y} width={bw} height={barH} rx="3" className="fill-black dark:fill-white" opacity={c.count > 0 ? 0.85 : 0.08} />
-              {c.count > 0 && <text x={x + bw / 2} y={y - 3} textAnchor="middle" fontSize="9" className="fill-black dark:fill-white">{c.count}</text>}
+              <rect x={x} y={y} width={bw} height={barH} rx="5" className={c.count > 0 ? "fill-volt-500 dark:fill-volt" : "fill-black dark:fill-white"} opacity={c.count > 0 ? 1 : 0.06} />
+              {c.count > 0 && <text x={x + bw / 2} y={y - 3} textAnchor="middle" fontSize="9" className="fill-black dark:fill-white font-bold">{c.count}</text>}
               <text x={x + bw / 2} y={H - 5} textAnchor="middle" fontSize="9" className="fill-gray-400 dark:fill-gray-600">{label}</text>
             </g>
           )
         })}
       </svg>
-      <p className="text-xs text-gray-400 dark:text-gray-600 mt-1 text-center">{completions.reduce((s, c) => s + c.count, 0)} todos completed this week</p>
+      <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mt-2 text-center">{completions.reduce((s, c) => s + c.count, 0)} todos completed this week</p>
     </div>
   )
 }
@@ -142,9 +142,9 @@ function CompletionBarChart({ completions }: { completions: { date: string; coun
 // ─── Constants ───────────────────────────────────────────────────────
 
 const URGENCY_META = {
-  critical: { label: "Critical", color: "bg-red-500",    text: "text-red-600 dark:text-red-400"       },
+  critical: { label: "Critical", color: "bg-rose-500",    text: "text-rose-600 dark:text-rose-400"       },
   high:     { label: "High",     color: "bg-orange-400", text: "text-orange-600 dark:text-orange-400" },
-  medium:   { label: "Medium",   color: "bg-yellow-400", text: "text-yellow-600 dark:text-yellow-400" },
+  medium:   { label: "Medium",   color: "bg-amber-400", text: "text-amber-600 dark:text-amber-400" },
   low:      { label: "Low",      color: "bg-gray-400",   text: "text-gray-600 dark:text-gray-400"     },
 }
 
@@ -410,20 +410,23 @@ export default function StatsPage() {
       <div className="animate-slide-in-down">
 
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-4 mb-7">
           <div className="w-12 h-12 bg-black dark:bg-volt rounded-2xl flex items-center justify-center shrink-0 -rotate-3 shadow-lg shadow-black/15 dark:shadow-volt/20">
             <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
               <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
             </svg>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Statistics</h1>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-1.5">Insights</p>
+            <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Statistics</h1>
+          </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1 mb-8 overflow-x-auto">
+        <div className="flex gap-1 bg-black/[0.04] dark:bg-white/[0.05] rounded-full p-1 mb-8 overflow-x-auto scrollbar-hide">
           {([["todo", "Todo"], ["expenses", "Expenses"], ["to-buy", "To Buy"], ["debts", "Debts"], ["lending", "Lending"]] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => setActiveTab(t)}
-              className={`shrink-0 px-3 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-150 ${activeTab === t ? "bg-black dark:bg-volt text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
+              className={`shrink-0 flex-1 px-4 h-10 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-150 ${activeTab === t ? "bg-black dark:bg-volt text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
               {label}
             </button>
           ))}
@@ -434,15 +437,15 @@ export default function StatsPage() {
           todoLoading ? <SectionSkeleton /> : (
             <div className="space-y-8">
               <div>
-                <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Activity</h2>
+                <h2 className="text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white mb-3 px-1">Activity</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {periodStats.map((stat, i) => (
                     <div key={stat.period} className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm animate-slide-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
-                      <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">{stat.period}</h3>
+                      <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-4">{stat.period}</h3>
                       <div className="space-y-2">
-                        {[["Created", stat.created, "bg-blue-400", "text-blue-600 dark:text-blue-400"], ["In Progress", stat.inProgress, "bg-yellow-400", "text-yellow-600 dark:text-yellow-400"], ["Completed", stat.completed, "bg-green-400", "text-green-600 dark:text-green-400"]].map(([label, val, dot, tc]) => (
+                        {[["Created", stat.created, "bg-blue-400", "text-blue-600 dark:text-blue-400"], ["In Progress", stat.inProgress, "bg-amber-400", "text-amber-600 dark:text-amber-400"], ["Completed", stat.completed, "bg-green-400", "text-emerald-600 dark:text-emerald-400"]].map(([label, val, dot, tc]) => (
                           <div key={label as string} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2"><div className={`w-2 h-2 rounded-full ${dot}`} /><span className="text-sm text-gray-600 dark:text-gray-400">{label}</span></div>
+                            <div className="flex items-center gap-2"><div className={`w-2 h-2 rounded-full ${dot}`} /><span className="text-sm font-medium text-gray-600 dark:text-gray-400">{label}</span></div>
                             <span className={`font-bold ${tc}`}>{val}</span>
                           </div>
                         ))}
@@ -456,16 +459,16 @@ export default function StatsPage() {
 
               {[["Longest Running", longestTodos, "orange"] as const, ["Longest to Complete", longestCompleted, "purple"] as const, ["Fastest Completed", fastestTodos, "green"] as const].map(([title, list, color]) => (
                 <div key={title}>
-                  <h2 className="text-lg font-semibold text-black dark:text-white mb-4">{title}</h2>
+                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white mb-3 px-1">{title}</h2>
                   <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm">
                     {list.length === 0 ? (
                       <p className="text-center text-gray-500 dark:text-gray-400 py-6">No data yet.</p>
                     ) : (
                       <div className="space-y-3">
                         {(list as any[]).map((todo, i) => (
-                          <div key={todo.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-950 rounded-xl" style={{ animationDelay: `${i * 0.1}s` }}>
+                          <div key={todo.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/[0.03] rounded-2xl" style={{ animationDelay: `${i * 0.1}s` }}>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-black dark:text-white truncate">{todo.title}</p>
+                              <p className="font-semibold text-black dark:text-white truncate">{todo.title}</p>
                               {todo.status_name && <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{todo.status_name}</p>}
                             </div>
                             <div className="text-right ml-3 shrink-0">
@@ -487,15 +490,15 @@ export default function StatsPage() {
         {activeTab === "expenses" && (
           expensesLoading ? <SectionSkeleton /> :
           expensesLoaded && expenses.length === 0 ? (
-            <div className="text-center py-16 sm:py-20"><p className="text-gray-500 dark:text-gray-400">No expense data yet.</p></div>
+            <div className="text-center py-16 sm:py-20"><p className="font-medium text-gray-500 dark:text-gray-400">No expense data yet.</p></div>
           ) : expensesLoaded ? (
             <div className="space-y-6">
 
               {/* Period filter */}
-              <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1">
+              <div className="flex gap-1 bg-black/[0.04] dark:bg-white/[0.05] rounded-full p-1">
                 {(["all", "30d", "7d"] as ExpPeriod[]).map(p => (
                   <button key={p} onClick={() => { setExpPeriod(p); setShowAllDesc(false); setShowAllCat(false); setShowAllDays(false) }}
-                    className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${expPeriod === p ? "bg-black dark:bg-volt text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
+                    className={`flex-1 h-9 rounded-full text-xs font-bold transition-all ${expPeriod === p ? "bg-black dark:bg-volt text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
                     {PERIOD_LABELS[p]}
                   </button>
                 ))}
@@ -509,7 +512,7 @@ export default function StatsPage() {
                 <input type="text" value={descRaw} onChange={e => setDescRaw(e.target.value)} placeholder="Search description or category…"
                   className="w-full pl-11 pr-10 h-12 bg-white dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] rounded-2xl shadow-sm text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt transition-all text-sm" />
                 {descRaw && (
-                  <button onClick={() => { setDescRaw(""); setDescQuery("") }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button onClick={() => { setDescRaw(""); setDescQuery("") }} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 grid place-items-center rounded-full text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06]">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                   </button>
                 )}
@@ -522,33 +525,33 @@ export default function StatsPage() {
 
                     {/* Aggregate card */}
                     <div className="hero-card rounded-3xl p-6 shadow-xl">
-                      <p className="text-gray-400 dark:text-gray-600 text-xs font-medium mb-3">Results for "{descQuery}" — all time</p>
+                      <p className="text-xs font-semibold text-white/60 dark:text-black/60 mb-4">Results for "{descQuery}" — all time</p>
                       <div className="grid grid-cols-3 gap-3 mb-4">
                         <div>
-                          <p className="text-gray-400 dark:text-gray-600 text-xs mb-0.5">Total Spent</p>
-                          <p className="text-lg font-bold text-white dark:text-black">{currency} {formatMoney(descAggregate.total)}</p>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Total Spent</p>
+                          <p className="font-display text-lg sm:text-xl font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{currency} {formatMoney(descAggregate.total)}</p>
                         </div>
                         <div>
-                          <p className="text-gray-400 dark:text-gray-600 text-xs mb-0.5">Occurrences</p>
-                          <p className="text-lg font-bold text-white dark:text-black">{descAggregate.count}</p>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Occurrences</p>
+                          <p className="font-display text-lg sm:text-xl font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{descAggregate.count}</p>
                         </div>
                         <div>
-                          <p className="text-gray-400 dark:text-gray-600 text-xs mb-0.5">Average</p>
-                          <p className="text-lg font-bold text-white dark:text-black">{currency} {formatMoney(descAggregate.avg)}</p>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Average</p>
+                          <p className="font-display text-lg sm:text-xl font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{currency} {formatMoney(descAggregate.avg)}</p>
                         </div>
                       </div>
-                      <div className="grid grid-cols-3 gap-3 border-t border-gray-800 dark:border-gray-200 pt-3">
+                      <div className="grid grid-cols-3 gap-3 border-t border-white/10 dark:border-black/10 pt-4">
                         <div>
-                          <p className="text-gray-400 dark:text-gray-600 text-xs mb-0.5">Min</p>
-                          <p className="text-sm font-semibold text-white dark:text-black">{currency} {formatMoney(descAggregate.min)}</p>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Min</p>
+                          <p className="text-sm font-bold text-white dark:text-black">{currency} {formatMoney(descAggregate.min)}</p>
                         </div>
                         <div>
-                          <p className="text-gray-400 dark:text-gray-600 text-xs mb-0.5">Max</p>
-                          <p className="text-sm font-semibold text-white dark:text-black">{currency} {formatMoney(descAggregate.max)}</p>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Max</p>
+                          <p className="text-sm font-bold text-white dark:text-black">{currency} {formatMoney(descAggregate.max)}</p>
                         </div>
                         <div>
-                          <p className="text-gray-400 dark:text-gray-600 text-xs mb-0.5">Since</p>
-                          <p className="text-sm font-semibold text-white dark:text-black">{fmtDate(descAggregate.firstDate)}</p>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Since</p>
+                          <p className="text-sm font-bold text-white dark:text-black">{fmtDate(descAggregate.firstDate)}</p>
                         </div>
                       </div>
                     </div>
@@ -556,7 +559,7 @@ export default function StatsPage() {
                     {/* Category breakdown for this search */}
                     {descAggregate.catBreakdown.length > 1 && (
                       <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm space-y-3">
-                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">By Category</p>
+                        <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em]">By Category</p>
                         {descAggregate.catBreakdown.map(([cat, tot]) => (
                           <RankBar key={cat} label={cat} labelRight={`${currency} ${formatMoney(tot)}`} value={tot} max={descAggregate.catBreakdown[0][1]} barClass={CATEGORY_COLORS[cat] || CATEGORY_COLORS["Other"]} />
                         ))}
@@ -566,7 +569,7 @@ export default function StatsPage() {
                     {/* Matching expense list */}
                     <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
                       <div className="px-4 py-3 border-b border-black/[0.05] dark:border-white/[0.05] flex items-center justify-between">
-                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Matching Expenses</p>
+                        <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em]">Matching Expenses</p>
                         <span className="text-xs text-gray-400">{descAggregate.count} found</span>
                       </div>
                       <div className="divide-y divide-black/[0.05] dark:divide-white/[0.05]">
@@ -585,7 +588,7 @@ export default function StatsPage() {
                       </div>
                       {searchListPage * SEARCH_PER_PAGE < descAggregate.count && (
                         <button onClick={() => setSearchListPage(p => p + 1)}
-                          className="w-full py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white border-t border-gray-100 dark:border-gray-900 transition-colors">
+                          className="w-full py-3.5 text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/[0.02] dark:hover:bg-white/[0.02] border-t border-black/[0.05] dark:border-white/[0.05] transition-colors">
                           Show more ({descAggregate.count - searchListPage * SEARCH_PER_PAGE} remaining)
                         </button>
                       )}
@@ -725,7 +728,7 @@ export default function StatsPage() {
                         </div>
                         {expStats.sortedDays.length > 5 && (
                           <button onClick={() => setShowAllDays(v => !v)}
-                            className="w-full py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white border-t border-gray-100 dark:border-gray-900 transition-colors">
+                            className="w-full py-3.5 text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/[0.02] dark:hover:bg-white/[0.02] border-t border-black/[0.05] dark:border-white/[0.05] transition-colors">
                             {showAllDays ? "Show less" : `Show ${expStats.sortedDays.length - 5} more days`}
                           </button>
                         )}
@@ -794,7 +797,7 @@ export default function StatsPage() {
         {activeTab === "debts" && (
           debtsLoading ? <SectionSkeleton /> :
           debtsLoaded && debts.length === 0 ? (
-            <div className="text-center py-16 sm:py-20"><p className="text-gray-500 dark:text-gray-400">No debts recorded yet.</p></div>
+            <div className="text-center py-16 sm:py-20"><p className="font-medium text-gray-500 dark:text-gray-400">No debts recorded yet.</p></div>
           ) : debtsLoaded ? (() => {
             const s = financeStats(debts)
             return (
@@ -803,13 +806,13 @@ export default function StatsPage() {
                   <StatCard label="Total Debts"  value={String(s.total)}                                sub={`${s.paid} paid off`}        delay={0} />
                   <StatCard label="Total Owed"   value={`${currency} ${formatMoney(s.totalAmount)}`}   sub="all time"                    delay={1} />
                   <StatCard label="Total Paid"   value={`${currency} ${formatMoney(s.totalPaid)}`}     sub="amount repaid"               delay={2} />
-                  <StatCard label="Outstanding"  value={`${currency} ${formatMoney(s.outstanding)}`}   sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} accent={s.outstanding > 0 ? "text-red-500 dark:text-red-400" : undefined} delay={3} />
+                  <StatCard label="Outstanding"  value={`${currency} ${formatMoney(s.outstanding)}`}   sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} accent={s.outstanding > 0 ? "text-rose-600 dark:text-rose-400" : undefined} delay={3} />
                 </div>
 
                 <div>
                   <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Status</h2>
                   <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
-                    {([["Unpaid", s.unpaid, "bg-red-400", "text-red-600 dark:text-red-400"], ["Partial", s.partial, "bg-yellow-400", "text-yellow-600 dark:text-yellow-400"], ["Paid", s.paid, "bg-green-500", "text-green-600 dark:text-green-400"]] as [string, number, string, string][]).map(([label, count, bar, text], idx, arr) => (
+                    {([["Unpaid", s.unpaid, "bg-rose-500", "text-rose-600 dark:text-rose-400"], ["Partial", s.partial, "bg-amber-400", "text-amber-600 dark:text-amber-400"], ["Paid", s.paid, "bg-emerald-500", "text-emerald-600 dark:text-emerald-400"]] as [string, number, string, string][]).map(([label, count, bar, text], idx, arr) => (
                       <div key={label} className={`px-5 py-4 ${idx < arr.length - 1 ? "border-b border-black/[0.05] dark:border-white/[0.05]" : ""}`}>
                         <RankBar label={label} labelRight={`${count} item${count !== 1 ? "s" : ""}`} value={count} max={Math.max(s.total, 1)} barClass={bar} />
                       </div>
@@ -831,7 +834,7 @@ export default function StatsPage() {
                               <p className="text-sm font-medium text-black dark:text-white truncate">{p.name}</p>
                               <p className="text-xs text-gray-400">{p.count} debt{p.count !== 1 ? "s" : ""} · total {currency} {formatMoney(p.total)}</p>
                             </div>
-                            <span className="text-sm font-bold text-red-500 dark:text-red-400 shrink-0">{currency} {formatMoney(p.outstanding)}</span>
+                            <span className="font-display text-sm sm:text-base font-bold tracking-tight text-rose-600 dark:text-rose-400 shrink-0">{currency} {formatMoney(p.outstanding)}</span>
                           </div>
                         ))}
                         {s.personRanking.filter(p => p.outstanding === 0).map(p => (
@@ -843,7 +846,7 @@ export default function StatsPage() {
                               <p className="text-sm font-medium text-black dark:text-white truncate">{p.name}</p>
                               <p className="text-xs text-gray-400">{p.count} debt{p.count !== 1 ? "s" : ""}</p>
                             </div>
-                            <span className="text-xs font-semibold text-green-500">Settled</span>
+                            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2.5 py-1 rounded-full">Settled</span>
                           </div>
                         ))}
                       </div>
@@ -859,7 +862,7 @@ export default function StatsPage() {
         {activeTab === "lending" && (
           lendingLoading ? <SectionSkeleton /> :
           lendingLoaded && lendings.length === 0 ? (
-            <div className="text-center py-16 sm:py-20"><p className="text-gray-500 dark:text-gray-400">No lendings recorded yet.</p></div>
+            <div className="text-center py-16 sm:py-20"><p className="font-medium text-gray-500 dark:text-gray-400">No lendings recorded yet.</p></div>
           ) : lendingLoaded ? (() => {
             const s = financeStats(lendings)
             return (
@@ -868,13 +871,13 @@ export default function StatsPage() {
                   <StatCard label="Total Lendings" value={String(s.total)}                               sub={`${s.paid} returned fully`}  delay={0} />
                   <StatCard label="Total Lent"      value={`${currency} ${formatMoney(s.totalAmount)}`}  sub="all time"                    delay={1} />
                   <StatCard label="Total Received"  value={`${currency} ${formatMoney(s.totalPaid)}`}    sub="amount returned"             delay={2} />
-                  <StatCard label="Outstanding"     value={`${currency} ${formatMoney(s.outstanding)}`}  sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} accent={s.outstanding > 0 ? "text-green-600 dark:text-green-400" : undefined} delay={3} />
+                  <StatCard label="Outstanding"     value={`${currency} ${formatMoney(s.outstanding)}`}  sub={s.overdue > 0 ? `${s.overdue} overdue` : "remaining"} accent={s.outstanding > 0 ? "text-emerald-600 dark:text-emerald-400" : undefined} delay={3} />
                 </div>
 
                 <div>
                   <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Status</h2>
                   <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
-                    {([["Not Returned", s.unpaid, "bg-blue-400", "text-blue-600 dark:text-blue-400"], ["Partial", s.partial, "bg-yellow-400", "text-yellow-600 dark:text-yellow-400"], ["Returned", s.paid, "bg-green-500", "text-green-600 dark:text-green-400"]] as [string, number, string, string][]).map(([label, count, bar, text], idx, arr) => (
+                    {([["Not Returned", s.unpaid, "bg-blue-400", "text-blue-600 dark:text-blue-400"], ["Partial", s.partial, "bg-amber-400", "text-amber-600 dark:text-amber-400"], ["Returned", s.paid, "bg-emerald-500", "text-emerald-600 dark:text-emerald-400"]] as [string, number, string, string][]).map(([label, count, bar, text], idx, arr) => (
                       <div key={label} className={`px-5 py-4 ${idx < arr.length - 1 ? "border-b border-black/[0.05] dark:border-white/[0.05]" : ""}`}>
                         <RankBar label={label} labelRight={`${count} item${count !== 1 ? "s" : ""}`} value={count} max={Math.max(s.total, 1)} barClass={bar} />
                       </div>
@@ -896,7 +899,7 @@ export default function StatsPage() {
                               <p className="text-sm font-medium text-black dark:text-white truncate">{p.name}</p>
                               <p className="text-xs text-gray-400">{p.count} lending{p.count !== 1 ? "s" : ""} · total {currency} {formatMoney(p.total)}</p>
                             </div>
-                            <span className="text-sm font-bold text-green-600 dark:text-green-400 shrink-0">{currency} {formatMoney(p.outstanding)}</span>
+                            <span className="font-display text-sm sm:text-base font-bold tracking-tight text-emerald-600 dark:text-emerald-400 shrink-0">{currency} {formatMoney(p.outstanding)}</span>
                           </div>
                         ))}
                         {s.personRanking.filter(p => p.outstanding === 0).map(p => (
@@ -908,7 +911,7 @@ export default function StatsPage() {
                               <p className="text-sm font-medium text-black dark:text-white truncate">{p.name}</p>
                               <p className="text-xs text-gray-400">{p.count} lending{p.count !== 1 ? "s" : ""}</p>
                             </div>
-                            <span className="text-xs font-semibold text-green-500">Returned</span>
+                            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2.5 py-1 rounded-full">Returned</span>
                           </div>
                         ))}
                       </div>
