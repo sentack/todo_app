@@ -328,15 +328,15 @@
 }
 
 .animate-slide-in-up {
-  animation: slideInUp 0.45s var(--ease-out-expo) both;
+  animation: slideInUp 0.45s var(--ease-out-expo) backwards;
 }
 
 .animate-slide-in-down {
-  animation: slideInDown 0.45s var(--ease-out-expo) both;
+  animation: slideInDown 0.45s var(--ease-out-expo) backwards;
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.25s ease-out both;
+  animation: fadeIn 0.25s ease-out backwards;
 }
 
 .animate-pulse-slow {
@@ -344,7 +344,7 @@
 }
 
 .animate-pop-in {
-  animation: popIn 0.32s var(--ease-out-expo) both;
+  animation: popIn 0.32s var(--ease-out-expo) backwards;
 }
 
 .animate-glow {
@@ -353,12 +353,12 @@
 
 /* Bottom sheet on phones, centered dialog from sm up */
 .animate-sheet {
-  animation: sheetUp 0.42s var(--ease-out-expo) both;
+  animation: sheetUp 0.42s var(--ease-out-expo) backwards;
 }
 
 @media (min-width: 640px) {
   .animate-sheet {
-    animation: popIn 0.32s var(--ease-out-expo) both;
+    animation: popIn 0.32s var(--ease-out-expo) backwards;
   }
 }
 

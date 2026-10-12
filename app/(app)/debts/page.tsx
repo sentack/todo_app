@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
+import { createPortal } from "react-dom"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import FriendCombobox from "@/components/FriendCombobox"
 import { useCurrency } from "@/contexts/CurrencyContext"
@@ -380,7 +381,8 @@ function PersonModal({ group, currency, userId, onClose, onDebtUpdated, onDebtDe
     return () => { document.body.style.overflow = "" }
   }, [])
 
-  return (
+  // Portal to <body> so no transformed ancestor can re-anchor the fixed overlay
+  return createPortal(
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-md animate-fade-in" onClick={onClose} />
 
@@ -483,7 +485,8 @@ function PersonModal({ group, currency, userId, onClose, onDebtUpdated, onDebtDe
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
