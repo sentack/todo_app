@@ -385,7 +385,7 @@ function ItemRow({ item, isLast, togglingId, currency, onToggle, onDelete, onUpd
   const itemTotal = Number(item.price) * Number(item.quantity)
   const qtyStr    = Number(item.quantity) % 1 === 0 ? String(Number(item.quantity)) : Number(item.quantity).toFixed(2)
   const borderCls = !isLast ? "border-b border-black/[0.05] dark:border-white/[0.05]" : ""
-  const inactiveCls = "bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800"
+  const inactiveCls = "bg-white dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.09]"
 
   if (isEditing) {
     return (

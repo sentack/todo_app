@@ -443,7 +443,7 @@ export default function StatsPage() {
                     <div key={stat.period} className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-5 sm:p-6 shadow-sm animate-slide-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
                       <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-4">{stat.period}</h3>
                       <div className="space-y-2">
-                        {[["Created", stat.created, "bg-blue-400", "text-blue-600 dark:text-blue-400"], ["In Progress", stat.inProgress, "bg-amber-400", "text-amber-600 dark:text-amber-400"], ["Completed", stat.completed, "bg-green-400", "text-emerald-600 dark:text-emerald-400"]].map(([label, val, dot, tc]) => (
+                        {[["Created", stat.created, "bg-sky-400", "text-sky-600 dark:text-sky-400"], ["In Progress", stat.inProgress, "bg-amber-400", "text-amber-600 dark:text-amber-400"], ["Completed", stat.completed, "bg-green-400", "text-emerald-600 dark:text-emerald-400"]].map(([label, val, dot, tc]) => (
                           <div key={label as string} className="flex items-center justify-between">
                             <div className="flex items-center gap-2"><div className={`w-2 h-2 rounded-full ${dot}`} /><span className="text-sm font-medium text-gray-600 dark:text-gray-400">{label}</span></div>
                             <span className={`font-bold ${tc}`}>{val}</span>
@@ -877,7 +877,7 @@ export default function StatsPage() {
                 <div>
                   <h2 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.14em] mb-3 px-1">By Status</h2>
                   <div className="bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl overflow-hidden shadow-sm">
-                    {([["Not Returned", s.unpaid, "bg-blue-400", "text-blue-600 dark:text-blue-400"], ["Partial", s.partial, "bg-amber-400", "text-amber-600 dark:text-amber-400"], ["Returned", s.paid, "bg-emerald-500", "text-emerald-600 dark:text-emerald-400"]] as [string, number, string, string][]).map(([label, count, bar, text], idx, arr) => (
+                    {([["Not Returned", s.unpaid, "bg-sky-400", "text-sky-600 dark:text-sky-400"], ["Partial", s.partial, "bg-amber-400", "text-amber-600 dark:text-amber-400"], ["Returned", s.paid, "bg-emerald-500", "text-emerald-600 dark:text-emerald-400"]] as [string, number, string, string][]).map(([label, count, bar, text], idx, arr) => (
                       <div key={label} className={`px-5 py-4 ${idx < arr.length - 1 ? "border-b border-black/[0.05] dark:border-white/[0.05]" : ""}`}>
                         <RankBar label={label} labelRight={`${count} item${count !== 1 ? "s" : ""}`} value={count} max={Math.max(s.total, 1)} barClass={bar} />
                       </div>

@@ -44,9 +44,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className={`${jakarta.variable} ${bricolage.variable} ${geistMono.variable} h-full`}>
       <body
-        className={`${jakarta.variable} ${bricolage.variable} ${geistMono.variable} font-sans h-full`}
+        className="font-sans h-full"
       >
         {children}
       </body>
