@@ -36,15 +36,15 @@ function getStatus(item: { amount: number; amount_paid: number }): "paid" | "par
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  paid:    "bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300",
-  partial: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  unpaid:  "bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300",
+  paid:    "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
+  partial: "bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-300",
+  unpaid:  "bg-rose-100 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300",
 }
 const STATUS_DOT: Record<string, string> = {
-  paid: "bg-green-500", partial: "bg-yellow-400", unpaid: "bg-red-400",
+  paid: "bg-emerald-500", partial: "bg-amber-400", unpaid: "bg-rose-500",
 }
 
-const CARD_INPUT = "w-full px-3 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-volt transition-all text-sm"
+const CARD_INPUT = "w-full px-4 py-2.5 bg-white dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[15px]"
 
 function groupByPerson(debts: DebtItem[], lendings: LendingItem[]): PersonGroup[] {
   const map = new Map<string, PersonGroup>()
@@ -164,14 +164,17 @@ export default function DebtsPage() {
       <div className="animate-slide-in-down">
 
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-4 mb-7">
           <div className="w-12 h-12 bg-black dark:bg-volt rounded-2xl flex items-center justify-center shrink-0 -rotate-3 shadow-lg shadow-black/15 dark:shadow-volt/20">
             <svg className="w-6 h-6 text-volt dark:text-black" fill="currentColor" viewBox="0 0 20 20">
               <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
             </svg>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Finances</h1>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400 mb-1.5">Debts &amp; lending</p>
+            <h1 className="text-3xl sm:text-4xl font-extrabold leading-none text-black dark:text-white">Finances</h1>
+          </div>
         </div>
 
         {/* Summary banner */}
@@ -180,15 +183,15 @@ export default function DebtsPage() {
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">You Owe</p>
-                <p className="text-lg font-bold text-white dark:text-black">{currency} {formatMoney(summary.youOwe)}</p>
+                <p className="font-display text-lg sm:text-2xl font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{currency} {formatMoney(summary.youOwe)}</p>
               </div>
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Owed to You</p>
-                <p className="text-lg font-bold text-white dark:text-black">{currency} {formatMoney(summary.theyOwe)}</p>
+                <p className="font-display text-lg sm:text-2xl font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{currency} {formatMoney(summary.theyOwe)}</p>
               </div>
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Net</p>
-                <p className={`text-lg font-bold ${summary.net >= 0 ? "text-green-400 dark:text-green-500" : "text-red-400"}`}>
+                <p className={`font-display text-lg sm:text-2xl font-extrabold tracking-tight leading-tight break-words ${summary.net >= 0 ? "text-volt dark:text-black" : "text-rose-400 dark:text-rose-700"}`}>
                   {summary.net >= 0 ? "+" : ""}{currency} {formatMoney(Math.abs(summary.net))}
                 </p>
               </div>
@@ -205,13 +208,13 @@ export default function DebtsPage() {
             <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name…"
               className="w-full pl-11 pr-10 h-12 bg-white dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] rounded-2xl shadow-sm text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt transition-all" />
             {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <button onClick={() => setSearch("")} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 grid place-items-center rounded-full text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06]">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
               </button>
             )}
           </div>
           <button onClick={() => setHideSettled(v => !v)}
-            className={`shrink-0 px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all ${hideSettled ? "bg-black dark:bg-volt text-white dark:text-black border-black dark:border-volt" : "bg-white dark:bg-black text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:border-black dark:hover:border-white"}`}>
+            className={`shrink-0 h-12 px-5 rounded-2xl border text-xs font-bold shadow-sm transition-all ${hideSettled ? "bg-black dark:bg-volt text-white dark:text-black border-black dark:border-volt" : "bg-white dark:bg-white/[0.04] text-gray-600 dark:text-gray-400 border-black/[0.06] dark:border-white/[0.08] hover:text-black dark:hover:text-white"}`}>
             {hideSettled ? "All" : "Active"}
           </button>
         </div>
@@ -226,7 +229,7 @@ export default function DebtsPage() {
                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
               </svg>
             </div>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="font-medium text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
               {search || hideSettled ? "No people match your filters." : "No debts or lendings yet. Use the + button to add one."}
             </p>
           </div>
@@ -276,12 +279,12 @@ function PersonCard({ group, currency, userId, onDebtUpdated, onDebtDelete, onLe
     <>
       <button
         onClick={() => setModalOpen(true)}
-        className="w-full text-left bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-4 shadow-sm hover:border-gray-400 dark:hover:border-gray-600 hover:shadow-md transition-all duration-150 active:scale-[0.99]"
+        className="w-full text-left bg-white dark:bg-black border border-black/[0.06] dark:border-white/[0.07] rounded-3xl p-4 shadow-sm hover:border-black/15 dark:hover:border-white/15 hover:shadow-lg hover:-translate-y-px transition-all duration-200 active:scale-[0.99]"
       >
         <div className="flex items-center gap-3">
           {/* Avatar */}
-          <div className="w-10 h-10 rounded-full bg-black dark:bg-volt flex items-center justify-center shrink-0">
-            <span className="text-white dark:text-black font-bold text-base leading-none">
+          <div className="w-12 h-12 rounded-2xl bg-black dark:bg-volt flex items-center justify-center shrink-0">
+            <span className="font-display text-volt dark:text-black font-extrabold text-lg leading-none">
               {group.name.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -289,8 +292,8 @@ function PersonCard({ group, currency, userId, onDebtUpdated, onDebtDelete, onLe
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <p className="font-bold text-sm text-black dark:text-white truncate">{group.name}</p>
-              <span className="text-xs text-gray-400 shrink-0">{totalTx} tx</span>
+              <p className="font-bold text-[15px] text-black dark:text-white truncate">{group.name}</p>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] shrink-0">{totalTx} tx</span>
             </div>
 
             {/* Last 5 mini chips */}
@@ -298,15 +301,15 @@ function PersonCard({ group, currency, userId, onDebtUpdated, onDebtDelete, onLe
               {recentItems.map((item, i) => {
                 const st = getStatus(item)
                 return (
-                  <span key={i} className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${item._type === "debt" ? "bg-red-400" : "bg-green-400"}`} />
+                  <span key={i} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] text-gray-700 dark:text-gray-300">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${item._type === "debt" ? "bg-rose-500" : "bg-emerald-500"}`} />
                     {currency} {formatMoney(Number(item.amount))}
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[st]}`} />
                   </span>
                 )
               })}
               {totalTx > 5 && (
-                <span className="text-xs px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-900 text-gray-400">
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] text-gray-400">
                   +{totalTx - 5} more
                 </span>
               )}
@@ -316,11 +319,11 @@ function PersonCard({ group, currency, userId, onDebtUpdated, onDebtDelete, onLe
           {/* Net */}
           <div className="text-right shrink-0 ml-2">
             {net === 0 ? (
-              <span className="text-xs font-semibold text-green-500 dark:text-green-400">Settled</span>
+              <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2.5 py-1 rounded-full">Settled</span>
             ) : (
               <>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{net > 0 ? "Owed to you" : "You owe"}</p>
-                <p className={`text-sm font-bold ${net > 0 ? "text-green-500 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">{net > 0 ? "Owed to you" : "You owe"}</p>
+                <p className={`font-display text-base font-bold tracking-tight ${net > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                   {currency} {formatMoney(Math.abs(net))}
                 </p>
               </>
@@ -379,55 +382,55 @@ function PersonModal({ group, currency, userId, onClose, onDebtUpdated, onDebtDe
 
   return (
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-md animate-fade-in" onClick={onClose} />
 
-      <div className="relative w-full sm:max-w-lg bg-white dark:bg-black sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-        style={{ height: "70vh" }}>
+      <div className="relative w-full sm:max-w-lg bg-white dark:bg-gray-950 rounded-t-[2rem] sm:rounded-[2rem] border-t sm:border border-black/[0.06] dark:border-white/[0.08] shadow-2xl flex flex-col overflow-hidden animate-sheet pb-[env(safe-area-inset-bottom)]"
+        style={{ height: "min(85dvh, 46rem)" }}>
 
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-black/[0.05] dark:border-white/[0.05] shrink-0">
-          <div className="w-9 h-9 rounded-full bg-black dark:bg-volt flex items-center justify-center shrink-0">
-            <span className="text-white dark:text-black font-bold text-base leading-none">
+        <div className="flex items-center gap-3 px-5 pt-5 pb-4 shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-black dark:bg-volt flex items-center justify-center shrink-0">
+            <span className="font-display text-volt dark:text-black font-extrabold text-lg leading-none">
               {group.name.charAt(0).toUpperCase()}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-base text-black dark:text-white truncate">{group.name}</p>
+            <p className="font-display font-bold text-xl tracking-tight text-black dark:text-white truncate">{group.name}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {group.debts.length} debt{group.debts.length !== 1 ? "s" : ""} · {group.lendings.length} lending{group.lendings.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors shrink-0">
+          <button onClick={onClose} aria-label="Close" className="w-9 h-9 grid place-items-center rounded-full bg-gray-100 dark:bg-white/[0.06] text-gray-500 hover:text-black dark:hover:text-white transition-colors shrink-0">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
 
         {/* Net summary strip */}
-        <div className="grid grid-cols-3 gap-px bg-gray-100 dark:bg-gray-900 shrink-0">
-          <div className="bg-white dark:bg-black px-4 py-3 text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">You Owe</p>
-            <p className="text-sm font-bold text-red-500 dark:text-red-400">{youOweTotal > 0 ? `${currency} ${formatMoney(youOweTotal)}` : "—"}</p>
+        <div className="grid grid-cols-3 gap-2 px-4 pb-4 shrink-0">
+          <div className="bg-gray-50 dark:bg-white/[0.04] rounded-2xl px-2 py-3 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">You Owe</p>
+            <p className="text-sm font-bold text-rose-600 dark:text-rose-400">{youOweTotal > 0 ? `${currency} ${formatMoney(youOweTotal)}` : "—"}</p>
           </div>
-          <div className="bg-white dark:bg-black px-4 py-3 text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Net</p>
-            <p className={`text-sm font-bold ${net > 0 ? "text-green-500 dark:text-green-400" : net < 0 ? "text-red-500 dark:text-red-400" : "text-gray-500"}`}>
+          <div className="bg-gray-50 dark:bg-white/[0.04] rounded-2xl px-2 py-3 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Net</p>
+            <p className={`font-display text-base font-bold tracking-tight ${net > 0 ? "text-emerald-600 dark:text-emerald-400" : net < 0 ? "text-rose-600 dark:text-rose-400" : "text-gray-500"}`}>
               {net === 0 ? "Settled" : `${net > 0 ? "+" : ""}${currency} ${formatMoney(Math.abs(net))}`}
             </p>
           </div>
-          <div className="bg-white dark:bg-black px-4 py-3 text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">They Owe</p>
-            <p className="text-sm font-bold text-green-500 dark:text-green-400">{theyOweTotal > 0 ? `${currency} ${formatMoney(theyOweTotal)}` : "—"}</p>
+          <div className="bg-gray-50 dark:bg-white/[0.04] rounded-2xl px-2 py-3 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">They Owe</p>
+            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{theyOweTotal > 0 ? `${currency} ${formatMoney(theyOweTotal)}` : "—"}</p>
           </div>
         </div>
 
         {/* Tabs */}
         <div className="flex border-b border-black/[0.05] dark:border-white/[0.05] shrink-0">
           <button onClick={() => setTab("debt")}
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === "debt" ? "text-red-500 dark:text-red-400 border-b-2 border-red-500 dark:border-red-400" : "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
+            className={`flex-1 py-3.5 text-sm font-bold transition-colors ${tab === "debt" ? "text-rose-600 dark:text-rose-400 border-b-2 border-rose-500 dark:border-rose-400" : "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
             I Owe ({group.debts.length})
           </button>
           <button onClick={() => setTab("lending")}
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === "lending" ? "text-green-500 dark:text-green-400 border-b-2 border-green-500 dark:border-green-400" : "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
+            className={`flex-1 py-3.5 text-sm font-bold transition-colors ${tab === "lending" ? "text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500 dark:border-emerald-400" : "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
             They Owe ({group.lendings.length})
           </button>
         </div>
@@ -459,22 +462,22 @@ function PersonModal({ group, currency, userId, onClose, onDebtUpdated, onDebtDe
 
         {/* Pagination */}
         {((tab === "debt" && debtPages > 1) || (tab === "lending" && lendPages > 1)) && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-900 shrink-0">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-black/[0.05] dark:border-white/[0.05] shrink-0">
             {tab === "debt" ? (
               <>
                 <button onClick={() => setDebtPage(p => Math.max(1, p - 1))} disabled={debtPage === 1}
-                  className="px-3 py-1.5 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">← Prev</button>
+                  className="h-9 px-3.5 rounded-full text-sm font-semibold bg-gray-100 dark:bg-white/[0.06] text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">← Prev</button>
                 <span className="text-xs text-gray-500 dark:text-gray-400">Page {debtPage} of {debtPages}</span>
                 <button onClick={() => setDebtPage(p => Math.min(debtPages, p + 1))} disabled={debtPage === debtPages}
-                  className="px-3 py-1.5 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">Next →</button>
+                  className="h-9 px-3.5 rounded-full text-sm font-semibold bg-gray-100 dark:bg-white/[0.06] text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">Next →</button>
               </>
             ) : (
               <>
                 <button onClick={() => setLendPage(p => Math.max(1, p - 1))} disabled={lendPage === 1}
-                  className="px-3 py-1.5 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">← Prev</button>
+                  className="h-9 px-3.5 rounded-full text-sm font-semibold bg-gray-100 dark:bg-white/[0.06] text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">← Prev</button>
                 <span className="text-xs text-gray-500 dark:text-gray-400">Page {lendPage} of {lendPages}</span>
                 <button onClick={() => setLendPage(p => Math.min(lendPages, p + 1))} disabled={lendPage === lendPages}
-                  className="px-3 py-1.5 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-900 text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">Next →</button>
+                  className="h-9 px-3.5 rounded-full text-sm font-semibold bg-gray-100 dark:bg-white/[0.06] text-black dark:text-white disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">Next →</button>
               </>
             )}
           </div>
@@ -543,10 +546,10 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
 
   if (isEditing) {
     return (
-      <div className="px-4 py-4 bg-gray-50 dark:bg-gray-950">
+      <div className="px-5 py-5 bg-volt/[0.06]">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold text-black dark:text-white">Edit Debt</p>
-          <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-black dark:hover:text-white">
+          <p className="font-display text-base font-bold tracking-tight text-black dark:text-white">Edit Debt</p>
+          <button onClick={() => setIsEditing(false)} aria-label="Close" className="w-8 h-8 grid place-items-center rounded-full bg-white dark:bg-white/[0.06] text-gray-500 hover:text-black dark:hover:text-white">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
@@ -568,7 +571,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
           </div>
           <div className="flex gap-2">
             <button type="submit" disabled={saving} className="flex-1 h-11 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl shadow-md shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40">{saving ? "Saving…" : "Save"}</button>
-            <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white text-sm font-semibold rounded-xl hover:opacity-80">Cancel</button>
+            <button type="button" onClick={() => setIsEditing(false)} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
           </div>
         </form>
       </div>
@@ -576,13 +579,13 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
   }
 
   return (
-    <div className="px-4 py-3">
+    <div className="px-5 py-4">
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-sm font-bold text-black dark:text-white">{currency} {formatMoney(Number(item.amount))}</span>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
-            {isOverdue && <span className="text-xs font-semibold text-red-500 bg-red-50 dark:bg-red-950/50 px-2 py-0.5 rounded-full">Overdue</span>}
+            <span className="font-display text-base font-bold tracking-tight text-black dark:text-white">{currency} {formatMoney(Number(item.amount))}</span>
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
+            {isOverdue && <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full">Overdue</span>}
           </div>
           <div className="flex flex-wrap gap-x-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             <span>Borrowed {fmtDate(item.date)}</span>
@@ -592,12 +595,12 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
         <div className="flex items-center gap-1 shrink-0">
           {status !== "paid" && (
             <button onClick={() => { setIsPaying(true); setIsEditing(false) }}
-              className="px-2.5 py-1 text-xs font-semibold bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">Pay</button>
+              className="h-8 px-3.5 text-xs font-bold bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-sm shadow-rose-500/30 transition-colors">Pay</button>
           )}
-          <button onClick={() => { setIsEditing(true); setIsPaying(false) }} className="p-1 text-gray-400 hover:text-blue-500 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+          <button onClick={() => { setIsEditing(true); setIsPaying(false) }} className="w-8 h-8 grid place-items-center text-gray-400 hover:text-black dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
           </button>
-          <button onClick={() => onDelete(item.id)} className="p-1 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors">
+          <button onClick={() => onDelete(item.id)} className="w-8 h-8 grid place-items-center text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
           </button>
         </div>
@@ -609,14 +612,14 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
             <span>Paid {currency} {formatMoney(Number(item.amount_paid))}</span>
             <span>{pct}%</span>
           </div>
-          <div className="h-1.5 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
-            <div className={`h-full rounded-full transition-all duration-500 ${status === "paid" ? "bg-green-500" : "bg-yellow-400"}`} style={{ width: `${pct}%` }} />
+          <div className="h-2 bg-gray-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
+            <div className={`h-full rounded-full transition-all duration-500 ${status === "paid" ? "bg-emerald-500" : "bg-amber-400"}`} style={{ width: `${pct}%` }} />
           </div>
         </div>
       )}
 
       {isPaying && (
-        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-900">
+        <div className="mt-3 pt-3 border-t border-black/[0.05] dark:border-white/[0.05]">
           <form onSubmit={handlePay} className="space-y-2">
             <div className="flex gap-2">
               <div className="flex-1 relative">
@@ -631,7 +634,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
             </div>
             <div className="flex gap-2">
               <button type="submit" disabled={submittingPay} className="flex-1 h-11 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl shadow-md shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40">{submittingPay ? "Saving…" : "Save Payment"}</button>
-              <button type="button" onClick={() => { setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }} className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-900 text-black dark:text-white rounded-xl hover:opacity-80">Cancel</button>
+              <button type="button" onClick={() => { setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
             </div>
           </form>
         </div>
@@ -639,7 +642,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
 
       {item.paid_history.length > 0 && !isPaying && (
         <div className="mt-2">
-          <button onClick={() => setHistExpanded(v => !v)} className="text-xs text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+          <button onClick={() => setHistExpanded(v => !v)} className="text-xs font-semibold text-gray-500 hover:text-black dark:hover:text-white px-2.5 py-1 -ml-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
             {histExpanded ? "▲" : "▼"} {item.paid_history.length} payment{item.paid_history.length !== 1 ? "s" : ""}
           </button>
           {histExpanded && (
@@ -717,10 +720,10 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
 
   if (isEditing) {
     return (
-      <div className="px-4 py-4 bg-gray-50 dark:bg-gray-950">
+      <div className="px-5 py-5 bg-volt/[0.06]">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold text-black dark:text-white">Edit Lending</p>
-          <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-black dark:hover:text-white">
+          <p className="font-display text-base font-bold tracking-tight text-black dark:text-white">Edit Lending</p>
+          <button onClick={() => setIsEditing(false)} aria-label="Close" className="w-8 h-8 grid place-items-center rounded-full bg-white dark:bg-white/[0.06] text-gray-500 hover:text-black dark:hover:text-white">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
@@ -742,7 +745,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
           </div>
           <div className="flex gap-2">
             <button type="submit" disabled={saving} className="flex-1 h-11 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl shadow-md shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40">{saving ? "Saving…" : "Save"}</button>
-            <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white text-sm font-semibold rounded-xl hover:opacity-80">Cancel</button>
+            <button type="button" onClick={() => setIsEditing(false)} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
           </div>
         </form>
       </div>
@@ -750,13 +753,13 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
   }
 
   return (
-    <div className="px-4 py-3">
+    <div className="px-5 py-4">
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-sm font-bold text-black dark:text-white">{currency} {formatMoney(Number(item.amount))}</span>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
-            {isOverdue && <span className="text-xs font-semibold text-red-500 bg-red-50 dark:bg-red-950/50 px-2 py-0.5 rounded-full">Overdue</span>}
+            <span className="font-display text-base font-bold tracking-tight text-black dark:text-white">{currency} {formatMoney(Number(item.amount))}</span>
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
+            {isOverdue && <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full">Overdue</span>}
           </div>
           <div className="flex flex-wrap gap-x-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             <span>Lent {fmtDate(item.date)}</span>
@@ -766,12 +769,12 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
         <div className="flex items-center gap-1 shrink-0">
           {status !== "paid" && (
             <button onClick={() => { setIsPaying(true); setIsEditing(false) }}
-              className="px-2.5 py-1 text-xs font-semibold bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">Got Paid</button>
+              className="h-8 px-3.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-sm shadow-emerald-500/30 transition-colors">Got Paid</button>
           )}
-          <button onClick={() => { setIsEditing(true); setIsPaying(false) }} className="p-1 text-gray-400 hover:text-blue-500 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+          <button onClick={() => { setIsEditing(true); setIsPaying(false) }} className="w-8 h-8 grid place-items-center text-gray-400 hover:text-black dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
           </button>
-          <button onClick={() => onDelete(item.id)} className="p-1 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors">
+          <button onClick={() => onDelete(item.id)} className="w-8 h-8 grid place-items-center text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
           </button>
         </div>
@@ -783,14 +786,14 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
             <span>Received {currency} {formatMoney(Number(item.amount_paid))}</span>
             <span>{pct}%</span>
           </div>
-          <div className="h-1.5 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
-            <div className={`h-full rounded-full transition-all duration-500 ${status === "paid" ? "bg-green-500" : "bg-blue-400"}`} style={{ width: `${pct}%` }} />
+          <div className="h-2 bg-gray-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
+            <div className={`h-full rounded-full transition-all duration-500 ${status === "paid" ? "bg-emerald-500" : "bg-sky-400"}`} style={{ width: `${pct}%` }} />
           </div>
         </div>
       )}
 
       {isPaying && (
-        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-900">
+        <div className="mt-3 pt-3 border-t border-black/[0.05] dark:border-white/[0.05]">
           <form onSubmit={handleReceipt} className="space-y-2">
             <div className="flex gap-2">
               <div className="flex-1 relative">
@@ -805,7 +808,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
             </div>
             <div className="flex gap-2">
               <button type="submit" disabled={submittingPay} className="flex-1 h-11 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl shadow-md shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40">{submittingPay ? "Saving…" : "Save Receipt"}</button>
-              <button type="button" onClick={() => { setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }} className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-900 text-black dark:text-white rounded-xl hover:opacity-80">Cancel</button>
+              <button type="button" onClick={() => { setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
             </div>
           </form>
         </div>
@@ -813,7 +816,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
 
       {item.paid_history.length > 0 && !isPaying && (
         <div className="mt-2">
-          <button onClick={() => setHistExpanded(v => !v)} className="text-xs text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+          <button onClick={() => setHistExpanded(v => !v)} className="text-xs font-semibold text-gray-500 hover:text-black dark:hover:text-white px-2.5 py-1 -ml-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
             {histExpanded ? "▲" : "▼"} {item.paid_history.length} receipt{item.paid_history.length !== 1 ? "s" : ""}
           </button>
           {histExpanded && (
