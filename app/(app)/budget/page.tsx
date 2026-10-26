@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useRef, useMemo, Suspense } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { CATEGORIES, CATEGORY_COLORS, CATEGORY_TEXT, INCOME_SOURCES, INCOME_SOURCE_BADGE } from "@/lib/constants"
 import { useCurrency } from "@/contexts/CurrencyContext"
@@ -35,7 +36,12 @@ function fmtDay(d: string) {
   return new Date(d + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
 }
 
-export default function BudgetPage() {
+// useSearchParams needs a Suspense boundary for the static build
+export default function BudgetPageWrapper() {
+  return <Suspense><BudgetPage /></Suspense>
+}
+
+function BudgetPage() {
   const [month, setMonth]           = useState(currentMonth)
   const [loading, setLoading]       = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -52,6 +58,12 @@ export default function BudgetPage() {
   const userIdRef = useRef<string | null>(null)
   const { currency } = useCurrency()
   const money = (v: number) => `${currency} ${formatMoney(v)}`
+
+  // Deep link from search: /budget?month=YYYY-MM
+  const monthParam = useSearchParams().get("month")
+  useEffect(() => {
+    if (monthParam && /^\d{4}-(0[1-9]|1[0-2])$/.test(monthParam)) setMonth(monthParam)
+  }, [monthParam])
 
   useEffect(() => {
     let cancelled = false
