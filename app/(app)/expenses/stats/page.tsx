@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { todayStr, ymd } from "@/lib/dates"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { CATEGORY_COLORS, CATEGORY_TEXT } from "@/lib/constants"
 import { formatMoney } from "@/lib/formatMoney"
@@ -63,12 +64,12 @@ export default function ExpenseStatsPage() {
     })()
   }, [])
 
-  const today = new Date().toISOString().split("T")[0]
+  const today = todayStr()
 
   const startOf = (daysAgo: number) => {
     const d = new Date()
     d.setDate(d.getDate() - daysAgo)
-    return d.toISOString().split("T")[0]
+    return ymd(d)
   }
 
   const sum = (list: Expense[]) => list.reduce((s, e) => s + Number(e.amount), 0)

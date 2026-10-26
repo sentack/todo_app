@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { todayStr } from "@/lib/dates"
 import Modal from "./Modal"
 import FriendCombobox from "./FriendCombobox"
 import { CATEGORIES } from "@/lib/constants"
@@ -23,7 +24,6 @@ const INPUT = "w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gr
 const LABEL = "block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2"
 const SUBMIT = "w-full h-12 mt-2 bg-black dark:bg-volt text-white dark:text-black font-bold rounded-2xl shadow-lg shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40 disabled:shadow-none transition-all duration-200 text-[0.9375rem]"
 
-function todayStr() { return new Date().toISOString().split("T")[0] }
 
 // ── AddTodoForm ────────────────────────────────────────────────────────────────
 

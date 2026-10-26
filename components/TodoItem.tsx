@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser";
+import { todayStr } from "@/lib/dates";
 
 interface Subtask {
   id: string;
@@ -157,7 +158,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
     return { name: "Pending", color: "status-pending", icon: "📋" };
   };
 
-  const today     = new Date().toISOString().split("T")[0];
+  const today     = todayStr();
   const isOverdue = !todo.completed && todo.due_date && todo.due_date < today;
   const isDueToday = !todo.completed && todo.due_date === today;
   const overdueDays = isOverdue

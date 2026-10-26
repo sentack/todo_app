@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser";
+import { todayStr } from "@/lib/dates";
 import TodoItem from "./TodoItem";
 
 const PAGE_SIZE = 10;
@@ -43,7 +44,7 @@ const TodoList: React.FC<TodoListProps> = ({ setLoading }) => {
       const uid = userIdRef.current!;
 
       // Lightweight count query — unaffected by search, always shows true totals in tabs
-      const today = new Date().toISOString().split("T")[0];
+      const today = todayStr();
       const { data: countData } = await supabase
         .from("todos")
         .select("completed, due_date")
