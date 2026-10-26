@@ -2,16 +2,18 @@
 
 import { useState, useMemo, useEffect, useRef } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { todayStr } from "@/lib/dates"
 import Modal from "./Modal"
 import FriendCombobox from "./FriendCombobox"
-import { CATEGORIES } from "@/lib/constants"
+import { CATEGORIES, INCOME_SOURCES } from "@/lib/constants"
 import { useCurrency } from "@/contexts/CurrencyContext"
 
-type ModalType = "todo" | "expense" | "to-buy" | "debt" | "lending" | "friend"
+type ModalType = "todo" | "expense" | "income" | "to-buy" | "debt" | "lending" | "friend"
 
 const SECTIONS: { label: string; modal: ModalType; icon: string }[] = [
   { label: "Todo",    modal: "todo",    icon: "📋" },
   { label: "Expense", modal: "expense", icon: "💰" },
+  { label: "Income",  modal: "income",  icon: "💵" },
   { label: "To Buy",  modal: "to-buy",  icon: "🛒" },
   { label: "Debt",    modal: "debt",    icon: "↓"  },
   { label: "Lending", modal: "lending", icon: "↑"  },
@@ -23,7 +25,6 @@ const INPUT = "w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gr
 const LABEL = "block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2"
 const SUBMIT = "w-full h-12 mt-2 bg-black dark:bg-volt text-white dark:text-black font-bold rounded-2xl shadow-lg shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40 disabled:shadow-none transition-all duration-200 text-[0.9375rem]"
 
-function todayStr() { return new Date().toISOString().split("T")[0] }
 
 // ── AddTodoForm ────────────────────────────────────────────────────────────────
 
@@ -182,6 +183,66 @@ function AddExpenseForm({ onDone }: { onDone: () => void }) {
       </div>
       <button type="submit" disabled={loading} className={SUBMIT}>
         {loading ? "Saving..." : "Add Expense"}
+      </button>
+    </form>
+  )
+}
+
+// ── AddIncomeForm ──────────────────────────────────────────────────────────────
+
+function AddIncomeForm({ onDone }: { onDone: () => void }) {
+  const [amount, setAmount]         = useState("")
+  const [description, setDesc]      = useState("")
+  const [source, setSource]         = useState<string>("Salary")
+  const [date, setDate]             = useState(todayStr())
+  const [loading, setLoading]       = useState(false)
+  const { currency }                = useCurrency()
+  const supabase                    = useMemo(() => createBrowserSupabaseClient(), [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const parsed = parseFloat(amount)
+    if (!parsed || parsed <= 0) return
+    setLoading(true)
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setLoading(false); return }
+
+    const { error } = await supabase.from("incomes").insert({
+      user_id: user.id, amount: parsed,
+      description: description.trim() || null, source, date,
+    })
+    if (!error) onDone()
+    setLoading(false)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <label className={LABEL}>Amount *</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium">{currency}</span>
+            <input type="number" step="0.01" min="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" required className={`${INPUT} pl-11`} autoFocus />
+          </div>
+        </div>
+        <div>
+          <label className={LABEL}>Date</label>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)} className={INPUT} />
+        </div>
+      </div>
+      <div>
+        <label className={LABEL}>Description</label>
+        <input type="text" value={description} onChange={e => setDesc(e.target.value)} placeholder="Where did it come from?" className={INPUT} />
+      </div>
+      <div>
+        <label className={LABEL}>Source</label>
+        <select value={source} onChange={e => setSource(e.target.value)} className={INPUT}>
+          {INCOME_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+      <button type="submit" disabled={loading} className={SUBMIT}>
+        {loading ? "Saving..." : "Add Income"}
       </button>
     </form>
   )
@@ -439,6 +500,16 @@ export default function QuickAddFAB() {
     setActiveModal(modal)
   }
 
+  // Other screens can open a form: dispatch "quick-add" with { type }
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const type = (e as CustomEvent).detail?.type
+      if (SECTIONS.some(s => s.modal === type)) { setOpen(false); setActiveModal(type) }
+    }
+    window.addEventListener("quick-add", handler)
+    return () => window.removeEventListener("quick-add", handler)
+  }, [])
+
   const closeModal = () => setActiveModal(null)
 
   const doneAndRefresh = (type: string) => {
@@ -449,6 +520,7 @@ export default function QuickAddFAB() {
   const MODAL_TITLES: Record<ModalType, string> = {
     "todo":    "Add Todo",
     "expense": "Add Expense",
+    "income":  "Add Income",
     "to-buy":  "Add to Shopping List",
     "debt":    "Add Debt",
     "lending": "Add Lending",
@@ -506,6 +578,7 @@ export default function QuickAddFAB() {
         >
           {activeModal === "todo"    && <AddTodoForm    onDone={() => doneAndRefresh("todo")}    />}
           {activeModal === "expense" && <AddExpenseForm onDone={() => doneAndRefresh("expense")} />}
+          {activeModal === "income"  && <AddIncomeForm  onDone={() => doneAndRefresh("income")}  />}
           {activeModal === "to-buy"  && <AddToBuyForm   onDone={() => doneAndRefresh("to-buy")}  />}
           {activeModal === "debt"    && <AddDebtForm    onDone={() => doneAndRefresh("debt")}    />}
           {activeModal === "lending" && <AddLendingForm onDone={() => doneAndRefresh("lending")} />}

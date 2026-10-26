@@ -13,6 +13,7 @@ import LoginForm from "@/components/LoginForm"
 import MobileTabBar from "@/components/MobileTabBar"
 import { BrandMark, Wordmark } from "@/components/BrandMark"
 import { CurrencyProvider } from "@/contexts/CurrencyContext"
+import { formatInstant } from "@/lib/dates"
 import type { User } from "@supabase/supabase-js"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -72,7 +73,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </h2>
                 <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 max-w-md mb-7">Organize your tasks with style and efficiency</p>
                 <div className="hidden sm:flex flex-wrap gap-2">
-                  {["Todos", "Expenses", "Debts & lending", "Shopping list", "Stats"].map(f => (
+                  {["Todos", "Expenses", "Debts & lending", "Shopping list", "Insights"].map(f => (
                     <span key={f} className="px-3 py-1.5 rounded-full text-xs font-semibold bg-black/[0.04] dark:bg-white/[0.06] text-gray-700 dark:text-gray-300">{f}</span>
                   ))}
                 </div>
@@ -108,7 +109,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </button>
                   <h1 className="lg:hidden"><Wordmark className="text-xl" /></h1>
                   <p className="hidden lg:block font-display text-lg font-bold tracking-tight text-black dark:text-white">
-                    {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+                    {formatInstant(new Date(), { weekday: "long", month: "long", day: "numeric" })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2">

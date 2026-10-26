@@ -1,7 +1,10 @@
 ﻿"use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
+import Link from "next/link"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { todayStr, daysAgo } from "@/lib/dates"
+import { currentMonth, monthRange, effectiveLimits, spentByCategory } from "@/lib/budget"
 import { CATEGORIES, CATEGORY_BADGE } from "@/lib/constants"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
@@ -21,8 +24,7 @@ type TimeFilter = "all" | "today" | "7d" | "30d"
 
 const PAGE_SIZE = 15
 
-function todayStr() { return new Date().toISOString().split("T")[0] }
-function dateOffset(days: number) { const d = new Date(); d.setDate(d.getDate() - days); return d.toISOString().split("T")[0] }
+const dateOffset = daysAgo
 
 function formatDateLabel(dateStr: string) {
   const today     = todayStr()
@@ -37,12 +39,19 @@ export default function ExpensesPage() {
   const [loading, setLoading]         = useState(true)
   const [refreshKey, setRefreshKey]   = useState(0)
   const [page, setPage]               = useState(1)
+  const [limits, setLimits]           = useState<Record<string, number>>({})
 
   // filters
   const [search, setSearch]                   = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [timeFilter, setTimeFilter]           = useState<TimeFilter>("all")
   const [categoryFilter, setCategoryFilter]   = useState("all")
+
+  // Deep link from Insights: /expenses?category=Coffee
+  useEffect(() => {
+    const c = new URLSearchParams(window.location.search).get("category")
+    if (c && (CATEGORIES as readonly string[]).includes(c)) setCategoryFilter(c)
+  }, [])
   const [sortKey, setSortKey]                 = useState<SortKey>("date-desc")
 
   const supabase  = useMemo(() => createBrowserSupabaseClient(), [])
@@ -69,15 +78,21 @@ export default function ExpensesPage() {
       if (cancelled) return
       const uid = userIdRef.current!
 
-      const { data } = await supabase
-        .from("expenses")
-        .select("*")
-        .eq("user_id", uid)
-        .order("date", { ascending: false })
-        .order("created_at", { ascending: false })
+      const [monthStart] = monthRange(currentMonth())
+      const [{ data }, { data: defaults }, { data: overrides }] = await Promise.all([
+        supabase
+          .from("expenses")
+          .select("*")
+          .eq("user_id", uid)
+          .order("date", { ascending: false })
+          .order("created_at", { ascending: false }),
+        supabase.from("expense_budgets").select("category, monthly_limit").eq("user_id", uid),
+        supabase.from("month_budgets").select("category, amount").eq("user_id", uid).eq("month", monthStart),
+      ])
 
       if (!cancelled) {
         setAllExpenses((data ?? []) as Expense[])
+        setLimits(effectiveLimits(defaults ?? [], overrides ?? []))
         setLoading(false)
       }
     }
@@ -119,6 +134,15 @@ export default function ExpensesPage() {
   }, [allExpenses, debouncedSearch, categoryFilter, timeFilter, sortKey])
 
   const todayTotal  = useMemo(() => allExpenses.filter(e => e.date === todayStr()).reduce((s, e) => s + Number(e.amount), 0), [allExpenses])
+
+  // Remaining across budgeted categories for the current month; null when no limits are set
+  const budgetLeft = useMemo(() => {
+    const cats = Object.keys(limits)
+    if (cats.length === 0) return null
+    const month = currentMonth()
+    const spent = spentByCategory(allExpenses.filter(e => e.date.slice(0, 7) === month))
+    return cats.reduce((s, c) => s + limits[c] - (spent[c] ?? 0), 0)
+  }, [allExpenses, limits])
   const totalPages  = Math.ceil(filtered.length / PAGE_SIZE)
   const paged       = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
@@ -186,6 +210,13 @@ export default function ExpensesPage() {
             <div className="hero-card rounded-3xl p-6 mb-6 shadow-xl">
               <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-2">Today&apos;s Total</p>
               <p className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-white dark:text-black">{currency} {formatMoney(todayTotal)}</p>
+              {budgetLeft !== null && (
+                <Link href="/budget" className="inline-block mt-3 text-xs font-semibold text-white/70 dark:text-black/70 hover:text-white dark:hover:text-black underline-offset-2 hover:underline">
+                  {budgetLeft < 0
+                    ? `${currency} ${formatMoney(-budgetLeft)} over this month's budget`
+                    : `${currency} ${formatMoney(budgetLeft)} left of this month's budget`} →
+                </Link>
+              )}
             </div>
           )}
 

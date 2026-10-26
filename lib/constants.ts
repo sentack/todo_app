@@ -52,6 +52,26 @@ export const CATEGORY_BADGE: Record<string, string> = {
   "Other":         "bg-gray-100 text-gray-700 dark:bg-white/[0.06] dark:text-gray-300",
 }
 
+export const INCOME_SOURCES = [
+  "Salary",
+  "Freelance",
+  "Business",
+  "Gift",
+  "Refund",
+  "Other",
+] as const
+
+export type IncomeSource = (typeof INCOME_SOURCES)[number]
+
+export const INCOME_SOURCE_BADGE: Record<string, string> = {
+  "Salary":    "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
+  "Freelance": "bg-sky-100 text-sky-700 dark:bg-sky-400/10 dark:text-sky-300",
+  "Business":  "bg-violet-100 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300",
+  "Gift":      "bg-pink-100 text-pink-700 dark:bg-pink-400/10 dark:text-pink-300",
+  "Refund":    "bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-300",
+  "Other":     "bg-gray-100 text-gray-700 dark:bg-white/[0.06] dark:text-gray-300",
+}
+
 export const CURRENCIES = [
   { code: "ETB", name: "Ethiopian Birr" },
   { code: "USD", name: "US Dollar" },

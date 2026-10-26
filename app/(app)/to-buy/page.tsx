@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { todayStr } from "@/lib/dates"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
 import { formatMoney } from "@/lib/formatMoney"
@@ -160,14 +161,16 @@ export default function ToBuyPage() {
 
   const logAsExpense = async () => {
     if (!logPrompt || !userIdRef.current) return
-    const today = new Date().toISOString().split("T")[0]
-    await supabase.from("expenses").insert({
+    const today = todayStr()
+    const { data: expense } = await supabase.from("expenses").insert({
       user_id: userIdRef.current,
       category: "Shopping",
       amount: logPrompt.amount,
       description: logPrompt.name,
       date: today,
-    })
+    }).select("id").single()
+    // Link the item to its expense so analytics can tell what was logged
+    if (expense) await supabase.from("to_buy_items").update({ expense_id: expense.id }).eq("id", logPrompt.itemId)
     setLogPrompt(null)
   }
 

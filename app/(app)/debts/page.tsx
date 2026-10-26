@@ -3,12 +3,12 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { createPortal } from "react-dom"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { todayStr } from "@/lib/dates"
 import FriendCombobox from "@/components/FriendCombobox"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
 import { formatMoney } from "@/lib/formatMoney"
-
-interface PayRecord { amount: number; date: string }
+import type { PayRecord } from "@/lib/budget"
 
 interface DebtItem {
   id: string; amount: number; date: string; deadline: string | null
@@ -24,7 +24,6 @@ interface PersonGroup { name: string; debts: DebtItem[]; lendings: LendingItem[]
 
 const MODAL_PAGE = 10
 
-function todayStr() { return new Date().toISOString().split("T")[0] }
 
 function fmtDate(d: string) {
   return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -61,6 +60,34 @@ function groupByPerson(debts: DebtItem[], lendings: LendingItem[]): PersonGroup[
     map.get(k)!.lendings.push(l)
   }
   return [...map.values()].sort((a, b) => a.name.localeCompare(b.name))
+}
+
+const isWrittenOff = (item: DebtItem) => item.paid_history.some(p => p.written_off)
+
+// Close out the unpaid part of a loan that will never be repaid. No cash moved,
+// so it becomes a real expense (lending written off) or income (debt forgiven),
+// and the history entry is flagged so the budget's loan flows skip it.
+async function settleRemaining<T extends DebtItem>(
+  supabase: ReturnType<typeof createBrowserSupabaseClient>, table: "debts" | "lendings", item: T, userId: string,
+): Promise<T | null> {
+  const remaining = Number(item.amount) - Number(item.amount_paid)
+  const date = todayStr()
+  const [into, row] = table === "lendings"
+    ? ["expenses", { user_id: userId, amount: remaining, date, category: "Other", description: `Written off: loan to ${item.person}` }] as const
+    : ["incomes",  { user_id: userId, amount: remaining, date, source: "Other",   description: `Forgiven: debt to ${item.person}` }] as const
+
+  const { data: created, error } = await supabase.from(into).insert(row).select("id").single()
+  if (error || !created) return null
+
+  const paid_history: PayRecord[] = [...item.paid_history, { amount: remaining, date, written_off: true }]
+  const { data, error: updErr } = await supabase.from(table)
+    .update({ amount_paid: Number(item.amount), paid_history })
+    .eq("id", item.id).select().single()
+  if (updErr || !data) {
+    await supabase.from(into).delete().eq("id", created.id)
+    return null
+  }
+  return { ...item, ...data, paid_history }
 }
 
 function personNet(g: PersonGroup) {
@@ -513,7 +540,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
   const status    = getStatus(item)
   const remaining = Number(item.amount) - Number(item.amount_paid)
   const pct       = Math.min(100, Math.round((Number(item.amount_paid) / Number(item.amount)) * 100))
-  const isOverdue = item.deadline && new Date(item.deadline + "T00:00:00") < new Date() && status !== "paid"
+  const isOverdue = item.deadline && item.deadline < todayStr() && status !== "paid"
 
   const ensureFriend = async (name: string) => {
     if (!userId || !name.trim()) return
@@ -531,6 +558,16 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
       .eq("id", item.id).select().single()
     if (!error && data) { await ensureFriend(person.trim()); setIsEditing(false); onUpdated({ ...item, ...data }) }
     setSaving(false)
+  }
+
+  const [confirmSettle, setConfirmSettle] = useState(false)
+  const [settling,      setSettling]      = useState(false)
+
+  const handleForgive = async () => {
+    setSettling(true)
+    const updated = await settleRemaining(supabase, "debts", item, userId)
+    setSettling(false)
+    if (updated) { onUpdated(updated); setIsPaying(false); setConfirmSettle(false) }
   }
 
   const handlePay = async (e: React.FormEvent) => {
@@ -589,6 +626,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
             <span className="font-display text-base font-bold tracking-tight text-black dark:text-white">{currency} {formatMoney(Number(item.amount))}</span>
             <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
             {isOverdue && <span className="text-[0.6875rem] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full">Overdue</span>}
+            {isWrittenOff(item) && <span className="text-[0.6875rem] font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">Forgiven</span>}
           </div>
           <div className="flex flex-wrap gap-x-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             <span>Borrowed {fmtDate(item.date)}</span>
@@ -637,9 +675,14 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
             </div>
             <div className="flex gap-2">
               <button type="submit" disabled={submittingPay} className="flex-1 h-11 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl shadow-md shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40">{submittingPay ? "Saving…" : "Save Payment"}</button>
-              <button type="button" onClick={() => { setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
+              <button type="button" onClick={() => { setIsPaying(false); setConfirmSettle(false); setPayAmount(""); setPayDate(todayStr()) }} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
             </div>
           </form>
+          <SettlePrompt
+            open={confirmSettle} busy={settling} onOpen={() => setConfirmSettle(true)} onCancel={() => setConfirmSettle(false)} onConfirm={handleForgive}
+            trigger={`${item.person} forgave the rest?`} action="Forgive"
+            message={`Mark the remaining ${currency} ${formatMoney(remaining)} as forgiven? It will be recorded as income today.`}
+          />
         </div>
       )}
 
@@ -652,7 +695,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
             <div className="mt-1.5 space-y-1">
               {[...item.paid_history].reverse().map((p, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-gray-400">{fmtDate(p.date)}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{fmtDate(p.date)}{p.written_off && " · forgiven"}</span>
                   <span className="font-semibold text-black dark:text-white">{currency} {formatMoney(Number(p.amount))}</span>
                 </div>
               ))}
@@ -687,7 +730,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
   const status    = getStatus(item)
   const remaining = Number(item.amount) - Number(item.amount_paid)
   const pct       = Math.min(100, Math.round((Number(item.amount_paid) / Number(item.amount)) * 100))
-  const isOverdue = item.deadline && new Date(item.deadline + "T00:00:00") < new Date() && status !== "paid"
+  const isOverdue = item.deadline && item.deadline < todayStr() && status !== "paid"
 
   const ensureFriend = async (name: string) => {
     if (!userId || !name.trim()) return
@@ -705,6 +748,16 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
       .eq("id", item.id).select().single()
     if (!error && data) { await ensureFriend(person.trim()); setIsEditing(false); onUpdated({ ...item, ...data }) }
     setSaving(false)
+  }
+
+  const [confirmSettle, setConfirmSettle] = useState(false)
+  const [settling,      setSettling]      = useState(false)
+
+  const handleWriteOff = async () => {
+    setSettling(true)
+    const updated = await settleRemaining(supabase, "lendings", item, userId)
+    setSettling(false)
+    if (updated) { onUpdated(updated); setIsPaying(false); setConfirmSettle(false) }
   }
 
   const handleReceipt = async (e: React.FormEvent) => {
@@ -763,6 +816,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
             <span className="font-display text-base font-bold tracking-tight text-black dark:text-white">{currency} {formatMoney(Number(item.amount))}</span>
             <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
             {isOverdue && <span className="text-[0.6875rem] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full">Overdue</span>}
+            {isWrittenOff(item) && <span className="text-[0.6875rem] font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">Written off</span>}
           </div>
           <div className="flex flex-wrap gap-x-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             <span>Lent {fmtDate(item.date)}</span>
@@ -811,9 +865,14 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
             </div>
             <div className="flex gap-2">
               <button type="submit" disabled={submittingPay} className="flex-1 h-11 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl shadow-md shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40">{submittingPay ? "Saving…" : "Save Receipt"}</button>
-              <button type="button" onClick={() => { setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
+              <button type="button" onClick={() => { setIsPaying(false); setConfirmSettle(false); setPayAmount(""); setPayDate(todayStr()) }} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
             </div>
           </form>
+          <SettlePrompt
+            open={confirmSettle} busy={settling} onOpen={() => setConfirmSettle(true)} onCancel={() => setConfirmSettle(false)} onConfirm={handleWriteOff}
+            trigger="Won't be paid back? Write it off" action="Write off"
+            message={`Write off the remaining ${currency} ${formatMoney(remaining)}? It will be recorded as an expense today.`}
+          />
         </div>
       )}
 
@@ -826,7 +885,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
             <div className="mt-1.5 space-y-1">
               {[...item.paid_history].reverse().map((p, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-gray-400">{fmtDate(p.date)}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{fmtDate(p.date)}{p.written_off && " · written off"}</span>
                   <span className="font-semibold text-black dark:text-white">{currency} {formatMoney(Number(p.amount))}</span>
                 </div>
               ))}
@@ -834,6 +893,30 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────── SettlePrompt ────
+
+function SettlePrompt({ open, busy, trigger, action, message, onOpen, onCancel, onConfirm }: {
+  open: boolean; busy: boolean; trigger: string; action: string; message: string
+  onOpen: () => void; onCancel: () => void; onConfirm: () => void
+}) {
+  if (!open) {
+    return (
+      <button type="button" onClick={onOpen} className="mt-2 text-xs font-semibold text-gray-500 hover:text-black dark:hover:text-white px-2.5 py-1 -ml-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
+        {trigger}
+      </button>
+    )
+  }
+  return (
+    <div className="mt-3 p-3 rounded-2xl bg-gray-50 dark:bg-white/[0.04] border border-black/[0.05] dark:border-white/[0.06]">
+      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{message}</p>
+      <div className="flex gap-2">
+        <button type="button" onClick={onConfirm} disabled={busy} className="flex-1 h-10 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl hover:opacity-90 disabled:opacity-40">{busy ? "Saving…" : action}</button>
+        <button type="button" onClick={onCancel} className="h-10 px-4 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
+      </div>
     </div>
   )
 }

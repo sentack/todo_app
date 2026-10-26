@@ -4,12 +4,14 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import ClearDataModal from "@/components/ClearDataModal"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { CURRENCIES, CATEGORIES } from "@/lib/constants"
+import { activeTimeZone, deviceTimeZone, formatInstant } from "@/lib/dates"
 import { FONT_SCALE_DEFAULT, FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP, readFontScale, saveFontScale } from "@/lib/fontScale"
 
 function fontScaleLabel(v: number) {
@@ -55,7 +57,10 @@ export default function SettingsPage() {
 
   const supabase = createBrowserSupabaseClient()
   const router = useRouter()
-  const { currency, setCurrencyPref } = useCurrency()
+  const { currency, setCurrencyPref, timezone, setTimezonePref } = useCurrency()
+  const timeZones = useMemo(() => {
+    try { return Intl.supportedValuesOf("timeZone") } catch { return timezone ? [timezone] : [] }
+  }, [timezone])
 
   useEffect(() => {
     fetchUser()
@@ -366,6 +371,22 @@ export default function SettingsPage() {
                     <span className="text-xs font-bold text-volt-800 dark:text-volt bg-volt-100 dark:bg-volt/10 px-3 py-1.5 rounded-full whitespace-nowrap">Current: {currency}</span>
                   </div>
                 </div>
+                <div>
+                  <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Timezone</label>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Decides which day &ldquo;today&rdquo; is, and the day and weekday your entries fall on.</p>
+                  <select
+                    value={timezone ?? ""}
+                    onChange={e => setTimezonePref(e.target.value || null)}
+                    className="w-full px-4 h-12 border border-gray-200 dark:border-white/[0.08] rounded-2xl bg-gray-50 dark:bg-white/[0.04] text-black dark:text-white font-semibold focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt transition-all"
+                  >
+                    <option value="">Automatic — this device ({deviceTimeZone()})</option>
+                    {timeZones.map(tz => <option key={tz} value={tz}>{tz.replace(/_/g, " ")}</option>)}
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Today is <span className="font-semibold text-black dark:text-white">{formatInstant(new Date(), { weekday: "long", month: "long", day: "numeric" })}</span> in {activeTimeZone().replace(/_/g, " ")}.
+                    {timezone && timezone !== deviceTimeZone() && " This device is set to a different timezone."}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -427,9 +448,9 @@ export default function SettingsPage() {
                     <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold tracking-tight text-black dark:text-white">Spending Budgets</h2>
+                <h2 className="text-xl font-bold tracking-tight text-black dark:text-white">Default Monthly Budgets</h2>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Set monthly limits per category. Leave blank for no limit.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Limits applied to every month. Adjust a single month from the <Link href="/budget" className="font-semibold underline underline-offset-2 hover:text-black dark:hover:text-white">Budget</Link> page. Leave blank for no limit.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {CATEGORIES.map(cat => (
                   <div key={cat}>

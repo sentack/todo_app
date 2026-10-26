@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { todayStr } from "@/lib/dates"
+import { currentMonth, monthRange, effectiveLimits, spentByCategory, overBudgetCount } from "@/lib/budget"
 import { BrandMark, Wordmark } from "./BrandMark"
 
 interface SidebarProps {
@@ -14,15 +16,16 @@ interface SidebarProps {
 
 interface Badges {
   todos: number
+  budget: number
   finances: number
 }
 
 export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
   const pathname  = usePathname()
   const [mounted, setMounted] = useState(false)
-  const [badges, setBadges]   = useState<Badges>({ todos: 0, finances: 0 })
+  const [badges, setBadges]   = useState<Badges>({ todos: 0, budget: 0, finances: 0 })
   const supabase  = createBrowserSupabaseClient()
-  const today     = new Date().toISOString().split("T")[0]
+  const today     = todayStr()
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -43,8 +46,18 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       const overdueDebts   = (debtItems ?? []).filter(i => Number(i.amount_paid) < Number(i.amount)).length
       const overdueLending = (lendingItems ?? []).filter(i => Number(i.amount_paid) < Number(i.amount)).length
 
+      // Categories over their limit this month
+      const [start, end] = monthRange(currentMonth())
+      const [{ data: monthExpenses }, { data: defaults }, { data: overrides }] = await Promise.all([
+        supabase.from("expenses").select("amount, category").eq("user_id", userId).gte("date", start).lt("date", end),
+        supabase.from("expense_budgets").select("category, monthly_limit").eq("user_id", userId),
+        supabase.from("month_budgets").select("category, amount").eq("user_id", userId).eq("month", start),
+      ])
+      const overBudget = overBudgetCount(effectiveLimits(defaults ?? [], overrides ?? []), spentByCategory(monthExpenses ?? []))
+
       setBadges({
         todos:    todosCount ?? 0,
+        budget:   overBudget,
         finances: overdueDebts + overdueLending,
       })
     }
@@ -84,6 +97,17 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       ),
     },
     {
+      name: "Budget",
+      href: "/budget",
+      badge: badges.budget,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
+          <path d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
+        </svg>
+      ),
+    },
+    {
       name: "To Buy",
       href: "/to-buy",
       badge: 0,
@@ -114,7 +138,7 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       ),
     },
     {
-      name: "Stats",
+      name: "Insights",
       href: "/stats",
       badge: 0,
       icon: (
