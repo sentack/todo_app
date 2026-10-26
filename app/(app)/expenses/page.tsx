@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { todayStr, ymd } from "@/lib/dates"
 import { CATEGORIES, CATEGORY_BADGE } from "@/lib/constants"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
@@ -21,8 +22,7 @@ type TimeFilter = "all" | "today" | "7d" | "30d"
 
 const PAGE_SIZE = 15
 
-function todayStr() { return new Date().toISOString().split("T")[0] }
-function dateOffset(days: number) { const d = new Date(); d.setDate(d.getDate() - days); return d.toISOString().split("T")[0] }
+function dateOffset(days: number) { const d = new Date(); d.setDate(d.getDate() - days); return ymd(d) }
 
 function formatDateLabel(dateStr: string) {
   const today     = todayStr()

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { todayStr } from "@/lib/dates"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
 import { formatMoney } from "@/lib/formatMoney"
@@ -160,7 +161,7 @@ export default function ToBuyPage() {
 
   const logAsExpense = async () => {
     if (!logPrompt || !userIdRef.current) return
-    const today = new Date().toISOString().split("T")[0]
+    const today = todayStr()
     await supabase.from("expenses").insert({
       user_id: userIdRef.current,
       category: "Shopping",

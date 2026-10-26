@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { todayStr } from "@/lib/dates"
 import { BrandMark, Wordmark } from "./BrandMark"
 
 interface SidebarProps {
@@ -22,7 +23,7 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
   const [mounted, setMounted] = useState(false)
   const [badges, setBadges]   = useState<Badges>({ todos: 0, finances: 0 })
   const supabase  = createBrowserSupabaseClient()
-  const today     = new Date().toISOString().split("T")[0]
+  const today     = todayStr()
 
   useEffect(() => { setMounted(true) }, [])
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { createPortal } from "react-dom"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { todayStr } from "@/lib/dates"
 import FriendCombobox from "@/components/FriendCombobox"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
@@ -24,7 +25,6 @@ interface PersonGroup { name: string; debts: DebtItem[]; lendings: LendingItem[]
 
 const MODAL_PAGE = 10
 
-function todayStr() { return new Date().toISOString().split("T")[0] }
 
 function fmtDate(d: string) {
   return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })

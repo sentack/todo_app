@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { todayStr, ymd } from "@/lib/dates"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { CATEGORY_COLORS, CATEGORY_TEXT } from "@/lib/constants"
 import { formatMoney } from "@/lib/formatMoney"
@@ -73,7 +74,7 @@ function SpendingLineChart({ expenses, currency }: { expenses: Expense[]; curren
   const today = new Date()
   const days  = Array.from({ length: 30 }, (_, i) => {
     const d = new Date(today); d.setDate(d.getDate() - (29 - i))
-    return d.toISOString().split("T")[0]
+    return ymd(d)
   })
   const byDay  = new Map<string, number>()
   for (const exp of expenses) byDay.set(exp.date, (byDay.get(exp.date) ?? 0) + Number(exp.amount))
@@ -142,7 +143,6 @@ function CompletionBarChart({ completions }: { completions: { date: string; coun
 // ─── Insight helpers ─────────────────────────────────────────────────
 
 const DAY_MS = 86400000
-const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 const parseDay = (s: string) => new Date(s + "T00:00:00")
 const fmtDay = (s: string) => parseDay(s).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
 const fmtCompact = (v: number) => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e4 ? `${Math.round(v / 1e3)}k` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : String(Math.round(v))
@@ -444,8 +444,8 @@ export default function StatsPage() {
     const sevenAgo = new Date(); sevenAgo.setDate(sevenAgo.getDate() - 6); sevenAgo.setHours(0, 0, 0, 0)
     const { data: recentDone } = await supabase.from("todos").select("updated_at").eq("user_id", uid).eq("status_id", 3).gte("updated_at", sevenAgo.toISOString())
     const cmap: Record<string, number> = {}
-    for (const t of (recentDone ?? [])) { const d = t.updated_at.split("T")[0]; cmap[d] = (cmap[d] ?? 0) + 1 }
-    setCompletionsByDay(Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); const k = d.toISOString().split("T")[0]; return { date: k, count: cmap[k] ?? 0 } }))
+    for (const t of (recentDone ?? [])) { const d = ymd(new Date(t.updated_at)); cmap[d] = (cmap[d] ?? 0) + 1 }
+    setCompletionsByDay(Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); const k = ymd(d); return { date: k, count: cmap[k] ?? 0 } }))
   }
 
   const loadExpensesData = async (uid: string) => {
@@ -479,8 +479,8 @@ export default function StatsPage() {
   // ── Computed ─────────────────────────────────────────────────────
 
   const periodStart = useMemo(() => {
-    if (expPeriod === "7d")  { const d = new Date(); d.setDate(d.getDate() - 7);  return d.toISOString().split("T")[0] }
-    if (expPeriod === "30d") { const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split("T")[0] }
+    if (expPeriod === "7d")  { const d = new Date(); d.setDate(d.getDate() - 7);  return ymd(d) }
+    if (expPeriod === "30d") { const d = new Date(); d.setDate(d.getDate() - 30); return ymd(d) }
     return null
   }, [expPeriod])
 
@@ -491,9 +491,9 @@ export default function StatsPage() {
   const expStats = useMemo(() => {
     const list = periodExpenses
     if (list.length === 0) return null
-    const today = new Date().toISOString().split("T")[0]
+    const today = todayStr()
     const sum = (l: Expense[]) => l.reduce((s, e) => s + Number(e.amount), 0)
-    const start = (n: number) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().split("T")[0] }
+    const start = (n: number) => { const d = new Date(); d.setDate(d.getDate() - n); return ymd(d) }
 
     const allTotal   = sum(list)
     const allDays    = [...new Set(list.map(e => e.date))]
