@@ -540,7 +540,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
   const status    = getStatus(item)
   const remaining = Number(item.amount) - Number(item.amount_paid)
   const pct       = Math.min(100, Math.round((Number(item.amount_paid) / Number(item.amount)) * 100))
-  const isOverdue = item.deadline && new Date(item.deadline + "T00:00:00") < new Date() && status !== "paid"
+  const isOverdue = item.deadline && item.deadline < todayStr() && status !== "paid"
 
   const ensureFriend = async (name: string) => {
     if (!userId || !name.trim()) return
@@ -730,7 +730,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
   const status    = getStatus(item)
   const remaining = Number(item.amount) - Number(item.amount_paid)
   const pct       = Math.min(100, Math.round((Number(item.amount_paid) / Number(item.amount)) * 100))
-  const isOverdue = item.deadline && new Date(item.deadline + "T00:00:00") < new Date() && status !== "paid"
+  const isOverdue = item.deadline && item.deadline < todayStr() && status !== "paid"
 
   const ensureFriend = async (name: string) => {
     if (!userId || !name.trim()) return

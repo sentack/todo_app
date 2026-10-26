@@ -13,6 +13,7 @@ import LoginForm from "@/components/LoginForm"
 import MobileTabBar from "@/components/MobileTabBar"
 import { BrandMark, Wordmark } from "@/components/BrandMark"
 import { CurrencyProvider } from "@/contexts/CurrencyContext"
+import { formatInstant } from "@/lib/dates"
 import type { User } from "@supabase/supabase-js"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -108,7 +109,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </button>
                   <h1 className="lg:hidden"><Wordmark className="text-xl" /></h1>
                   <p className="hidden lg:block font-display text-lg font-bold tracking-tight text-black dark:text-white">
-                    {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+                    {formatInstant(new Date(), { weekday: "long", month: "long", day: "numeric" })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2">

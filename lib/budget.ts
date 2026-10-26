@@ -25,7 +25,7 @@ export function daysLeftInMonth(month: string) {
   if (month < cur) return 0
   const [y, m] = month.split("-").map(Number)
   const days = new Date(y, m, 0).getDate()
-  return month > cur ? days : days - new Date().getDate() + 1
+  return month > cur ? days : days - Number(todayStr().slice(8, 10)) + 1
 }
 
 /** Month override wins; otherwise the default limit from expense_budgets. */

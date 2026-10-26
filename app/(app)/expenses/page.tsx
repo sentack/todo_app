@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import Link from "next/link"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
-import { todayStr, ymd } from "@/lib/dates"
+import { todayStr, daysAgo } from "@/lib/dates"
 import { currentMonth, monthRange, effectiveLimits, spentByCategory } from "@/lib/budget"
 import { CATEGORIES, CATEGORY_BADGE } from "@/lib/constants"
 import { useCurrency } from "@/contexts/CurrencyContext"
@@ -24,7 +24,7 @@ type TimeFilter = "all" | "today" | "7d" | "30d"
 
 const PAGE_SIZE = 15
 
-function dateOffset(days: number) { const d = new Date(); d.setDate(d.getDate() - days); return ymd(d) }
+const dateOffset = daysAgo
 
 function formatDateLabel(dateStr: string) {
   const today     = todayStr()
