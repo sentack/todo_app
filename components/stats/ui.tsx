@@ -149,10 +149,12 @@ export function QuickAddButton({ type, children }: { type: string; children: Rea
 
 interface Series { name: string; bar: string }
 
+// Round the axis top up to a clean number whose half is also clean (0 / 15K / 30K)
 const niceMax = (v: number) => {
-  if (v <= 0) return 1
+  if (v <= 0) return 2
+  if (v <= 10) return Math.ceil(v / 2) * 2   // small counts: even top so the midline is a whole number
   const p = 10 ** Math.floor(Math.log10(v)), n = v / p
-  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p
+  return ([1, 2, 3, 4, 5, 6, 8, 10].find(s => n <= s) ?? 10) * p
 }
 
 /**
@@ -171,6 +173,9 @@ export function ColumnChart({ title, series, data, format, height = 176 }: {
   const [table, setTable] = useState(false)
   const max = niceMax(Math.max(0, ...data.flatMap(d => d.values)))
   const ticks = [max, max / 2, 0]
+  // Dense charts label every few columns (always the last) so labels never truncate
+  const labelEvery = Math.ceil(data.length / 7)
+  const showLabel = (i: number) => i === data.length - 1 || (data.length - 1 - i) % labelEvery === 0
 
   return (
     <div className={`${CARD} p-5 sm:p-6`}>
@@ -229,13 +234,13 @@ export function ColumnChart({ title, series, data, format, height = 176 }: {
                         style={{ height: v > 0 ? `${Math.max((v / max) * 100, 1.5)}%` : 0 }} />
                     ))}
                   </div>
-                  <span className={`h-6 pt-1.5 text-[0.625rem] font-semibold leading-none truncate max-w-full ${d.dim ? "text-gray-400 dark:text-gray-500" : "text-gray-600 dark:text-gray-300"}`}>{d.label}</span>
+                  <span className={`h-6 pt-1.5 text-[0.625rem] font-semibold leading-none whitespace-nowrap ${d.dim ? "text-gray-400 dark:text-gray-500" : "text-gray-600 dark:text-gray-300"}`}>{showLabel(i) ? d.label : ""}</span>
                 </button>
               ))}
             </div>
             {/* Tooltip: values lead, names follow, line keys */}
             {hover !== null && (
-              <div className="absolute top-0 z-10 pointer-events-none min-w-[8.5rem] px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-black/[0.08] dark:border-white/[0.1] shadow-lg"
+              <div className="absolute top-0 z-10 pointer-events-none whitespace-nowrap px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-black/[0.08] dark:border-white/[0.1] shadow-lg"
                 style={{
                   left: `${((hover + 0.5) / data.length) * 100}%`,
                   transform: `translateX(${hover === 0 ? "-15%" : hover === data.length - 1 ? "-85%" : "-50%"})`,
