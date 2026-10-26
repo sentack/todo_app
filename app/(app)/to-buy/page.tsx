@@ -162,13 +162,15 @@ export default function ToBuyPage() {
   const logAsExpense = async () => {
     if (!logPrompt || !userIdRef.current) return
     const today = todayStr()
-    await supabase.from("expenses").insert({
+    const { data: expense } = await supabase.from("expenses").insert({
       user_id: userIdRef.current,
       category: "Shopping",
       amount: logPrompt.amount,
       description: logPrompt.name,
       date: today,
-    })
+    }).select("id").single()
+    // Link the item to its expense so analytics can tell what was logged
+    if (expense) await supabase.from("to_buy_items").update({ expense_id: expense.id }).eq("id", logPrompt.itemId)
     setLogPrompt(null)
   }
 
