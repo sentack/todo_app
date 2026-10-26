@@ -46,6 +46,12 @@ export default function ExpensesPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [timeFilter, setTimeFilter]           = useState<TimeFilter>("all")
   const [categoryFilter, setCategoryFilter]   = useState("all")
+
+  // Deep link from Insights: /expenses?category=Coffee
+  useEffect(() => {
+    const c = new URLSearchParams(window.location.search).get("category")
+    if (c && (CATEGORIES as readonly string[]).includes(c)) setCategoryFilter(c)
+  }, [])
   const [sortKey, setSortKey]                 = useState<SortKey>("date-desc")
 
   const supabase  = useMemo(() => createBrowserSupabaseClient(), [])

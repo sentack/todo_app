@@ -138,7 +138,7 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       ),
     },
     {
-      name: "Stats",
+      name: "Insights",
       href: "/stats",
       badge: 0,
       icon: (
