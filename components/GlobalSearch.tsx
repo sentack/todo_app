@@ -61,6 +61,7 @@ export default function GlobalSearch({ userId }: GlobalSearchProps) {
     const [
       { data: todos },
       { data: expenses },
+      { data: incomes },
       { data: toBuy },
       { data: debts },
       { data: lendings },
@@ -70,6 +71,8 @@ export default function GlobalSearch({ userId }: GlobalSearchProps) {
         .or(`title.ilike.${like},description.ilike.${like}`).limit(4),
       supabase.from("expenses").select("id, description, category, amount").eq("user_id", userId)
         .or(`description.ilike.${like},category.ilike.${like}`).limit(4),
+      supabase.from("incomes").select("id, description, source, amount, date").eq("user_id", userId)
+        .or(`description.ilike.${like},source.ilike.${like}`).limit(4),
       supabase.from("to_buy_items").select("id, name, urgency").eq("user_id", userId)
         .ilike("name", like).limit(4),
       supabase.from("debts").select("id, person, amount").eq("user_id", userId)
@@ -88,6 +91,10 @@ export default function GlobalSearch({ userId }: GlobalSearchProps) {
       ...(expenses ?? []).map(e => ({
         id: e.id, section: "Expenses", href: "/expenses",
         label: e.description || e.category, sub: e.category,
+      })),
+      ...(incomes ?? []).map(i => ({
+        id: i.id, section: "Income", href: `/budget?month=${i.date.slice(0, 7)}`,
+        label: i.description || i.source, sub: `${i.source} · +${currency} ${formatMoney(Number(i.amount))}`,
       })),
       ...(toBuy ?? []).map(i => ({
         id: i.id, section: "To Buy", href: "/to-buy",
