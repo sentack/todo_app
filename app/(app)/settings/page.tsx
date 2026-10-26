@@ -7,6 +7,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import ClearDataModal from "@/components/ClearDataModal"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { CURRENCIES, CATEGORIES } from "@/lib/constants"
@@ -427,9 +428,9 @@ export default function SettingsPage() {
                     <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold tracking-tight text-black dark:text-white">Spending Budgets</h2>
+                <h2 className="text-xl font-bold tracking-tight text-black dark:text-white">Default Monthly Budgets</h2>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Set monthly limits per category. Leave blank for no limit.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Limits applied to every month. Adjust a single month from the <Link href="/budget" className="font-semibold underline underline-offset-2 hover:text-black dark:hover:text-white">Budget</Link> page. Leave blank for no limit.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {CATEGORIES.map(cat => (
                   <div key={cat}>
