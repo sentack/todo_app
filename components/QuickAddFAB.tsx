@@ -500,6 +500,16 @@ export default function QuickAddFAB() {
     setActiveModal(modal)
   }
 
+  // Other screens can open a form: dispatch "quick-add" with { type }
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const type = (e as CustomEvent).detail?.type
+      if (SECTIONS.some(s => s.modal === type)) { setOpen(false); setActiveModal(type) }
+    }
+    window.addEventListener("quick-add", handler)
+    return () => window.removeEventListener("quick-add", handler)
+  }, [])
+
   const closeModal = () => setActiveModal(null)
 
   const doneAndRefresh = (type: string) => {

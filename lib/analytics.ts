@@ -315,7 +315,7 @@ export function moneyInsights(a: MoneyAnalytics, period: Period, money: (v: numb
   if (down) out.push({ rank: 5, tone: "good", text: `${down.cat} spending is down ${Math.abs(Math.round(down.change!))}% from ${prevWord}.` })
   if (a.earned === 0 && a.spent > 0) out.push({ rank: 6, tone: "info", text: "No income recorded for this period — add it to see your savings rate." })
 
-  return out.sort((x, y) => x.rank - y.rank).slice(0, 3).map(({ rank: _rank, ...i }) => i)
+  return out.sort((x, y) => x.rank - y.rank).slice(0, 3).map(({ tone, text, href }) => ({ tone, text, href }))
 }
 
 // ─── Todos ───────────────────────────────────────────────────────────
