@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
-import { todayStr, ymd } from "@/lib/dates"
+import { todayStr, dayKey, daysAgo, addDays } from "@/lib/dates"
+import { currentMonth, shiftMonth } from "@/lib/budget"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { CATEGORY_COLORS, CATEGORY_TEXT } from "@/lib/constants"
 import { formatMoney } from "@/lib/formatMoney"
@@ -71,11 +72,7 @@ function RankBar({
 // ─── SVG Charts ──────────────────────────────────────────────────────
 
 function SpendingLineChart({ expenses, currency }: { expenses: Expense[]; currency: string }) {
-  const today = new Date()
-  const days  = Array.from({ length: 30 }, (_, i) => {
-    const d = new Date(today); d.setDate(d.getDate() - (29 - i))
-    return ymd(d)
-  })
+  const days  = Array.from({ length: 30 }, (_, i) => daysAgo(29 - i))
   const byDay  = new Map<string, number>()
   for (const exp of expenses) byDay.set(exp.date, (byDay.get(exp.date) ?? 0) + Number(exp.amount))
   const values = days.map(d => byDay.get(d) ?? 0)
@@ -147,10 +144,10 @@ const parseDay = (s: string) => new Date(s + "T00:00:00")
 const fmtDay = (s: string) => parseDay(s).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
 const fmtCompact = (v: number) => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e4 ? `${Math.round(v / 1e3)}k` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : String(Math.round(v))
 const lastMonths = (n: number) => {
-  const now = new Date()
+  const cur = currentMonth()
   return Array.from({ length: n }, (_, k) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - (n - 1 - k), 1)
-    return { key: ymd(d).slice(0, 7), label: d.toLocaleDateString("en-US", { month: "short" }) }
+    const key = shiftMonth(cur, k - (n - 1))
+    return { key, label: parseDay(`${key}-01`).toLocaleDateString("en-US", { month: "short" }) }
   })
 }
 
@@ -184,7 +181,7 @@ function ColumnChart({ data, format }: {
 
 // Extra debt / lending insights
 function financeInsights(items: FinanceItem[]) {
-  const today = parseDay(ymd(new Date()))
+  const today = parseDay(todayStr())
   const in7 = new Date(today.getTime() + 7 * DAY_MS)
   const outOf = (i: FinanceItem) => Math.max(0, Number(i.amount) - Number(i.amount_paid))
   const open = items.filter(i => outOf(i) > 0)
@@ -441,11 +438,12 @@ export default function StatsPage() {
       setFastestTodos([...mapped].sort((a, b) => a.hours - b.hours).slice(0, 3))
     }
 
-    const sevenAgo = new Date(); sevenAgo.setDate(sevenAgo.getDate() - 6); sevenAgo.setHours(0, 0, 0, 0)
+    // 8 days back covers the last 7 calendar days in any timezone; bucketed by dayKey below
+    const sevenAgo = new Date(Date.now() - 8 * DAY_MS)
     const { data: recentDone } = await supabase.from("todos").select("updated_at").eq("user_id", uid).eq("status_id", 3).gte("updated_at", sevenAgo.toISOString())
     const cmap: Record<string, number> = {}
-    for (const t of (recentDone ?? [])) { const d = ymd(new Date(t.updated_at)); cmap[d] = (cmap[d] ?? 0) + 1 }
-    setCompletionsByDay(Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); const k = ymd(d); return { date: k, count: cmap[k] ?? 0 } }))
+    for (const t of (recentDone ?? [])) { const d = dayKey(t.updated_at); cmap[d] = (cmap[d] ?? 0) + 1 }
+    setCompletionsByDay(Array.from({ length: 7 }, (_, i) => { const k = daysAgo(6 - i); return { date: k, count: cmap[k] ?? 0 } }))
   }
 
   const loadExpensesData = async (uid: string) => {
@@ -479,8 +477,8 @@ export default function StatsPage() {
   // ── Computed ─────────────────────────────────────────────────────
 
   const periodStart = useMemo(() => {
-    if (expPeriod === "7d")  { const d = new Date(); d.setDate(d.getDate() - 7);  return ymd(d) }
-    if (expPeriod === "30d") { const d = new Date(); d.setDate(d.getDate() - 30); return ymd(d) }
+    if (expPeriod === "7d")  return daysAgo(7)
+    if (expPeriod === "30d") return daysAgo(30)
     return null
   }, [expPeriod])
 
@@ -493,7 +491,7 @@ export default function StatsPage() {
     if (list.length === 0) return null
     const today = todayStr()
     const sum = (l: Expense[]) => l.reduce((s, e) => s + Number(e.amount), 0)
-    const start = (n: number) => { const d = new Date(); d.setDate(d.getDate() - n); return ymd(d) }
+    const start = daysAgo
 
     const allTotal   = sum(list)
     const allDays    = [...new Set(list.map(e => e.date))]
@@ -516,7 +514,7 @@ export default function StatsPage() {
     const medianTx = amounts.length % 2 ? amounts[mid] : (amounts[mid - 1] + amounts[mid]) / 2
 
     // Calendar coverage + streaks
-    const todayKey  = ymd(new Date())
+    const todayKey  = todayStr()
     const ascDays   = [...allDays].sort()
     const calendarSpan = expPeriod === "7d" ? 7 : expPeriod === "30d" ? 30
       : Math.max(1, Math.round((parseDay(todayKey).getTime() - parseDay(ascDays[0]).getTime()) / DAY_MS) + 1)
@@ -527,9 +525,8 @@ export default function StatsPage() {
     }
     const daySet = new Set(allDays)
     let currentStreak = 0
-    const cursor = parseDay(todayKey)
-    if (!daySet.has(todayKey)) cursor.setDate(cursor.getDate() - 1)
-    while (daySet.has(ymd(cursor))) { currentStreak++; cursor.setDate(cursor.getDate() - 1) }
+    let cursor = daySet.has(todayKey) ? todayKey : addDays(todayKey, -1)
+    while (daySet.has(cursor)) { currentStreak++; cursor = addDays(cursor, -1) }
 
     // Weekday pattern (Mon → Sun)
     const weekdays = WEEKDAYS.map(label => ({ label, value: 0 }))
@@ -562,13 +559,13 @@ export default function StatsPage() {
   // Last 6 months — always from all expenses
   const expMonthly = useMemo(() => {
     if (expenses.length === 0) return null
-    const now = new Date()
     const months = lastMonths(6).map((m, i, arr) => ({ ...m, value: 0, current: i === arr.length - 1 }))
     const idx = new Map(months.map((m, i) => [m.key, i]))
     for (const e of expenses) { const k = idx.get(e.date.slice(0, 7)); if (k !== undefined) months[k].value += Number(e.amount) }
     const thisMonth = months[5].value
-    const dayOfMonth = now.getDate()
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+    const dayOfMonth = Number(todayStr().slice(8, 10))
+    const [curY, curM] = months[5].key.split("-").map(Number)
+    const daysInMonth = new Date(curY, curM, 0).getDate()
     const lastSamePoint = expenses
       .filter(e => e.date.slice(0, 7) === months[4].key && Number(e.date.slice(8, 10)) <= dayOfMonth)
       .reduce((s, e) => s + Number(e.amount), 0)
@@ -621,7 +618,7 @@ export default function StatsPage() {
 
   const financeStats = (items: FinanceItem[]) => {
     const gs = (i: FinanceItem) => Number(i.amount_paid) >= Number(i.amount) ? "paid" : Number(i.amount_paid) > 0 ? "partial" : "unpaid"
-    const now = new Date()
+    const today = todayStr()
     // Group by person
     const personMap = new Map<string, { total: number; outstanding: number; count: number }>()
     for (const i of items) {
@@ -639,7 +636,7 @@ export default function StatsPage() {
       totalAmount:  items.reduce((s, i) => s + Number(i.amount), 0),
       totalPaid:    items.reduce((s, i) => s + Number(i.amount_paid), 0),
       outstanding:  items.filter(i => gs(i) !== "paid").reduce((s, i) => s + (Number(i.amount) - Number(i.amount_paid)), 0),
-      overdue:      items.filter(i => i.deadline && new Date(i.deadline + "T00:00:00") < now && gs(i) !== "paid").length,
+      overdue:      items.filter(i => i.deadline && i.deadline < today && gs(i) !== "paid").length,
       personRanking: [...personMap.entries()].map(([name, v]) => ({ name, ...v })).sort((a, b) => b.outstanding - a.outstanding),
     }
   }
