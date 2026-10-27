@@ -3,7 +3,9 @@
 import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
-import { type Period, type TodoRow, type Delta, todoAnalytics, todoInsights, deltaOf } from "@/lib/analytics"
+import { fetchAll } from "@/lib/fetchAll"
+import { dayKey } from "@/lib/dates"
+import { type Period, type TodoRow, type Delta, todoAnalytics, todoInsights, deltaOf, periodForData } from "@/lib/analytics"
 import { CARD, IN_BAR, DIM_BAR, SectionTitle, Hero, HeroStat, StatTile, InsightList, ColumnChart, EmptyState, QuickAddButton } from "./ui"
 
 const fmtDuration = (h: number) =>
@@ -20,13 +22,14 @@ export default function TodosTab({ userId, period }: { userId: string; period: P
     ;(async () => {
       setLoading(true)
       const cols = "id, title, created_at, updated_at, completed, due_date"
-      const full = await supabase.from("todos").select(`${cols}, completed_at`).eq("user_id", userId)
+      // Columns are a runtime string, so Supabase can't infer the row type — the cast supplies it
+      const load = (c: string) => fetchAll<TodoRow>((from, to) =>
+        supabase.from("todos").select(c, { count: "exact" }).eq("user_id", userId).order("created_at").order("id").range(from, to) as never)
+      let res = await load(`${cols}, completed_at`)
       // completed_at not migrated yet — analytics fall back to updated_at
-      const rows = full.error
-        ? (await supabase.from("todos").select(cols).eq("user_id", userId)).data
-        : full.data
+      if (res.error) res = await load(cols)
       if (cancelled) return
-      setTodos((rows ?? []) as TodoRow[])
+      setTodos(res.data)
       setLoading(false)
     })()
     return () => { cancelled = true }
@@ -38,12 +41,17 @@ export default function TodosTab({ userId, period }: { userId: string; period: P
     return () => window.removeEventListener("refresh-data", handler)
   }, [])
 
-  const a = useMemo(() => todos ? todoAnalytics(period, todos) : null, [todos, period])
-  const insights = useMemo(() => a ? todoInsights(a) : [], [a])
+  if (!todos) return <div className="space-y-4">{[1, 2, 3].map(i => <div key={i} className="skeleton rounded-3xl h-32" />)}</div>
+  return <TodosView todos={todos} period={period} loading={loading} />
+}
 
-  if (!a) return <div className="space-y-4">{[1, 2, 3].map(i => <div key={i} className="skeleton rounded-3xl h-32" />)}</div>
+/** Renders the tab from loaded rows (no fetching — rendered directly in tests) */
+export function TodosView({ todos, period: basePeriod, loading = false }: { todos: TodoRow[]; period: Period; loading?: boolean }) {
+  const period = useMemo(() => periodForData(basePeriod, todos.map(t => dayKey(t.created_at))), [basePeriod, todos])
+  const a = useMemo(() => todoAnalytics(period, todos), [todos, period])
+  const insights = useMemo(() => todoInsights(a), [a])
 
-  if (todos!.length === 0) {
+  if (todos.length === 0) {
     return <EmptyState action={<QuickAddButton type="todo">Add a todo</QuickAddButton>}>No todos yet. Add one to start tracking your progress.</EmptyState>
   }
 

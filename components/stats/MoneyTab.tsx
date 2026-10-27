@@ -5,10 +5,10 @@ import Link from "next/link"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { formatMoney } from "@/lib/formatMoney"
-import { currentMonth, shiftMonth } from "@/lib/budget"
+import { fetchAll } from "@/lib/fetchAll"
 import {
   type Period, type MoneyInput, type Delta,
-  moneyAnalytics, moneyInsights, deltaOf,
+  moneyAnalytics, moneyInsights, deltaOf, periodForData, fmtPct,
 } from "@/lib/analytics"
 import {
   CARD, IN_BAR, OUT_BAR, SectionTitle, Hero, HeroStat, StatTile, InsightList, ColumnChart,
@@ -17,37 +17,40 @@ import {
 
 const fmtDay = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
 
+/** Every money row the tab needs. All rows — the analytics filter by period. */
+export async function loadMoneyInput(supabase: ReturnType<typeof createBrowserSupabaseClient>, userId: string): Promise<MoneyInput> {
+  // Columns are a runtime string, so Supabase can't infer the row type — the cast supplies it
+  const all = <T,>(table: string, cols: string, order: string) =>
+    fetchAll<T>((from, to) => supabase.from(table).select(cols, { count: "exact" }).eq("user_id", userId).order(order).order("id").range(from, to) as never)
+  const [exp, inc, def, ovr, pln, dbt, lnd] = await Promise.all([
+    all<MoneyInput["expenses"][number]>("expenses", "amount, category, date, description", "date"),
+    all<MoneyInput["incomes"][number]>("incomes", "amount, source, date", "date"),
+    all<MoneyInput["defaults"][number]>("expense_budgets", "category, monthly_limit", "category"),
+    all<MoneyInput["overrides"][number]>("month_budgets", "month, category, amount", "month"),
+    all<MoneyInput["plans"][number]>("month_plans", "month, expected_income", "month"),
+    all<MoneyInput["debts"][number]>("debts", "amount, amount_paid, date, deadline, person, paid_history", "date"),
+    all<MoneyInput["lendings"][number]>("lendings", "amount, amount_paid, date, deadline, person, paid_history", "date"),
+  ])
+  return {
+    expenses: exp.data, incomes: inc.data, defaults: def.data, overrides: ovr.data,
+    plans: pln.data, debts: dbt.data, lendings: lnd.data,
+  }
+}
+
 export default function MoneyTab({ userId, period }: { userId: string; period: Period }) {
   const [data, setData]       = useState<MoneyInput | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
-  const [showAllCats, setShowAllCats] = useState(false)
   const supabase = useMemo(() => createBrowserSupabaseClient(), [])
   const { currency } = useCurrency()
-  const money = (v: number) => `${currency} ${formatMoney(v)}`
-  const signed = (v: number) => `${v < 0 ? "−" : "+"}${money(Math.abs(v))}`
 
-  // 24 months covers the longest period (12M) plus its comparison period
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       setLoading(true)
-      const since = `${shiftMonth(currentMonth(), -23)}-01`
-      const [exp, inc, def, ovr, pln, dbt, lnd] = await Promise.all([
-        supabase.from("expenses").select("amount, category, date, description").eq("user_id", userId).gte("date", since),
-        supabase.from("incomes").select("amount, source, date").eq("user_id", userId).gte("date", since),
-        supabase.from("expense_budgets").select("category, monthly_limit").eq("user_id", userId),
-        supabase.from("month_budgets").select("month, category, amount").eq("user_id", userId).gte("month", since),
-        supabase.from("month_plans").select("month, expected_income").eq("user_id", userId).gte("month", since),
-        supabase.from("debts").select("amount, amount_paid, date, deadline, person, paid_history").eq("user_id", userId),
-        supabase.from("lendings").select("amount, amount_paid, date, deadline, person, paid_history").eq("user_id", userId),
-      ])
+      const input = await loadMoneyInput(supabase, userId)
       if (cancelled) return
-      setData({
-        expenses: exp.data ?? [], incomes: inc.data ?? [], defaults: def.data ?? [],
-        overrides: ovr.data ?? [], plans: pln.data ?? [],
-        debts: (dbt.data ?? []) as MoneyInput["debts"], lendings: (lnd.data ?? []) as MoneyInput["lendings"],
-      })
+      setData(input)
       setLoading(false)
     })()
     return () => { cancelled = true }
@@ -62,15 +65,26 @@ export default function MoneyTab({ userId, period }: { userId: string; period: P
     return () => window.removeEventListener("refresh-data", handler)
   }, [])
 
-  const a = useMemo(() => data ? moneyAnalytics(period, data) : null, [data, period])
-  const insights = useMemo(() => a ? moneyInsights(a, period, money) : [], [a, period]) // eslint-disable-line react-hooks/exhaustive-deps
+  if (!data) return <div className="space-y-4">{[1, 2, 3].map(i => <div key={i} className="skeleton rounded-3xl h-32" />)}</div>
+  return <MoneyView data={data} period={period} currency={currency} loading={loading} />
+}
 
-  if (!a) return <div className="space-y-4">{[1, 2, 3].map(i => <div key={i} className="skeleton rounded-3xl h-32" />)}</div>
+/** Renders the tab from loaded rows (no fetching — rendered directly in tests) */
+export function MoneyView({ data, period: basePeriod, currency, loading = false }: {
+  data: MoneyInput; period: Period; currency: string; loading?: boolean
+}) {
+  const [showAllCats, setShowAllCats] = useState(false)
+  const money = (v: number) => `${currency} ${formatMoney(v)}`
+  const signed = (v: number) => `${v < 0 ? "−" : "+"}${money(Math.abs(v))}`
+
+  const period = useMemo(() => periodForData(basePeriod, [...data.expenses.map(e => e.date), ...data.incomes.map(i => i.date)]), [basePeriod, data])
+  const a = useMemo(() => moneyAnalytics(period, data), [data, period])
+  const insights = useMemo(() => moneyInsights(a, period, money), [a, period]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (a.spent === 0 && a.earned === 0 && a.loans.owedToYou === 0 && a.loans.youOwe === 0) {
     return (
       <EmptyState action={<div className="flex gap-2 justify-center"><QuickAddButton type="expense">Add expense</QuickAddButton><QuickAddButton type="income">Add income</QuickAddButton></div>}>
-        No money activity in {period.label.toLowerCase().startsWith("last") ? `the ${period.label.toLowerCase()}` : period.label}. Add an expense or income to start seeing insights.
+        No money activity {period.key === "all" ? "yet" : period.label.toLowerCase().startsWith("last") ? `in the ${period.label.toLowerCase()}` : `in ${period.label}`}. Add an expense or income to start seeing insights.
       </EmptyState>
     )
   }
@@ -93,7 +107,7 @@ export default function MoneyTab({ userId, period }: { userId: string; period: P
       {/* Hero: savings rate, or net when there's no income */}
       <Hero
         label={a.savingsRate !== null ? "Savings rate" : "Net cash flow"}
-        value={a.savingsRate !== null ? `${Math.round(a.savingsRate)}%` : signed(a.net)}
+        value={a.savingsRate !== null ? fmtPct(a.savingsRate) : signed(a.net)}
         valueTone={(a.savingsRate ?? a.net) < 0 ? "bad" : undefined}
         delta={savingsDelta}>
         <div className="grid grid-cols-3 gap-3 mt-5">
@@ -143,10 +157,10 @@ export default function MoneyTab({ userId, period }: { userId: string; period: P
           <div className={`${CARD} p-5 sm:p-6`}>
             <BarList bar={OUT_BAR} rows={cats.map(c => ({
               key: c.cat, label: c.cat, value: c.total, valueText: money(c.total),
-              note: <ChangeNote pct={c.change} upIsGood={false} />,
+              note: period.hasComparison ? <ChangeNote pct={c.change} upIsGood={false} /> : undefined,
               href: `/expenses?category=${encodeURIComponent(c.cat)}`,
             }))} />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">Change is {period.compareLabel}. Tap a category to see its expenses.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">{period.hasComparison && `Change is ${period.compareLabel}. `}Tap a category to see its expenses.</p>
           </div>
         )}
       </div>
@@ -164,12 +178,12 @@ export default function MoneyTab({ userId, period }: { userId: string; period: P
               <div className="mb-5 pb-5 border-b border-black/[0.05] dark:border-white/[0.05]">
                 <div className="flex items-baseline justify-between gap-3 mb-1.5">
                   <span className="text-sm font-semibold text-black dark:text-white">Received vs plan</span>
-                  <span className="text-sm font-bold text-black dark:text-white">{Math.round((a.earned / a.expected) * 100)}%</span>
+                  <span className="text-sm font-bold text-black dark:text-white">{Math.round((a.receivedVsPlan / a.expected) * 100)}%</span>
                 </div>
                 <div className="h-2 rounded-full bg-emerald-100 dark:bg-emerald-950 overflow-hidden">
-                  <div className={`h-full rounded-full ${IN_BAR}`} style={{ width: `${Math.min(100, (a.earned / a.expected) * 100)}%` }} />
+                  <div className={`h-full rounded-full ${IN_BAR}`} style={{ width: `${Math.min(100, (a.receivedVsPlan / a.expected) * 100)}%` }} />
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">{money(a.earned)} of {money(a.expected)} planned</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">{money(a.receivedVsPlan)} of {money(a.expected)} planned{a.plannedMonths < period.months.length && ` · ${a.plannedMonths} of ${period.months.length} months have a plan`}</p>
               </div>
             )}
             <BarList bar={IN_BAR} rows={a.sources.map(s => ({

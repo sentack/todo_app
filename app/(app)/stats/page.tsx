@@ -88,7 +88,8 @@ function StatsPage() {
         <div className="sticky top-16 lg:top-[4.5rem] z-[40] -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-2 mb-5 chrome">
           <PeriodPicker value={periodKey} onChange={p => update({ period: p })} />
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 px-1">
-            <span className="font-semibold text-black dark:text-white">{period.label}</span> · changes shown {period.compareLabel}
+            <span className="font-semibold text-black dark:text-white">{period.label}</span>
+            {period.hasComparison ? ` · changes shown ${period.compareLabel}` : " · everything you've recorded"}
           </p>
         </div>
 
