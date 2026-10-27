@@ -6,7 +6,9 @@ import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { formatMoney } from "@/lib/formatMoney"
 import { currentMonth, monthRange, effectiveLimits, spentByCategory } from "@/lib/budget"
-import { type Period, type ToBuyRow, type Urgency, shoppingAnalytics, shoppingInsights, deltaOf } from "@/lib/analytics"
+import { fetchAll } from "@/lib/fetchAll"
+import { dayKey } from "@/lib/dates"
+import { type Period, type ToBuyRow, type Urgency, shoppingAnalytics, shoppingInsights, deltaOf, periodForData } from "@/lib/analytics"
 import { CARD, SectionTitle, Hero, HeroStat, StatTile, InsightList, BarList, EmptyState, QuickAddButton } from "./ui"
 
 const URGENCY: Record<Urgency, { label: string; dot: string }> = {
@@ -25,34 +27,33 @@ export default function ShoppingTab({ userId, period }: { userId: string; period
   const [refreshKey, setRefreshKey] = useState(0)
   const supabase = useMemo(() => createBrowserSupabaseClient(), [])
   const { currency } = useCurrency()
-  const money = (v: number) => `${currency} ${formatMoney(v)}`
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       setLoading(true)
-      const loadItems = async (): Promise<ToBuyRow[]> => {
-        const cols = "id, name, quantity, price, urgency, bought, created_at"
-        const full = await supabase.from("to_buy_items").select(`${cols}, bought_at, expense_id`).eq("user_id", userId)
-        if (!full.error) return (full.data ?? []) as ToBuyRow[]
-        // bought_at / expense_id not migrated yet
-        const { data } = await supabase.from("to_buy_items").select(cols).eq("user_id", userId)
-        return (data ?? []) as ToBuyRow[]
-      }
+      const cols = "id, name, quantity, price, urgency, bought, created_at"
+      // Columns are a runtime string, so Supabase can't infer the row type — the cast supplies it
+      const loadItems = (c: string) => fetchAll<ToBuyRow>((from, to) =>
+        supabase.from("to_buy_items").select(c, { count: "exact" }).eq("user_id", userId).order("created_at").order("id").range(from, to) as never)
       const [start, end] = monthRange(currentMonth())
-      const [rows, exp, def, ovr] = await Promise.all([
-        loadItems(),
-        supabase.from("expenses").select("amount, category").eq("user_id", userId).gte("date", start).lt("date", end),
+      const [firstTry, exp, def, ovr] = await Promise.all([
+        loadItems(`${cols}, bought_at, expense_id`),
+        fetchAll<{ amount: number; category: string }>((from, to) =>
+          supabase.from("expenses").select("amount, category", { count: "exact" }).eq("user_id", userId)
+            .gte("date", start).lt("date", end).order("date").order("id").range(from, to)),
         supabase.from("expense_budgets").select("category, monthly_limit").eq("user_id", userId),
         supabase.from("month_budgets").select("category, amount").eq("user_id", userId).eq("month", start),
       ])
+      // bought_at / expense_id not migrated yet
+      const itemsRes = firstTry.error ? await loadItems(cols) : firstTry
       if (cancelled) return
 
       const limits = effectiveLimits(def.data ?? [], ovr.data ?? [])
-      const spent = spentByCategory(exp.data ?? [])
+      const spent = spentByCategory(exp.data)
       const cats = Object.keys(limits)
       setBudgetLeft(cats.length ? cats.reduce((s, c) => s + limits[c] - (spent[c] ?? 0), 0) : null)
-      setItems(rows)
+      setItems(itemsRes.data)
       setLoading(false)
     })()
     return () => { cancelled = true }
@@ -67,12 +68,20 @@ export default function ShoppingTab({ userId, period }: { userId: string; period
     return () => window.removeEventListener("refresh-data", handler)
   }, [])
 
-  const a = useMemo(() => items ? shoppingAnalytics(period, items) : null, [items, period])
-  const insights = useMemo(() => a ? shoppingInsights(a, budgetLeft, money) : [], [a, budgetLeft]) // eslint-disable-line react-hooks/exhaustive-deps
+  if (!items) return <div className="space-y-4">{[1, 2, 3].map(i => <div key={i} className="skeleton rounded-3xl h-32" />)}</div>
+  return <ShoppingView items={items} budgetLeft={budgetLeft} period={period} currency={currency} loading={loading} />
+}
 
-  if (!a) return <div className="space-y-4">{[1, 2, 3].map(i => <div key={i} className="skeleton rounded-3xl h-32" />)}</div>
+/** Renders the tab from loaded rows (no fetching — rendered directly in tests) */
+export function ShoppingView({ items, budgetLeft, period: basePeriod, currency, loading = false }: {
+  items: ToBuyRow[]; budgetLeft: number | null; period: Period; currency: string; loading?: boolean
+}) {
+  const money = (v: number) => `${currency} ${formatMoney(v)}`
+  const period = useMemo(() => periodForData(basePeriod, items.map(i => dayKey(i.created_at))), [basePeriod, items])
+  const a = useMemo(() => shoppingAnalytics(period, items), [items, period])
+  const insights = useMemo(() => shoppingInsights(a, budgetLeft, money), [a, budgetLeft]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (items!.length === 0) {
+  if (items.length === 0) {
     return <EmptyState action={<QuickAddButton type="to-buy">Add an item</QuickAddButton>}>Your shopping list is empty. Add items to plan purchases against your budget.</EmptyState>
   }
 
