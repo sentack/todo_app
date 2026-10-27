@@ -9,7 +9,7 @@ const DAY_MS = 86400000
 
 // ─── Periods ─────────────────────────────────────────────────────────
 
-export type PeriodKey = "month" | "last-month" | "3m" | "6m" | "12m"
+export type PeriodKey = "month" | "last-month" | "3m" | "6m" | "12m" | "all"
 
 export const PERIODS: { key: PeriodKey; label: string }[] = [
   { key: "month",      label: "This month" },
@@ -17,6 +17,7 @@ export const PERIODS: { key: PeriodKey; label: string }[] = [
   { key: "3m",         label: "3M" },
   { key: "6m",         label: "6M" },
   { key: "12m",        label: "12M" },
+  { key: "all",        label: "All time" },
 ]
 
 export const isPeriodKey = (v: string | null): v is PeriodKey => PERIODS.some(p => p.key === v)
@@ -25,12 +26,14 @@ export interface Period {
   key: PeriodKey
   label: string        // "October 2026", "Last 3 months"
   start: string        // first day, inclusive
-  end: string          // day after the last, exclusive
+  end: string          // day after the last, exclusive. Running periods cover the whole
+                       //   current month, so entries dated later this month count (as on Budget)
   months: string[]     // month keys covered, oldest first
   prevStart: string    // comparison period: same length, ending at the same point
-  prevEnd: string
+  prevEnd: string      //   (empty for All time, which has nothing to compare with)
+  hasComparison: boolean
   compareLabel: string // "vs same point last month"
-  days: number         // days covered (to today for periods still running)
+  days: number         // days elapsed (to today for running periods) — the divisor for averages
   toDate: boolean      // still running
 }
 
@@ -47,23 +50,46 @@ export function shiftDate(key: string, months: number) {
   return `${m}-${String(Math.min(Number(key.slice(8, 10)), dim)).padStart(2, "0")}`
 }
 
-export function resolvePeriod(key: PeriodKey): Period {
+/**
+ * `firstDay` is the earliest day with data; only All time uses it (it starts
+ * there). Without it, All time starts at the beginning of this month.
+ */
+export function resolvePeriod(key: PeriodKey, firstDay?: string | null): Period {
   const cur = currentMonth()
   const tomorrow = addDays(todayStr(), 1)
+  const nextMonth = `${shiftMonth(cur, 1)}-01`
+  if (key === "all") {
+    const start = firstDay && firstDay < tomorrow ? firstDay : `${cur}-01`
+    const months: string[] = []
+    for (let m = start.slice(0, 7); m <= cur; m = shiftMonth(m, 1)) months.push(m)
+    return {
+      key, months, start, end: nextMonth, toDate: true, label: "All time",
+      prevStart: start, prevEnd: start, hasComparison: false, compareLabel: "",
+      days: daysBetween(start, tomorrow),
+    }
+  }
   const n = key === "3m" ? 3 : key === "6m" ? 6 : key === "12m" ? 12 : 1
   const lastMonth = key === "last-month" ? shiftMonth(cur, -1) : cur
   const months = Array.from({ length: n }, (_, i) => shiftMonth(lastMonth, i - (n - 1)))
   const start = `${months[0]}-01`
   const toDate = key !== "last-month"
-  const end = toDate ? tomorrow : `${cur}-01`
+  const end = toDate ? nextMonth : `${cur}-01`
   return {
     key, months, start, end, toDate,
     label: n === 1 ? monthLabel(lastMonth) : `Last ${n} months`,
     prevStart: shiftDate(start, -n),
-    prevEnd: toDate ? shiftDate(end, -n) : start,
+    prevEnd: toDate ? shiftDate(tomorrow, -n) : start,   // same point in the earlier period
+    hasComparison: true,
     compareLabel: key === "month" ? "vs same point last month" : key === "last-month" ? "vs the month before" : `vs previous ${n} months`,
-    days: daysBetween(start, end),
+    days: daysBetween(start, toDate ? tomorrow : end),
   }
+}
+
+/** All time starts at the first day that has data; other periods are fixed */
+export function periodForData(period: Period, days: (string | null | undefined)[]) {
+  if (period.key !== "all") return period
+  const first = days.reduce<string | null>((min, d) => d && (!min || d < min) ? d : min, null)
+  return resolvePeriod("all", first)
 }
 
 const inRange = (d: string, start: string, end: string) => d >= start && d < end
@@ -75,6 +101,9 @@ export interface Insight { tone: Tone; text: string; href?: string }
 export interface Delta { text: string; tone: Tone | "neutral" }
 
 const total = <T,>(list: T[], f: (x: T) => number) => list.reduce((s, x) => s + f(x), 0)
+
+/** A percentage for display: one decimal under 1% so a small negative never shows as "0%" */
+export const fmtPct = (v: number) => `${Math.abs(v) < 1 && v !== 0 ? v.toFixed(1) : Math.round(v)}%`
 
 /** % change, or null when there's nothing to compare against */
 export const pctChange = (now: number, prev: number) => prev > 0 ? ((now - prev) / prev) * 100 : null
@@ -199,8 +228,11 @@ export function moneyAnalytics(period: Period, d: MoneyInput) {
   for (const i of inc) bySource[i.source] = (bySource[i.source] ?? 0) + Number(i.amount)
   const sources = Object.entries(bySource).map(([source, t]) => ({ source, total: t })).sort((a, b) => b.total - a.total)
 
-  // Only plans saved for these exact months count — no carry-over in hindsight
-  const expected = total(d.plans.filter(p => period.months.includes(p.month.slice(0, 7))), p => Number(p.expected_income))
+  // Only plans saved for these exact months count — no carry-over in hindsight —
+  // and they're compared with income from those same months only
+  const plannedMonths = new Set(d.plans.map(p => p.month.slice(0, 7)).filter(m => period.months.includes(m)))
+  const expected = total(d.plans.filter(p => plannedMonths.has(p.month.slice(0, 7))), p => Number(p.expected_income))
+  const receivedVsPlan = total(inc.filter(i => plannedMonths.has(i.date.slice(0, 7))), i => Number(i.amount))
 
   // Cash flow: at least 6 months of context, ending with the period's last month
   const chartLen = Math.max(period.months.length, 6)
@@ -228,7 +260,8 @@ export function moneyAnalytics(period: Period, d: MoneyInput) {
                 + total(d.debts, l => total(realPayments(l).filter(p => inRange(p.date, period.start, period.end)), p => Number(p.amount)))
 
   const personMap = new Map<string, { name: string; net: number }>()
-  for (const [list, sign] of [[d.lendings, 1], [d.debts, -1]] as const) {
+  // Debts first, like the Finances page, so the same spelling of a name is shown
+  for (const [list, sign] of [[d.debts, -1], [d.lendings, 1]] as const) {
     for (const l of list) {
       const k = l.person.trim().toLowerCase()
       const e = personMap.get(k) ?? { name: l.person.trim(), net: 0 }
@@ -241,7 +274,7 @@ export function moneyAnalytics(period: Period, d: MoneyInput) {
   // Habits
   const weekdays = WEEKDAYS.map(label => ({ label, value: 0 }))
   for (const e of exp) { const [y, m, dd] = e.date.split("-").map(Number); weekdays[(new Date(Date.UTC(y, m - 1, dd)).getUTCDay() + 6) % 7].value += Number(e.amount) }
-  const spendDays = new Set(exp.map(e => e.date))
+  const spendDays = new Set(exp.filter(e => e.date <= today).map(e => e.date))
   const byDay = new Map<string, number>()
   for (const e of exp) byDay.set(e.date, (byDay.get(e.date) ?? 0) + Number(e.amount))
   const biggestDay = [...byDay.entries()].sort((a, b) => b[1] - a[1])[0] ?? null
@@ -260,7 +293,7 @@ export function moneyAnalytics(period: Period, d: MoneyInput) {
     avgPerDay: period.days > 0 ? spent / period.days : 0,
     projected,
     budget: { kept, total: budgetRows.length, overBudget },
-    categories, sources, expected, cashflow,
+    categories, sources, expected, receivedVsPlan, plannedMonths: plannedMonths.size, cashflow,
     loans: {
       owedToYou, youOwe, net: owedToYou - youOwe,
       overdueLendAmount: total(overdueLend, outstanding), overdueLendCount: overdueLend.length,
@@ -330,15 +363,20 @@ const completedAt = (t: TodoRow) => t.completed ? (t.completed_at ?? t.updated_a
 
 export function todoAnalytics(period: Period, todos: TodoRow[]) {
   const today = todayStr()
-  const done = todos.map(t => ({ t, at: completedAt(t) })).filter((x): x is { t: TodoRow; at: string } => !!x.at)
-  const doneIn = (s: string, e: string) => done.filter(x => inRange(dayKey(x.at), s, e))
+  // Resolve each row's days once — dayKey() is the expensive part
+  const rows = todos.map(t => {
+    const at = completedAt(t)
+    return { t, at, createdDay: dayKey(t.created_at), doneDay: at ? dayKey(at) : null }
+  })
+  const done = rows.filter((x): x is typeof x & { at: string; doneDay: string } => !!x.doneDay)
+  const doneIn = (s: string, e: string) => done.filter(x => inRange(x.doneDay, s, e))
 
   const completed = doneIn(period.start, period.end)
   const completedPrev = doneIn(period.prevStart, period.prevEnd)
-  const created = todos.filter(t => inRange(dayKey(t.created_at), period.start, period.end))
+  const created = rows.filter(x => inRange(x.createdDay, period.start, period.end))
 
   const withDue = completed.filter(x => x.t.due_date)
-  const onTime = withDue.filter(x => dayKey(x.at) <= x.t.due_date!)
+  const onTime = withDue.filter(x => x.doneDay <= x.t.due_date!)
 
   const hours = completed.map(x => (new Date(x.at).getTime() - new Date(x.t.created_at).getTime()) / 3600000).filter(h => h >= 0)
 
@@ -349,8 +387,8 @@ export function todoAnalytics(period: Period, todos: TodoRow[]) {
 
   const chart = buckets(period).map(b => ({
     label: b.label,
-    created: todos.filter(t => inRange(dayKey(t.created_at), b.start, b.end)).length,
-    completed: done.filter(x => inRange(dayKey(x.at), b.start, b.end)).length,
+    created: rows.filter(x => inRange(x.createdDay, b.start, b.end)).length,
+    completed: done.filter(x => inRange(x.doneDay, b.start, b.end)).length,
   }))
 
   return {
@@ -363,7 +401,7 @@ export function todoAnalytics(period: Period, todos: TodoRow[]) {
     openCount: open.length,
     overdue: overdue.map(t => ({ id: t.id, title: t.title, days: daysBetween(t.due_date!, today) })),
     oldestOpen,
-    streak: streaks(new Set(done.map(x => dayKey(x.at)))),
+    streak: streaks(new Set(done.map(x => x.doneDay))),
     chart,
   }
 }

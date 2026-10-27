@@ -10,9 +10,12 @@
 // device timezone when they haven't chosen one.
 
 let userTimeZone: string | undefined
+// Building an Intl formatter is slow; dayKey() runs once per row, so keep one
+let dayFormat: Intl.DateTimeFormat | null = null
 
 export function setUserTimeZone(tz: string | null | undefined) {
   userTimeZone = tz || undefined
+  dayFormat = null
 }
 
 export const deviceTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -22,9 +25,10 @@ export const activeTimeZone = () => userTimeZone ?? deviceTimeZone()
 
 /** Calendar day of an instant in the user's timezone. */
 export function dayKey(instant: Date | string | number = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-US", {
+  dayFormat ??= new Intl.DateTimeFormat("en-US", {
     timeZone: userTimeZone, year: "numeric", month: "2-digit", day: "2-digit",
-  }).formatToParts(new Date(instant))
+  })
+  const parts = dayFormat.formatToParts(new Date(instant))
   const get = (t: string) => parts.find(p => p.type === t)!.value
   return `${get("year")}-${get("month")}-${get("day")}`
 }

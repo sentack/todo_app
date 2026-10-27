@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { fetchAll } from "@/lib/fetchAll"
 import { todayStr } from "@/lib/dates"
 import { currentMonth, monthRange, effectiveLimits, spentByCategory, overBudgetCount } from "@/lib/budget"
 import { BrandMark, Wordmark } from "./BrandMark"
@@ -49,7 +50,8 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
       // Categories over their limit this month
       const [start, end] = monthRange(currentMonth())
       const [{ data: monthExpenses }, { data: defaults }, { data: overrides }] = await Promise.all([
-        supabase.from("expenses").select("amount, category").eq("user_id", userId).gte("date", start).lt("date", end),
+        fetchAll<{ amount: number; category: string }>((from, to) => supabase.from("expenses").select("amount, category", { count: "exact" })
+          .eq("user_id", userId).gte("date", start).lt("date", end).order("id").range(from, to)),
         supabase.from("expense_budgets").select("category, monthly_limit").eq("user_id", userId),
         supabase.from("month_budgets").select("category, amount").eq("user_id", userId).eq("month", start),
       ])

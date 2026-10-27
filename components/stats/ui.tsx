@@ -42,10 +42,11 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
 
 export function PeriodPicker({ value, onChange }: { value: PeriodKey; onChange: (p: PeriodKey) => void }) {
   return (
-    <div role="radiogroup" aria-label="Period" className="flex gap-1 bg-black/[0.04] dark:bg-white/[0.05] rounded-full p-1">
+    // Two rows of three on phones so every option stays visible; one row from sm up
+    <div role="radiogroup" aria-label="Period" className="grid grid-cols-3 sm:grid-cols-6 gap-1 bg-black/[0.04] dark:bg-white/[0.05] rounded-[1.25rem] sm:rounded-full p-1">
       {PERIODS.map(p => (
         <button key={p.key} role="radio" aria-checked={value === p.key} onClick={() => onChange(p.key)}
-          className={`flex-1 h-9 px-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-150 ${value === p.key ? "bg-black dark:bg-volt text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
+          className={`h-9 px-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-150 ${value === p.key ? "bg-black dark:bg-volt text-white dark:text-black shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"}`}>
           {p.label}
         </button>
       ))}
@@ -58,9 +59,9 @@ export function Hero({ label, value, valueTone, delta, children }: {
   label: string; value: string; valueTone?: "bad"; delta?: Delta; children?: ReactNode
 }) {
   return (
-    <div className="hero-card rounded-3xl p-6 shadow-xl">
+    <div className="hero-card rounded-3xl p-6 shadow-xl" data-stat={label}>
       <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-white/60 dark:text-black/60 mb-2">{label}</p>
-      <p className={`font-sans text-5xl font-extrabold tracking-tight leading-none ${valueTone === "bad" ? "text-rose-400 dark:text-rose-700" : "text-white dark:text-black"}`}>{value}</p>
+      <p data-value className={`font-sans text-5xl font-extrabold tracking-tight leading-none ${valueTone === "bad" ? "text-rose-400 dark:text-rose-700" : "text-white dark:text-black"}`}>{value}</p>
       {delta && (
         <p className={`text-xs font-bold mt-2 ${delta.tone === "good" ? "text-volt dark:text-emerald-800" : delta.tone === "bad" ? "text-rose-400 dark:text-rose-700" : "text-white/60 dark:text-black/60"}`}>{delta.text}</p>
       )}
@@ -71,9 +72,9 @@ export function Hero({ label, value, valueTone, delta, children }: {
 
 export function HeroStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-0">
+    <div className="min-w-0" data-stat={label}>
       <p className="text-[0.625rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1">{label}</p>
-      <p className="font-sans text-base sm:text-lg font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{value}</p>
+      <p data-value className="font-sans text-base sm:text-lg font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{value}</p>
     </div>
   )
 }
@@ -84,15 +85,15 @@ export function StatTile({ label, value, sub, delta, href }: {
   const body = (
     <>
       <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">{label}</p>
-      <p className="font-sans text-xl sm:text-2xl font-extrabold tracking-tight leading-tight break-words text-black dark:text-white">{value}</p>
-      {delta && <p className={`text-xs font-bold mt-1.5 ${TONE_TEXT[delta.tone]}`}>{delta.text}</p>}
-      {sub && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{sub}</p>}
+      <p data-value className="font-sans text-xl sm:text-2xl font-extrabold tracking-tight leading-tight break-words text-black dark:text-white">{value}</p>
+      {delta && <p data-delta className={`text-xs font-bold mt-1.5 ${TONE_TEXT[delta.tone]}`}>{delta.text}</p>}
+      {sub && <p data-sub className="text-xs text-gray-500 dark:text-gray-400 mt-1">{sub}</p>}
     </>
   )
   const cls = `${CARD} p-4 sm:p-5 block`
   return href
-    ? <Link href={href} className={`${cls} hover:border-black/15 dark:hover:border-white/15 transition-colors`}>{body}</Link>
-    : <div className={cls}>{body}</div>
+    ? <Link href={href} data-stat={label} className={`${cls} hover:border-black/15 dark:hover:border-white/15 transition-colors`}>{body}</Link>
+    : <div data-stat={label} className={cls}>{body}</div>
 }
 
 const TONE_ICON: Record<Tone, { label: string; path: string }> = {

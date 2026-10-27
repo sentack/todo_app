@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { fetchAll } from "@/lib/fetchAll"
 import { todayStr } from "@/lib/dates"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
@@ -71,11 +72,13 @@ export default function ToBuyPage() {
       if (cancelled) return
       const uid = userIdRef.current!
 
-      const { data } = await supabase
+      const { data } = await fetchAll<ToBuyItem>((from, to) => supabase
         .from("to_buy_items")
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("user_id", uid)
         .order("created_at", { ascending: false })
+        .order("id")
+        .range(from, to))
 
       if (!cancelled) {
         setAllItems((data ?? []) as ToBuyItem[])
