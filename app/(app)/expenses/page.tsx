@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import Link from "next/link"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { fetchAll } from "@/lib/fetchAll"
 import { todayStr, daysAgo } from "@/lib/dates"
 import { currentMonth, monthRange, effectiveLimits, spentByCategory } from "@/lib/budget"
 import { CATEGORIES, CATEGORY_BADGE } from "@/lib/constants"
@@ -80,12 +81,15 @@ export default function ExpensesPage() {
 
       const [monthStart] = monthRange(currentMonth())
       const [{ data }, { data: defaults }, { data: overrides }] = await Promise.all([
-        supabase
+        // Paged: a single select stops at Supabase's 1,000-row cap
+        fetchAll<Expense>((from, to) => supabase
           .from("expenses")
-          .select("*")
+          .select("*", { count: "exact" })
           .eq("user_id", uid)
           .order("date", { ascending: false })
-          .order("created_at", { ascending: false }),
+          .order("created_at", { ascending: false })
+          .order("id")
+          .range(from, to)),
         supabase.from("expense_budgets").select("category, monthly_limit").eq("user_id", uid),
         supabase.from("month_budgets").select("category, amount").eq("user_id", uid).eq("month", monthStart),
       ])

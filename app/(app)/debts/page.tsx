@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { createPortal } from "react-dom"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { fetchAll } from "@/lib/fetchAll"
 import { todayStr } from "@/lib/dates"
 import FriendCombobox from "@/components/FriendCombobox"
 import { useCurrency } from "@/contexts/CurrencyContext"
@@ -127,8 +128,8 @@ export default function DebtsPage() {
       }
       if (cancelled) return
       const [{ data: debts }, { data: lendings }] = await Promise.all([
-        supabase.from("debts").select("*").eq("user_id", userIdRef.current!).order("date", { ascending: false }),
-        supabase.from("lendings").select("*").eq("user_id", userIdRef.current!).order("date", { ascending: false }),
+        fetchAll<DebtItem>((from, to) => supabase.from("debts").select("*", { count: "exact" }).eq("user_id", userIdRef.current!).order("date", { ascending: false }).order("id").range(from, to)),
+        fetchAll<LendingItem>((from, to) => supabase.from("lendings").select("*", { count: "exact" }).eq("user_id", userIdRef.current!).order("date", { ascending: false }).order("id").range(from, to)),
       ])
       if (!cancelled) {
         setAllDebts((debts ?? []) as DebtItem[])

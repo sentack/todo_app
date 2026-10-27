@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
+import { fetchAll } from "@/lib/fetchAll"
 import { CATEGORIES, CATEGORY_COLORS, CATEGORY_TEXT, INCOME_SOURCES, INCOME_SOURCE_BADGE } from "@/lib/constants"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
@@ -79,17 +80,18 @@ function BudgetPage() {
       const [start, end] = monthRange(month)
 
       const [exp, inc, def, ovr, pln, dbt, lnd] = await Promise.all([
-        supabase.from("expenses").select("amount, category").eq("user_id", uid).gte("date", start).lt("date", end),
-        supabase.from("incomes").select("*").eq("user_id", uid).gte("date", start).lt("date", end)
-          .order("date", { ascending: false }).order("created_at", { ascending: false }),
+        fetchAll<ExpenseLite>((from, to) => supabase.from("expenses").select("amount, category", { count: "exact" })
+          .eq("user_id", uid).gte("date", start).lt("date", end).order("id").range(from, to)),
+        fetchAll<Income>((from, to) => supabase.from("incomes").select("*", { count: "exact" }).eq("user_id", uid).gte("date", start).lt("date", end)
+          .order("date", { ascending: false }).order("created_at", { ascending: false }).order("id").range(from, to)),
         supabase.from("expense_budgets").select("category, monthly_limit").eq("user_id", uid),
         supabase.from("month_budgets").select("category, amount").eq("user_id", uid).eq("month", start),
         // This month's plan, or the latest earlier one to carry over
         supabase.from("month_plans").select("month, expected_income, savings_goal").eq("user_id", uid)
           .lte("month", start).order("month", { ascending: false }).limit(1).maybeSingle(),
         // Repayments made this month can belong to older loans, so load them all
-        supabase.from("debts").select("amount, date, paid_history").eq("user_id", uid),
-        supabase.from("lendings").select("amount, date, paid_history").eq("user_id", uid),
+        fetchAll<LoanRecord>((from, to) => supabase.from("debts").select("amount, date, paid_history", { count: "exact" }).eq("user_id", uid).order("id").range(from, to)),
+        fetchAll<LoanRecord>((from, to) => supabase.from("lendings").select("amount, date, paid_history", { count: "exact" }).eq("user_id", uid).order("id").range(from, to)),
       ])
 
       if (cancelled) return
