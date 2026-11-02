@@ -28,7 +28,7 @@ export async function loadMoneyInput(supabase: ReturnType<typeof createBrowserSu
     all<MoneyInput["defaults"][number]>("expense_budgets", "category, monthly_limit", "category"),
     all<MoneyInput["overrides"][number]>("month_budgets", "month, category, amount", "month"),
     all<MoneyInput["plans"][number]>("month_plans", "month, expected_income", "month"),
-    // "*" so this works both before and after forgiven_at is migrated
+    // All columns: paid_history carries the forgiven / recovered entries
     all<MoneyInput["debts"][number]>("debts", "*", "date"),
     all<MoneyInput["lendings"][number]>("lendings", "*", "date"),
   ])

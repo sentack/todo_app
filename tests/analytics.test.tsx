@@ -138,29 +138,28 @@ describe("money", () => {
 
   it("loans: position, overdue, repayment, write-offs, flows, people", () => {
     const a = moneyAnalytics(resolvePeriod("month"), D).loans
-    expect(a.owedToYou).toBe(3000)            // Sara — Dawit's forgiven 900 isn't counted
-    expect(a.youOwe).toBe(3000)               // Abel 5000 − 2000 paid — Kebede's forgiven 700 isn't
+    expect(a.owedToYou).toBe(3000)            // Sara — forgiven loans (Liya, Dawit) are closed
+    expect(a.youOwe).toBe(3000)               // Abel 5000 − 2000 paid — Kebede's debt was forgiven
     expect(a.net).toBe(0)
     expect(a.overdueLendAmount).toBe(3000)    // Dawit is past due but forgiven
     expect(a.overdueLendCount).toBe(1)
     expect(a.overdueDebtAmount).toBe(3000)    // Kebede is past due but forgiven
     expect(a.overdueDebtCount).toBe(1)
-    // Lent 7,400 in all; 1,500 written off the old way; 2,000 actually came back
-    expect(a.repaymentRate!).toBeCloseTo((2000 / (7400 - 1500)) * 100, 6)
-    expect(a.lossRate!).toBeCloseTo((1500 / 7400) * 100, 6)
-    expect(a.avgSettleDays!).toBeCloseTo((20 + 15 + 99) / 3, 6)   // Mimi, abel, Hana; Liya's write-off doesn't count
-    expect(a.flowIn).toBe(300 + 400)          // Dawit + Hana paid in October; Liya's entry is a write-off
+    // Lent 7,400 in all; 2,400 forgiven (Liya 1,500 + Dawit 900); 2,000 actually came back
+    expect(a.repaymentRate!).toBeCloseTo((2000 / (7400 - 2400)) * 100, 6)
+    expect(a.avgSettleDays!).toBeCloseTo((20 + 15 + 99) / 3, 6)   // Mimi, abel, Hana; still-forgiven loans don't count
+    expect(a.flowIn).toBe(300 + 400)          // Dawit + Hana paid back in October; forgiven entries aren't cash
     expect(a.flowOut).toBe(3000 + 2000)       // lent to Sara + repaid Abel
     expect(a.people).toEqual([{ name: "Abel", net: -3000 }, { name: "Sara", net: 3000 }])   // "abel " merged, forgiven left out
   })
 
-  it("forgiven loans: kept on record, reported separately, payments still count", () => {
+  it("forgiven loans: reported separately, money back still counts", () => {
     const f = moneyAnalytics(resolvePeriod("month"), D).loans.forgiven
-    expect(f).toMatchObject({ owedToYou: 900, lendCount: 1, youOwe: 700, debtCount: 1 })
+    expect(f).toMatchObject({ owedToYou: 1500 + 900, lendCount: 2, youOwe: 700, debtCount: 1 })
     expect(f.recovered).toBe(300 + 400)       // Dawit after forgiving, and Hana who then paid in full
     expect(f.recoveredInPeriod).toBe(700)
     expect(f.paidAnyway).toBe(0)
-    expect(f.share!).toBeCloseTo(((900 + 1500) / 7400) * 100, 6)
+    expect(f.share!).toBeCloseTo((2400 / 7400) * 100, 6)
     // Recoveries outside the period aren't "in period"
     expect(moneyAnalytics(resolvePeriod("last-month"), D).loans.forgiven.recoveredInPeriod).toBe(0)
   })
@@ -175,10 +174,10 @@ describe("money", () => {
     const c = cards(renderToStaticMarkup(<MoneyView data={D} period={resolvePeriod("month")} currency="ETB" />))
     expect(c["Loans Owed to you"]).toBe(money(3000))
     expect(c["Loans You owe"]).toBe(money(3000))
-    expect(c["Owed to you · 1 loan"]).toBe(money(900))
+    expect(c["Owed to you · 2 loans"]).toBe(money(2400))
     expect(c["You owe · 1 debt"]).toBe(money(700))
     expect(c["Came back after forgiving"]).toBe(money(700))
-    expect(c["Not expected back"]).toBe(`${Math.round(((900 + 1500) / 7400) * 100)}% of lent`)
+    expect(c["Not expected back"]).toBe(`${Math.round((2400 / 7400) * 100)}% of lent`)
   })
 
   it("loads every row through the paged loader (>1,000 expenses)", async () => {

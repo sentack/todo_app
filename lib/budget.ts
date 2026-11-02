@@ -2,9 +2,9 @@ import { todayStr } from "./dates"
 
 // Months are "YYYY-MM" keys; DB rows store the first day ("YYYY-MM-01").
 
-// written_off: closed by the old write-off, which recorded the amount as an
-// expense (lending) or income (debt); record_id links to that row.
-export interface PayRecord { amount: number; date: string; written_off?: boolean; record_id?: string | null }
+// written_off: forgiven — closed and recorded as an expense (lending) or income
+// (debt); record_id links to that row. recovered: paid back after forgiving.
+export interface PayRecord { amount: number; date: string; written_off?: boolean; record_id?: string | null; recovered?: boolean }
 export interface LoanRecord { amount: number; date: string; paid_history: PayRecord[] | null }
 
 export const currentMonth = () => todayStr().slice(0, 7)

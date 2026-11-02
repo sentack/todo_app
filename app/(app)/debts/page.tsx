@@ -4,25 +4,23 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import { createPortal } from "react-dom"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { fetchAll } from "@/lib/fetchAll"
-import { todayStr, dayKey } from "@/lib/dates"
+import { todayStr } from "@/lib/dates"
 import FriendCombobox from "@/components/FriendCombobox"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
 import { formatMoney } from "@/lib/formatMoney"
 import type { PayRecord } from "@/lib/budget"
-import { counted, isForgiven, paidAfterForgiving, loanTotals, writtenOffAmount } from "@/lib/loans"
-import { WRITE_OFF_RECORD, writeOffRecordId, reopenWriteOffRemote, payAgainstWriteOffRemote } from "@/lib/writeOffs"
+import { outstanding, isForgiven, recoveredAmount, loanTotals, writtenOffAmount } from "@/lib/loans"
+import { WRITE_OFF_RECORD, writeOffRecordId, forgiveRemote, reopenWriteOffRemote, payAgainstWriteOffRemote } from "@/lib/writeOffs"
 
 interface DebtItem {
   id: string; amount: number; date: string; deadline: string | null
   person: string; amount_paid: number; paid_history: PayRecord[]; created_at: string
-  forgiven_at?: string | null
 }
 
 interface LendingItem {
   id: string; amount: number; date: string; deadline: string | null
   person: string; amount_paid: number; paid_history: PayRecord[]; created_at: string
-  forgiven_at?: string | null
 }
 
 interface PersonGroup { name: string; debts: DebtItem[]; lendings: LendingItem[] }
@@ -67,21 +65,9 @@ function groupByPerson(debts: DebtItem[], lendings: LendingItem[]): PersonGroup[
   return [...map.values()].sort((a, b) => a.name.localeCompare(b.name))
 }
 
-// Loans closed by the old "write off" (recorded as an expense/income) keep their label
-const isWrittenOff = (item: DebtItem) => item.paid_history.some(p => p.written_off)
-
-/** Mark or unmark as forgiven. The loan stays, and later payments are still recorded. */
-async function setForgiven<T extends DebtItem>(
-  supabase: ReturnType<typeof createBrowserSupabaseClient>, table: "debts" | "lendings", item: T, forgiven: boolean,
-): Promise<T | null> {
-  const forgiven_at = forgiven ? new Date().toISOString() : null
-  const { data, error } = await supabase.from(table).update({ forgiven_at }).eq("id", item.id).select().single()
-  return error || !data ? null : { ...item, ...data }
-}
-
-/** What's still owed between you and this person — forgiven amounts don't count */
+/** What's still owed between you and this person — forgiven loans are closed, so they don't count */
 function personNet(g: PersonGroup) {
-  return g.lendings.reduce((s, l) => s + counted(l), 0) - g.debts.reduce((s, d) => s + counted(d), 0)
+  return g.lendings.reduce((s, l) => s + outstanding(l), 0) - g.debts.reduce((s, d) => s + outstanding(d), 0)
 }
 
 const hasForgiven = (g: PersonGroup) => [...g.debts, ...g.lendings].some(isForgiven)
@@ -541,9 +527,11 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
 
   const status    = getStatus(item)
   const remaining = Number(item.amount) - Number(item.amount_paid)
-  // A written-off loan can still be paid back, up to the written-off amount
-  const payable   = isWrittenOff(item) && remaining <= 0 ? writtenOffAmount(item) : remaining
-  const pct       = Math.min(100, Math.round((Number(item.amount_paid) / Number(item.amount)) * 100))
+  // A forgiven loan can still be paid back, up to the forgiven amount
+  // Money that actually came back (the forgiven part is closed, not paid)
+  const realPaid  = Number(item.amount_paid) - writtenOffAmount(item)
+  const payable   = isForgiven(item) && remaining <= 0 ? writtenOffAmount(item) : remaining
+  const pct       = Math.min(100, Math.round((realPaid / Number(item.amount)) * 100))
   const isOverdue = item.deadline && item.deadline < todayStr() && status !== "paid" && !isForgiven(item)
 
   const ensureFriend = async (name: string) => {
@@ -562,7 +550,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
       .eq("id", item.id).select().single()
     if (!error && data) {
       // The write-off's expense/income is dated on the loan's date — keep it there
-      if (isWrittenOff(item) && date !== item.date) {
+      if (isForgiven(item) && date !== item.date) {
         const recordId = await writeOffRecordId(supabase, TABLE, item)
         if (recordId) await supabase.from(WRITE_OFF_RECORD[TABLE].table).update({ date }).eq("id", recordId)
       }
@@ -589,9 +577,10 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
   const [confirmForgive, setConfirmForgive] = useState(false)
   const [forgiving,      setForgiving]      = useState(false)
 
-  const toggleForgiven = async (forgiven: boolean) => {
+  // Close what's left and record it as an expense/income on the loan's date
+  const forgive = async () => {
     setForgiving(true)
-    const updated = await setForgiven(supabase, "debts", item, forgiven)
+    const updated = await forgiveRemote(supabase, TABLE, item, userId, todayStr())
     setForgiving(false)
     if (updated) { onUpdated(updated); setConfirmForgive(false) }
   }
@@ -601,7 +590,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
     const parsed = parseFloat(payAmount)
     if (!parsed || parsed <= 0 || parsed > payable + 0.001) return
     setSubmittingPay(true)
-    if (isWrittenOff(item) && remaining <= 0) {
+    if (isForgiven(item) && remaining <= 0) {
       const updated = await payAgainstWriteOffRemote(supabase, TABLE, item, parsed, payDate)
       if (updated) { onUpdated(updated); setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }
       setSubmittingPay(false)
@@ -656,11 +645,10 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="font-display text-base font-bold tracking-tight text-black dark:text-white">{currency} {formatMoney(Number(item.amount))}</span>
-            <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
+            {!isForgiven(item) && <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>}
             {isOverdue && <span className="text-[0.6875rem] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full">Overdue</span>}
-            {isWrittenOff(item) && <span className="text-[0.6875rem] font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">Closed as forgiven</span>}
             {isForgiven(item) && <span className="text-[0.6875rem] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-400/10 px-2 py-0.5 rounded-full">Forgiven</span>}
-            {!isForgiven(item) && item.forgiven_at && paidAfterForgiving(item) > 0 && <span className="text-[0.6875rem] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2 py-0.5 rounded-full">Repaid after forgiving</span>}
+            {!isForgiven(item) && recoveredAmount(item) > 0 && <span className="text-[0.6875rem] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2 py-0.5 rounded-full">Repaid after forgiving</span>}
           </div>
           <div className="flex flex-wrap gap-x-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             <span>Borrowed {fmtDate(item.date)}</span>
@@ -668,9 +656,13 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {(status !== "paid" || isWrittenOff(item)) && (
-            <button onClick={() => { setIsPaying(true); setIsEditing(false) }}
+          {(status !== "paid" || isForgiven(item)) && (
+            <button onClick={() => { setIsPaying(true); setIsEditing(false); setConfirmForgive(false) }}
               className="h-8 px-3.5 text-xs font-bold bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-sm shadow-rose-500/30 transition-colors">Pay</button>
+          )}
+          {status !== "paid" && (
+            <button onClick={() => { setConfirmForgive(true); setIsPaying(false); setIsEditing(false) }}
+              className="h-8 px-3 text-xs font-bold bg-gray-100 dark:bg-white/[0.08] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/[0.14] rounded-full transition-colors">Forgive</button>
           )}
           <button onClick={() => { setIsEditing(true); setIsPaying(false) }} className="w-8 h-8 grid place-items-center text-gray-400 hover:text-black dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
@@ -681,14 +673,14 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
         </div>
       </div>
 
-      {status !== "unpaid" && (
+      {realPaid > 0 && (
         <div className="mb-1">
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-            <span>Paid {currency} {formatMoney(Number(item.amount_paid))}</span>
+            <span>Paid {currency} {formatMoney(realPaid)}</span>
             <span>{pct}%</span>
           </div>
           <div className="h-2 bg-gray-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
-            <div className={`h-full rounded-full transition-all duration-500 ${status === "paid" ? "bg-emerald-500" : "bg-amber-400"}`} style={{ width: `${pct}%` }} />
+            <div className={`h-full rounded-full transition-all duration-500 ${realPaid >= Number(item.amount) ? "bg-emerald-500" : "bg-amber-400"}`} style={{ width: `${pct}%` }} />
           </div>
         </div>
       )}
@@ -717,7 +709,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
         </div>
       )}
 
-      {isWrittenOff(item) && !isPaying && (
+      {isForgiven(item) && !isPaying && (
         <ReopenPrompt
           kind={KIND} amount={`${currency} ${formatMoney(writtenOffAmount(item))}`} dated={fmtDate(item.date)}
           open={confirmReopen} busy={reopening}
@@ -726,12 +718,10 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
       )}
       {reopenNote && <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">{reopenNote}</p>}
 
-      {status !== "paid" && !isPaying && (
-        <ForgivePrompt
-          kind={KIND} forgivenAt={isForgiven(item) ? item.forgiven_at! : null} remaining={`${currency} ${formatMoney(remaining)}`}
-          open={confirmForgive} busy={forgiving}
-          onOpen={() => setConfirmForgive(true)} onCancel={() => setConfirmForgive(false)}
-          onConfirm={() => toggleForgiven(true)} onUndo={() => toggleForgiven(false)}
+      {confirmForgive && status !== "paid" && !isPaying && (
+        <ForgiveConfirm
+          kind={KIND} remaining={`${currency} ${formatMoney(remaining)}`} dated={fmtDate(item.date)} busy={forgiving}
+          onCancel={() => setConfirmForgive(false)} onConfirm={forgive}
         />
       )}
 
@@ -744,7 +734,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
             <div className="mt-1.5 space-y-1">
               {[...item.paid_history].reverse().map((p, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-gray-400">{fmtDate(p.date)}{p.written_off && " · forgiven"}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{fmtDate(p.date)}{p.written_off && " · forgiven"}{p.recovered && " · after forgiving"}</span>
                   <span className="font-semibold text-black dark:text-white">{currency} {formatMoney(Number(p.amount))}</span>
                 </div>
               ))}
@@ -778,9 +768,11 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
 
   const status    = getStatus(item)
   const remaining = Number(item.amount) - Number(item.amount_paid)
-  // A written-off loan can still be paid back, up to the written-off amount
-  const payable   = isWrittenOff(item) && remaining <= 0 ? writtenOffAmount(item) : remaining
-  const pct       = Math.min(100, Math.round((Number(item.amount_paid) / Number(item.amount)) * 100))
+  // A forgiven loan can still be paid back, up to the forgiven amount
+  // Money that actually came back (the forgiven part is closed, not paid)
+  const realPaid  = Number(item.amount_paid) - writtenOffAmount(item)
+  const payable   = isForgiven(item) && remaining <= 0 ? writtenOffAmount(item) : remaining
+  const pct       = Math.min(100, Math.round((realPaid / Number(item.amount)) * 100))
   const isOverdue = item.deadline && item.deadline < todayStr() && status !== "paid" && !isForgiven(item)
 
   const ensureFriend = async (name: string) => {
@@ -799,7 +791,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
       .eq("id", item.id).select().single()
     if (!error && data) {
       // The write-off's expense/income is dated on the loan's date — keep it there
-      if (isWrittenOff(item) && date !== item.date) {
+      if (isForgiven(item) && date !== item.date) {
         const recordId = await writeOffRecordId(supabase, TABLE, item)
         if (recordId) await supabase.from(WRITE_OFF_RECORD[TABLE].table).update({ date }).eq("id", recordId)
       }
@@ -826,9 +818,10 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
   const [confirmForgive, setConfirmForgive] = useState(false)
   const [forgiving,      setForgiving]      = useState(false)
 
-  const toggleForgiven = async (forgiven: boolean) => {
+  // Close what's left and record it as an expense/income on the loan's date
+  const forgive = async () => {
     setForgiving(true)
-    const updated = await setForgiven(supabase, "lendings", item, forgiven)
+    const updated = await forgiveRemote(supabase, TABLE, item, userId, todayStr())
     setForgiving(false)
     if (updated) { onUpdated(updated); setConfirmForgive(false) }
   }
@@ -838,7 +831,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
     const parsed = parseFloat(payAmount)
     if (!parsed || parsed <= 0 || parsed > payable + 0.001) return
     setSubmittingPay(true)
-    if (isWrittenOff(item) && remaining <= 0) {
+    if (isForgiven(item) && remaining <= 0) {
       const updated = await payAgainstWriteOffRemote(supabase, TABLE, item, parsed, payDate)
       if (updated) { onUpdated(updated); setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }
       setSubmittingPay(false)
@@ -893,11 +886,10 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="font-display text-base font-bold tracking-tight text-black dark:text-white">{currency} {formatMoney(Number(item.amount))}</span>
-            <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
+            {!isForgiven(item) && <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>}
             {isOverdue && <span className="text-[0.6875rem] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full">Overdue</span>}
-            {isWrittenOff(item) && <span className="text-[0.6875rem] font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">Written off</span>}
             {isForgiven(item) && <span className="text-[0.6875rem] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-400/10 px-2 py-0.5 rounded-full">Forgiven</span>}
-            {!isForgiven(item) && item.forgiven_at && paidAfterForgiving(item) > 0 && <span className="text-[0.6875rem] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2 py-0.5 rounded-full">Repaid after forgiving</span>}
+            {!isForgiven(item) && recoveredAmount(item) > 0 && <span className="text-[0.6875rem] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2 py-0.5 rounded-full">Repaid after forgiving</span>}
           </div>
           <div className="flex flex-wrap gap-x-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             <span>Lent {fmtDate(item.date)}</span>
@@ -905,9 +897,13 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {(status !== "paid" || isWrittenOff(item)) && (
-            <button onClick={() => { setIsPaying(true); setIsEditing(false) }}
+          {(status !== "paid" || isForgiven(item)) && (
+            <button onClick={() => { setIsPaying(true); setIsEditing(false); setConfirmForgive(false) }}
               className="h-8 px-3.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-sm shadow-emerald-500/30 transition-colors">Got Paid</button>
+          )}
+          {status !== "paid" && (
+            <button onClick={() => { setConfirmForgive(true); setIsPaying(false); setIsEditing(false) }}
+              className="h-8 px-3 text-xs font-bold bg-gray-100 dark:bg-white/[0.08] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/[0.14] rounded-full transition-colors">Forgive</button>
           )}
           <button onClick={() => { setIsEditing(true); setIsPaying(false) }} className="w-8 h-8 grid place-items-center text-gray-400 hover:text-black dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
@@ -918,14 +914,14 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
         </div>
       </div>
 
-      {status !== "unpaid" && (
+      {realPaid > 0 && (
         <div className="mb-1">
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-            <span>Received {currency} {formatMoney(Number(item.amount_paid))}</span>
+            <span>Received {currency} {formatMoney(realPaid)}</span>
             <span>{pct}%</span>
           </div>
           <div className="h-2 bg-gray-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
-            <div className={`h-full rounded-full transition-all duration-500 ${status === "paid" ? "bg-emerald-500" : "bg-sky-400"}`} style={{ width: `${pct}%` }} />
+            <div className={`h-full rounded-full transition-all duration-500 ${realPaid >= Number(item.amount) ? "bg-emerald-500" : "bg-sky-400"}`} style={{ width: `${pct}%` }} />
           </div>
         </div>
       )}
@@ -954,7 +950,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
         </div>
       )}
 
-      {isWrittenOff(item) && !isPaying && (
+      {isForgiven(item) && !isPaying && (
         <ReopenPrompt
           kind={KIND} amount={`${currency} ${formatMoney(writtenOffAmount(item))}`} dated={fmtDate(item.date)}
           open={confirmReopen} busy={reopening}
@@ -963,12 +959,10 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
       )}
       {reopenNote && <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">{reopenNote}</p>}
 
-      {status !== "paid" && !isPaying && (
-        <ForgivePrompt
-          kind={KIND} forgivenAt={isForgiven(item) ? item.forgiven_at! : null} remaining={`${currency} ${formatMoney(remaining)}`}
-          open={confirmForgive} busy={forgiving}
-          onOpen={() => setConfirmForgive(true)} onCancel={() => setConfirmForgive(false)}
-          onConfirm={() => toggleForgiven(true)} onUndo={() => toggleForgiven(false)}
+      {confirmForgive && status !== "paid" && !isPaying && (
+        <ForgiveConfirm
+          kind={KIND} remaining={`${currency} ${formatMoney(remaining)}`} dated={fmtDate(item.date)} busy={forgiving}
+          onCancel={() => setConfirmForgive(false)} onConfirm={forgive}
         />
       )}
 
@@ -981,7 +975,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
             <div className="mt-1.5 space-y-1">
               {[...item.paid_history].reverse().map((p, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-gray-400">{fmtDate(p.date)}{p.written_off && " · written off"}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{fmtDate(p.date)}{p.written_off && " · forgiven"}{p.recovered && " · after forgiving"}</span>
                   <span className="font-semibold text-black dark:text-white">{currency} {formatMoney(Number(p.amount))}</span>
                 </div>
               ))}
@@ -995,7 +989,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
 
 // ────────────────────────────────────────────────────── ReopenPrompt ────
 
-/** Undo an old write-off: deletes the expense/income it created and opens the loan again */
+/** Undo forgiving: deletes the expense/income it created and opens the loan again */
 function ReopenPrompt({ kind, amount, dated, open, busy, onOpen, onCancel, onConfirm }: {
   kind: "debt" | "lending"; amount: string; dated: string; open: boolean; busy: boolean
   onOpen: () => void; onCancel: () => void; onConfirm: () => void
@@ -1004,57 +998,41 @@ function ReopenPrompt({ kind, amount, dated, open, busy, onOpen, onCancel, onCon
   if (!open) {
     return (
       <div className="mt-2 flex items-center justify-between gap-3 text-xs">
-        <span className="text-gray-500 dark:text-gray-400">{amount} written off · recorded as an {record} on {dated}</span>
-        <button type="button" onClick={onOpen} className="shrink-0 font-semibold text-gray-500 hover:text-black dark:hover:text-white px-2.5 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">Reopen</button>
+        <span className="text-gray-500 dark:text-gray-400">{amount} forgiven · recorded as an {record} on {dated}</span>
+        <button type="button" onClick={onOpen} className="shrink-0 font-semibold text-gray-500 hover:text-black dark:hover:text-white px-2.5 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">Undo</button>
       </div>
     )
   }
   return (
     <div className="mt-3 p-3 rounded-2xl bg-gray-50 dark:bg-white/[0.04] border border-black/[0.05] dark:border-white/[0.06]">
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-        Reopen this {kind}? The {amount} {record} it created will be deleted, and the amount will count as {kind === "lending" ? "owed to you" : "owed"} again.
+        Undo forgiving? The {amount} {record} it created will be deleted, and the amount will count as {kind === "lending" ? "owed to you" : "owed"} again.
         If {kind === "lending" ? "they've" : "you've"} paid some back instead, use {kind === "lending" ? "Got Paid" : "Pay"} — that takes it off the {record}.
       </p>
       <div className="flex gap-2">
-        <button type="button" onClick={onConfirm} disabled={busy} className="flex-1 h-10 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl hover:opacity-90 disabled:opacity-40">{busy ? "Saving…" : "Reopen"}</button>
+        <button type="button" onClick={onConfirm} disabled={busy} className="flex-1 h-10 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl hover:opacity-90 disabled:opacity-40">{busy ? "Saving…" : "Undo forgiving"}</button>
         <button type="button" onClick={onCancel} className="h-10 px-4 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
       </div>
     </div>
   )
 }
 
-// ───────────────────────────────────────────────────── ForgivePrompt ────
+// ──────────────────────────────────────────────────── ForgiveConfirm ────
 
-/** Mark a loan forgiven (kept on record, out of totals, payments still accepted) or undo it */
-function ForgivePrompt({ kind, forgivenAt, remaining, open, busy, onOpen, onCancel, onConfirm, onUndo }: {
-  kind: "debt" | "lending"; forgivenAt: string | null; remaining: string; open: boolean; busy: boolean
-  onOpen: () => void; onCancel: () => void; onConfirm: () => void; onUndo: () => void
+/** Confirm forgiving what's left: it becomes an expense/income on the loan's date */
+function ForgiveConfirm({ kind, remaining, dated, busy, onCancel, onConfirm }: {
+  kind: "debt" | "lending"; remaining: string; dated: string; busy: boolean
+  onCancel: () => void; onConfirm: () => void
 }) {
-  if (forgivenAt) {
-    return (
-      <div className="mt-2 flex items-center justify-between gap-3 text-xs">
-        <span className="text-gray-500 dark:text-gray-400">Forgiven {fmtDate(dayKey(forgivenAt))} · not counted in totals</span>
-        <button type="button" onClick={onUndo} disabled={busy} className="shrink-0 font-semibold text-gray-500 hover:text-black dark:hover:text-white px-2.5 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] disabled:opacity-40 transition-colors">
-          {busy ? "Saving…" : "Undo"}
-        </button>
-      </div>
-    )
-  }
-  if (!open) {
-    return (
-      <button type="button" onClick={onOpen} className="mt-2 text-xs font-semibold text-gray-500 hover:text-black dark:hover:text-white px-2.5 py-1 -ml-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
-        {kind === "lending" ? "Not expecting it back? Mark forgiven" : "Lender let it go? Mark forgiven"}
-      </button>
-    )
-  }
   return (
     <div className="mt-3 p-3 rounded-2xl bg-gray-50 dark:bg-white/[0.04] border border-black/[0.05] dark:border-white/[0.06]">
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-        Mark the remaining {remaining} as forgiven? It stays here but won&apos;t count toward what {kind === "lending" ? "you're owed" : "you owe"}.
-        If {kind === "lending" ? "they pay" : "you pay"} later, record it as usual.
+        {kind === "lending"
+          ? <>Forgive the remaining {remaining}? It&apos;s recorded as an expense on {dated}, the day you lent it, and no longer counts as owed to you. If they pay later, use Got Paid — it comes off the expense.</>
+          : <>Mark the remaining {remaining} as forgiven? It&apos;s recorded as income on {dated}, the day you borrowed it, and no longer counts as owed. If you pay later, use Pay — it comes off that income.</>}
       </p>
       <div className="flex gap-2">
-        <button type="button" onClick={onConfirm} disabled={busy} className="flex-1 h-10 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl hover:opacity-90 disabled:opacity-40">{busy ? "Saving…" : "Mark forgiven"}</button>
+        <button type="button" onClick={onConfirm} disabled={busy} className="flex-1 h-10 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl hover:opacity-90 disabled:opacity-40">{busy ? "Saving…" : "Forgive"}</button>
         <button type="button" onClick={onCancel} className="h-10 px-4 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
       </div>
     </div>

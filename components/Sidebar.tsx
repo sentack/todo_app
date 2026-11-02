@@ -7,7 +7,6 @@ import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { fetchAll } from "@/lib/fetchAll"
 import { todayStr } from "@/lib/dates"
 import { currentMonth, monthRange, effectiveLimits, spentByCategory, overBudgetCount } from "@/lib/budget"
-import { counted } from "@/lib/loans"
 import { BrandMark, Wordmark } from "./BrandMark"
 
 interface SidebarProps {
@@ -39,16 +38,15 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
         .lt("due_date", today).not("due_date", "is", null)
 
       const [{ data: debtItems }, { data: lendingItems }] = await Promise.all([
-        // "*" so this still works before forgiven_at is migrated
-        supabase.from("debts").select("*")
+        supabase.from("debts").select("amount, amount_paid, deadline")
           .eq("user_id", userId).lt("deadline", today).not("deadline", "is", null),
-        supabase.from("lendings").select("*")
+        supabase.from("lendings").select("amount, amount_paid, deadline")
           .eq("user_id", userId).lt("deadline", today).not("deadline", "is", null),
       ])
 
-      // Forgiven loans aren't chased, so they don't count as overdue
-      const overdueDebts   = (debtItems ?? []).filter(i => counted(i) > 0).length
-      const overdueLending = (lendingItems ?? []).filter(i => counted(i) > 0).length
+      // Still unpaid (forgiven loans are closed, so they never count)
+      const overdueDebts   = (debtItems ?? []).filter(i => Number(i.amount_paid) < Number(i.amount)).length
+      const overdueLending = (lendingItems ?? []).filter(i => Number(i.amount_paid) < Number(i.amount)).length
 
       // Categories over their limit this month
       const [start, end] = monthRange(currentMonth())

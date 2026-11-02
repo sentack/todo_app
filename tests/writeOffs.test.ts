@@ -1,22 +1,25 @@
-// Old write-offs: reopening and paying back keep the expense/income they
-// created in step, and cash totals never count the same money twice.
+// Forgiving loans: the expense/income it records stays in step when the loan
+// is reopened or paid back, and cash totals never count the same money twice.
 
 import { describe, it, expect } from "vitest"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { PayRecord } from "@/lib/budget"
 import { loanFlows } from "@/lib/budget"
-import { writtenOffAmount, reopenWriteOff, payAgainstWriteOff, counted } from "@/lib/loans"
-import { reopenWriteOffRemote, payAgainstWriteOffRemote, writeOffRecordId } from "@/lib/writeOffs"
+import { writtenOffAmount, reopenWriteOff, payAgainstWriteOff, outstanding } from "@/lib/loans"
+import { forgiveRemote, reopenWriteOffRemote, payAgainstWriteOffRemote, writeOffRecordId } from "@/lib/writeOffs"
 
 type Row = Record<string, unknown>
 
 /** In-memory stand-in for the few query shapes the write-off actions use */
-function memDb(tables: Record<string, Row[]>) {
+function memDb(tables: Record<string, Row[]>, failUpdatesOn?: string) {
+  let nextId = 0
   const from = (table: string) => {
     const filters: [string, unknown][] = []
-    let op: { kind: "select" | "update" | "delete"; values?: Row } = { kind: "select" }
+    let op: { kind: "select" | "update" | "delete" | "insert"; values?: Row } = { kind: "select" }
     const rows = () => (tables[table] ??= []).filter(r => filters.every(([k, v]) => r[k] === v))
     const run = () => {
+      if (op.kind === "insert") { const r = { id: `new${++nextId}`, ...op.values }; (tables[table] ??= []).push(r); return [r] }
+      if (op.kind === "update" && table === failUpdatesOn) return null
       if (op.kind === "update") { for (const r of rows()) Object.assign(r, op.values); return rows() }
       if (op.kind === "delete") { const gone = new Set(rows()); tables[table] = tables[table].filter(r => !gone.has(r)); return [] }
       return rows()
@@ -24,12 +27,13 @@ function memDb(tables: Record<string, Row[]>) {
     const b = {
       select() { return b },
       update(values: Row) { op = { kind: "update", values }; return b },
+      insert(values: Row) { op = { kind: "insert", values }; return b },
       delete() { op = { kind: "delete" }; return b },
       eq(k: string, v: unknown) { filters.push([k, v]); return b },
       order() { return b },
       limit() { return b },
-      single: () => Promise.resolve({ data: { ...run()[0] }, error: null }),
-      maybeSingle: () => Promise.resolve({ data: run()[0] ?? null, error: null }),
+      single: () => { const r = run(); return Promise.resolve(r ? { data: { ...r[0] }, error: null } : { data: null, error: { message: "failed" } }) },
+      maybeSingle: () => Promise.resolve({ data: run()?.[0] ?? null, error: null }),
       then: (res: (v: unknown) => unknown) => Promise.resolve({ data: run(), error: null }).then(res),
     }
     return b
@@ -50,7 +54,7 @@ describe("write-off rules", () => {
     const next = reopenWriteOff(l)
     expect(next.amount_paid).toBe(200)
     expect(next.paid_history).toEqual([{ amount: 200, date: "2026-08-20" }])
-    expect(counted({ ...l, ...next })).toBe(800)
+    expect(outstanding({ ...l, ...next })).toBe(800)
   })
 
   it("a partial payment shrinks the write-off and records a real payment", () => {
@@ -59,7 +63,7 @@ describe("write-off rules", () => {
     expect(next.paid_history).toEqual([
       { amount: 200, date: "2026-08-20" },
       { amount: 500, date: "2026-10-02", written_off: true, record_id: "X1" },
-      { amount: 300, date: "2026-11-01" },
+      { amount: 300, date: "2026-11-01", recovered: true },
     ])
   })
 
@@ -67,7 +71,43 @@ describe("write-off rules", () => {
     const next = payAgainstWriteOff(writtenOffLending(), 5000, "2026-11-01", "X1")
     expect(next.writtenOffLeft).toBe(0)
     expect(next.paid_history.some(p => p.written_off)).toBe(false)
-    expect(next.paid_history.at(-1)).toEqual({ amount: 800, date: "2026-11-01" })
+    expect(next.paid_history.at(-1)).toEqual({ amount: 800, date: "2026-11-01", recovered: true })
+  })
+})
+
+describe("forgiving in the database", () => {
+  const open = () => ({ id: "L9", person: "Sara", amount: 1700, amount_paid: 200, date: "2026-07-23", paid_history: [{ amount: 200, date: "2026-08-01" }] as PayRecord[] })
+
+  it("records the rest as an expense on the day it was lent, and closes the loan", async () => {
+    const tables: Record<string, Row[]> = { lendings: [open()], expenses: [] }
+    const updated = await forgiveRemote(memDb(tables), "lendings", open(), "u1", "2026-11-02")
+    expect(tables.expenses).toEqual([{ id: "new1", user_id: "u1", amount: 1500, date: "2026-07-23", description: "Written off: loan to Sara", category: "Other" }])
+    expect(tables.lendings[0]).toMatchObject({ amount_paid: 1700 })
+    expect(updated!.paid_history.at(-1)).toEqual({ amount: 1500, date: "2026-11-02", written_off: true, record_id: "new1" })
+  })
+
+  it("a forgiven debt is income on the day it was borrowed", async () => {
+    const debt = { id: "D9", person: "Abel", amount: 600, amount_paid: 0, date: "2026-07-01", paid_history: [] as PayRecord[] }
+    const tables: Record<string, Row[]> = { debts: [{ ...debt }], incomes: [] }
+    await forgiveRemote(memDb(tables), "debts", debt, "u1", "2026-11-02")
+    expect(tables.incomes[0]).toMatchObject({ amount: 600, date: "2026-07-01", source: "Other", description: "Forgiven: debt to Abel" })
+  })
+
+  it("if the loan can't be closed, the expense is removed again", async () => {
+    const tables: Record<string, Row[]> = { lendings: [open()], expenses: [] }
+    expect(await forgiveRemote(memDb(tables, "lendings"), "lendings", open(), "u1", "2026-11-02")).toBeNull()
+    expect(tables.expenses).toEqual([])
+  })
+
+  it("forgive, part paid back, then undo: the expense follows every step", async () => {
+    const tables: Record<string, Row[]> = { lendings: [open()], expenses: [] }
+    const db = memDb(tables)
+    const forgiven = await forgiveRemote(db, "lendings", open(), "u1", "2026-11-02")
+    const part = await payAgainstWriteOffRemote(db, "lendings", forgiven!, 600, "2026-11-10")
+    expect(tables.expenses[0]).toMatchObject({ amount: 900, date: "2026-07-23" })
+    await reopenWriteOffRemote(db, "lendings", part!)
+    expect(tables.expenses).toEqual([])
+    expect(tables.lendings[0]).toMatchObject({ amount_paid: 800 })   // 200 + 600 really paid; 900 owed again
   })
 })
 

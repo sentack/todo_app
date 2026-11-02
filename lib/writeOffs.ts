@@ -1,18 +1,19 @@
-// Undoing the old write-off against the database. The old write-off closed a
-// loan and recorded the unpaid part as an expense (lending) or income (debt);
-// these keep that record in step when the loan is reopened or paid back.
+// Forgiving loans against the database. Forgiving closes a loan and records
+// its unpaid part as an expense (lending) or income (debt) dated the day the
+// loan was made; these keep that record in step when the loan is reopened or
+// money comes back. See lib/loans.ts for the rules.
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { PayRecord } from "./budget"
-import { writtenOffAmount, writeOffRecordIds, reopenWriteOff, payAgainstWriteOff } from "./loans"
+import { writtenOffAmount, writeOffRecordIds, reopenWriteOff, payAgainstWriteOff, forgiveLoan } from "./loans"
 
 export type LoanTable = "debts" | "lendings"
 
 interface WrittenOffLoan {
-  id: string; person: string; amount: number; amount_paid: number; paid_history: PayRecord[]
+  id: string; person: string; amount: number; amount_paid: number; paid_history: PayRecord[]; date?: string
 }
 
-/** Where an old write-off recorded the unpaid part */
+/** Where a forgiven amount is recorded (the prefixes also find records from before they were linked) */
 export const WRITE_OFF_RECORD = {
   lendings: { table: "expenses", prefix: "Written off: loan to ", noun: "expense", page: "Expenses" },
   debts:    { table: "incomes",  prefix: "Forgiven: debt to ",  noun: "income",  page: "Budget" },
@@ -28,6 +29,32 @@ export async function writeOffRecordId(supabase: SupabaseClient, table: LoanTabl
     .eq("description", r.prefix + item.person).eq("amount", writtenOffAmount(item))
     .order("created_at", { ascending: false }).limit(1).maybeSingle()
   return (data?.id as string | undefined) ?? null
+}
+
+/**
+ * Forgive what's left of a loan: record it as an expense (lending) or income
+ * (debt) on the loan's own date, then close the loan with a linked entry.
+ * If closing fails, the new record is removed again.
+ */
+export async function forgiveRemote<T extends WrittenOffLoan & { date: string }>(
+  supabase: SupabaseClient, table: LoanTable, item: T, userId: string, today: string,
+) {
+  const r = WRITE_OFF_RECORD[table]
+  const amount = Math.round((Number(item.amount) - Number(item.amount_paid)) * 100) / 100
+  if (amount <= 0) return null
+  const row = { user_id: userId, amount, date: item.date, description: r.prefix + item.person,
+    ...(table === "lendings" ? { category: "Other" } : { source: "Other" }) }
+  const { data: rec, error } = await supabase.from(r.table).insert(row).select("id").single()
+  if (error || !rec) return null
+
+  const next = forgiveLoan(item, today, rec.id as string)
+  const { data, error: updErr } = await supabase.from(table)
+    .update({ amount_paid: next.amount_paid, paid_history: next.paid_history }).eq("id", item.id).select().single()
+  if (updErr || !data) {
+    await supabase.from(r.table).delete().eq("id", rec.id)
+    return null
+  }
+  return { ...item, ...data, paid_history: next.paid_history } as T
 }
 
 /** Reopen a written-off loan: its expense/income is deleted and the amount is owed again */

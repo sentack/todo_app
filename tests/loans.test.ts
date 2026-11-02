@@ -1,51 +1,48 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest"
-import { setUserTimeZone } from "@/lib/dates"
-import { outstanding, isForgiven, counted, paidAfterForgiving, loanTotals, type LoanLike } from "@/lib/loans"
+import { describe, it, expect } from "vitest"
+import type { PayRecord } from "@/lib/budget"
+import {
+  outstanding, isForgiven, writtenOffAmount, recoveredAmount, loanTotals,
+  forgiveLoan, reopenWriteOff, payAgainstWriteOff, type LoanLike,
+} from "@/lib/loans"
 
-beforeAll(() => setUserTimeZone("Africa/Addis_Ababa"))
-afterAll(() => setUserTimeZone(null))
+const loan = (o: Partial<LoanLike>): LoanLike => ({ amount: 1000, amount_paid: 0, paid_history: [], ...o })
 
-const loan = (o: Partial<LoanLike>): LoanLike => ({ amount: 1000, amount_paid: 0, paid_history: [], forgiven_at: null, ...o })
-
-describe("forgiven loans", () => {
-  it("an unpaid forgiven loan is kept but not counted", () => {
-    const l = loan({ forgiven_at: "2026-10-01T09:00:00Z" })
-    expect(isForgiven(l)).toBe(true)
-    expect(outstanding(l)).toBe(1000)
-    expect(counted(l)).toBe(0)
+describe("forgiving a loan", () => {
+  it("closes what's left with an entry linked to its expense/income", () => {
+    const l = loan({ amount_paid: 250, paid_history: [{ amount: 250, date: "2026-09-01" }] })
+    const next = forgiveLoan(l, "2026-11-02", "R1")
+    expect(next.forgiven).toBe(750)
+    expect(next.amount_paid).toBe(1000)
+    expect(next.paid_history.at(-1)).toEqual({ amount: 750, date: "2026-11-02", written_off: true, record_id: "R1" })
+    const after = { ...l, ...next }
+    expect(isForgiven(after)).toBe(true)
+    expect(outstanding(after)).toBe(0)              // out of what's owed
+    expect(writtenOffAmount(after)).toBe(750)
   })
 
-  it("a forgiven loan that gets fully repaid is just paid", () => {
-    const l = loan({ amount_paid: 1000, paid_history: [{ amount: 1000, date: "2026-10-20" }], forgiven_at: "2026-10-01T09:00:00Z" })
-    expect(isForgiven(l)).toBe(false)
-    expect(counted(l)).toBe(0)
-    expect(paidAfterForgiving(l)).toBe(1000)
+  it("undo makes the amount owed again", () => {
+    const l = loan({ amount_paid: 1000, paid_history: [{ amount: 250, date: "2026-09-01" }, { amount: 750, date: "2026-11-02", written_off: true, record_id: "R1" }] })
+    const after = { ...l, ...reopenWriteOff(l) }
+    expect(isForgiven(after)).toBe(false)
+    expect(outstanding(after)).toBe(750)
   })
 
-  it("only payments from the forgiving day on count as recovered (in the user's timezone)", () => {
-    // 22:30 UTC on Sep 30 is already Oct 1 in Addis Ababa
-    const l = loan({
-      amount_paid: 600, forgiven_at: "2026-09-30T22:30:00Z",
-      paid_history: [{ amount: 200, date: "2026-09-30" }, { amount: 300, date: "2026-10-01" }, { amount: 100, date: "2026-10-09" }],
-    })
-    expect(paidAfterForgiving(l)).toBe(400)
-    expect(counted(l)).toBe(0)
+  it("money back after forgiving is a recovered payment; fully repaid is no longer forgiven", () => {
+    const l = loan({ amount_paid: 1000, paid_history: [{ amount: 1000, date: "2026-10-01", written_off: true, record_id: "R1" }] })
+    const part = { ...l, paid_history: payAgainstWriteOff(l, 400, "2026-10-20", "R1").paid_history }
+    expect(writtenOffAmount(part)).toBe(600)
+    expect(recoveredAmount(part)).toBe(400)
+    expect(isForgiven(part)).toBe(true)
+    const full = { ...part, paid_history: payAgainstWriteOff(part, 600, "2026-10-25", "R1").paid_history }
+    expect(isForgiven(full)).toBe(false)
+    expect(recoveredAmount(full)).toBe(1000)
+    expect(outstanding(full)).toBe(0)
   })
 
-  it("old write-off entries never count as money that came back", () => {
-    const l = loan({ amount_paid: 1000, forgiven_at: "2026-10-01T09:00:00Z", paid_history: [{ amount: 1000, date: "2026-10-05", written_off: true }] })
-    expect(paidAfterForgiving(l)).toBe(0)
-  })
-
-  it("unforgiving restores the amount to the totals", () => {
-    const l = loan({ amount_paid: 250, forgiven_at: null })
-    expect(isForgiven(l)).toBe(false)
-    expect(counted(l)).toBe(750)
-  })
-
-  it("Finances totals leave forgiven amounts out of the net and report them separately", () => {
-    const debts = [loan({ amount: 500 }), loan({ amount: 300, forgiven_at: "2026-10-01T09:00:00Z" })]
-    const lendings = [loan({ amount: 2000, amount_paid: 500 }), loan({ amount: 900, forgiven_at: "2026-10-01T09:00:00Z" })]
+  it("Finances totals: forgiven loans are out of the net and reported separately", () => {
+    const off = (amount: number): PayRecord[] => [{ amount, date: "2026-10-01", written_off: true }]
+    const debts = [loan({ amount: 500 }), loan({ amount: 300, amount_paid: 300, paid_history: off(300) })]
+    const lendings = [loan({ amount: 2000, amount_paid: 500 }), loan({ amount: 900, amount_paid: 900, paid_history: off(900) })]
     expect(loanTotals(debts, lendings)).toEqual({
       youOwe: 500, owedToYou: 1500, net: 1000,
       forgivenYouOwe: 300, forgivenDebtCount: 1,
