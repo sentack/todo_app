@@ -40,3 +40,46 @@ export function loanTotals(debts: LoanLike[], lendings: LoanLike[]) {
     forgivenOwedToYou: sum(fLend, outstanding), forgivenLendCount: fLend.length,
   }
 }
+
+// ── Old write-offs ───────────────────────────────────────────────────
+// The old "write off" closed a loan and recorded the unpaid part as an
+// expense (lending) or income (debt). These undo it, fully or partly.
+
+const round2 = (v: number) => Math.round(v * 100) / 100
+
+/** Amount closed by the old write-off */
+export const writtenOffAmount = (l: LoanLike) =>
+  round2(sum((l.paid_history ?? []).filter(p => p.written_off), p => Number(p.amount)))
+
+/** Ids of the expense/income rows the write-off created, where linked */
+export const writeOffRecordIds = (l: LoanLike) =>
+  (l.paid_history ?? []).filter(p => p.written_off && p.record_id).map(p => p.record_id!)
+
+/** Reopen: drop the write-off so the amount is owed again */
+export function reopenWriteOff(l: LoanLike) {
+  return {
+    paid_history: (l.paid_history ?? []).filter(p => !p.written_off),
+    amount_paid: round2(Number(l.amount_paid) - writtenOffAmount(l)),
+  }
+}
+
+/**
+ * A payment on a written-off loan: that much stops being written off and
+ * becomes a real payment. The loan stays fully settled. `writtenOffLeft` is
+ * what the linked expense/income should shrink to (0 = delete it).
+ */
+export function payAgainstWriteOff(l: LoanLike, amount: number, date: string, recordId: string | null) {
+  const off = writtenOffAmount(l)
+  const pay = round2(Math.min(amount, off))
+  const left = round2(off - pay)
+  const history = l.paid_history ?? []
+  const firstOff = history.find(p => p.written_off)
+  return {
+    paid_history: [
+      ...history.filter(p => !p.written_off),
+      ...(left > 0 ? [{ amount: left, date: firstOff?.date ?? date, written_off: true, record_id: recordId }] : []),
+      { amount: pay, date },
+    ],
+    writtenOffLeft: left,
+  }
+}

@@ -10,7 +10,8 @@ import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
 import { formatMoney } from "@/lib/formatMoney"
 import type { PayRecord } from "@/lib/budget"
-import { counted, isForgiven, paidAfterForgiving, loanTotals } from "@/lib/loans"
+import { counted, isForgiven, paidAfterForgiving, loanTotals, writtenOffAmount } from "@/lib/loans"
+import { WRITE_OFF_RECORD, writeOffRecordId, reopenWriteOffRemote, payAgainstWriteOffRemote } from "@/lib/writeOffs"
 
 interface DebtItem {
   id: string; amount: number; date: string; deadline: string | null
@@ -540,6 +541,8 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
 
   const status    = getStatus(item)
   const remaining = Number(item.amount) - Number(item.amount_paid)
+  // A written-off loan can still be paid back, up to the written-off amount
+  const payable   = isWrittenOff(item) && remaining <= 0 ? writtenOffAmount(item) : remaining
   const pct       = Math.min(100, Math.round((Number(item.amount_paid) / Number(item.amount)) * 100))
   const isOverdue = item.deadline && item.deadline < todayStr() && status !== "paid" && !isForgiven(item)
 
@@ -557,11 +560,32 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
     const { data, error } = await supabase.from("debts")
       .update({ person: person.trim(), amount: parsed, date, deadline: deadline || null })
       .eq("id", item.id).select().single()
-    if (!error && data) { await ensureFriend(person.trim()); setIsEditing(false); onUpdated({ ...item, ...data }) }
+    if (!error && data) {
+      // The write-off's expense/income is dated on the loan's date — keep it there
+      if (isWrittenOff(item) && date !== item.date) {
+        const recordId = await writeOffRecordId(supabase, TABLE, item)
+        if (recordId) await supabase.from(WRITE_OFF_RECORD[TABLE].table).update({ date }).eq("id", recordId)
+      }
+      await ensureFriend(person.trim()); setIsEditing(false); onUpdated({ ...item, ...data })
+    }
     setSaving(false)
   }
 
   const KIND = "debt" as const
+  const TABLE = "debts" as const
+  const [confirmReopen, setConfirmReopen] = useState(false)
+  const [reopening,     setReopening]     = useState(false)
+  const [reopenNote,    setReopenNote]    = useState("")
+
+  const reopen = async () => {
+    setReopening(true)
+    const res = await reopenWriteOffRemote(supabase, TABLE, item)
+    setReopening(false)
+    if (!res) return
+    setConfirmReopen(false)
+    if (!res.recordFound) setReopenNote(`Couldn't find the ${WRITE_OFF_RECORD[TABLE].noun} it created — delete it from ${WRITE_OFF_RECORD[TABLE].page} if it's still there.`)
+    onUpdated(res.item)
+  }
   const [confirmForgive, setConfirmForgive] = useState(false)
   const [forgiving,      setForgiving]      = useState(false)
 
@@ -575,8 +599,14 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault()
     const parsed = parseFloat(payAmount)
-    if (!parsed || parsed <= 0 || parsed > remaining + 0.001) return
+    if (!parsed || parsed <= 0 || parsed > payable + 0.001) return
     setSubmittingPay(true)
+    if (isWrittenOff(item) && remaining <= 0) {
+      const updated = await payAgainstWriteOffRemote(supabase, TABLE, item, parsed, payDate)
+      if (updated) { onUpdated(updated); setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }
+      setSubmittingPay(false)
+      return
+    }
     const newPaid    = Math.min(Number(item.amount), Number(item.amount_paid) + parsed)
     const newHistory: PayRecord[] = [...item.paid_history, { amount: parsed, date: payDate }]
     const { data, error } = await supabase.from("debts")
@@ -638,7 +668,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {status !== "paid" && (
+          {(status !== "paid" || isWrittenOff(item)) && (
             <button onClick={() => { setIsPaying(true); setIsEditing(false) }}
               className="h-8 px-3.5 text-xs font-bold bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-sm shadow-rose-500/30 transition-colors">Pay</button>
           )}
@@ -669,10 +699,10 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
             <div className="flex gap-2">
               <div className="flex-1 relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">{currency}</span>
-                <input type="number" step="0.01" min="0.01" max={remaining} value={payAmount}
-                  onChange={e => setPayAmount(e.target.value)} placeholder={`max ${formatMoney(remaining)}`}
+                <input type="number" step="0.01" min="0.01" max={payable} value={payAmount}
+                  onChange={e => setPayAmount(e.target.value)} placeholder={`max ${formatMoney(payable)}`}
                   required autoFocus className={`${CARD_INPUT} pl-11 pr-14`} />
-                <button type="button" onClick={() => setPayAmount(String(Math.round(remaining * 100) / 100))}
+                <button type="button" onClick={() => setPayAmount(String(Math.round(payable * 100) / 100))}
                   className="absolute right-2 top-1/2 -translate-y-1/2 h-7 px-2.5 rounded-full text-[0.6875rem] font-bold bg-gray-100 dark:bg-white/[0.08] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/[0.14] transition-colors">Max</button>
               </div>
               <div className="shrink-0 w-36">
@@ -686,6 +716,15 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
           </form>
         </div>
       )}
+
+      {isWrittenOff(item) && !isPaying && (
+        <ReopenPrompt
+          kind={KIND} amount={`${currency} ${formatMoney(writtenOffAmount(item))}`} dated={fmtDate(item.date)}
+          open={confirmReopen} busy={reopening}
+          onOpen={() => setConfirmReopen(true)} onCancel={() => setConfirmReopen(false)} onConfirm={reopen}
+        />
+      )}
+      {reopenNote && <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">{reopenNote}</p>}
 
       {status !== "paid" && !isPaying && (
         <ForgivePrompt
@@ -739,6 +778,8 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
 
   const status    = getStatus(item)
   const remaining = Number(item.amount) - Number(item.amount_paid)
+  // A written-off loan can still be paid back, up to the written-off amount
+  const payable   = isWrittenOff(item) && remaining <= 0 ? writtenOffAmount(item) : remaining
   const pct       = Math.min(100, Math.round((Number(item.amount_paid) / Number(item.amount)) * 100))
   const isOverdue = item.deadline && item.deadline < todayStr() && status !== "paid" && !isForgiven(item)
 
@@ -756,11 +797,32 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
     const { data, error } = await supabase.from("lendings")
       .update({ person: person.trim(), amount: parsed, date, deadline: deadline || null })
       .eq("id", item.id).select().single()
-    if (!error && data) { await ensureFriend(person.trim()); setIsEditing(false); onUpdated({ ...item, ...data }) }
+    if (!error && data) {
+      // The write-off's expense/income is dated on the loan's date — keep it there
+      if (isWrittenOff(item) && date !== item.date) {
+        const recordId = await writeOffRecordId(supabase, TABLE, item)
+        if (recordId) await supabase.from(WRITE_OFF_RECORD[TABLE].table).update({ date }).eq("id", recordId)
+      }
+      await ensureFriend(person.trim()); setIsEditing(false); onUpdated({ ...item, ...data })
+    }
     setSaving(false)
   }
 
   const KIND = "lending" as const
+  const TABLE = "lendings" as const
+  const [confirmReopen, setConfirmReopen] = useState(false)
+  const [reopening,     setReopening]     = useState(false)
+  const [reopenNote,    setReopenNote]    = useState("")
+
+  const reopen = async () => {
+    setReopening(true)
+    const res = await reopenWriteOffRemote(supabase, TABLE, item)
+    setReopening(false)
+    if (!res) return
+    setConfirmReopen(false)
+    if (!res.recordFound) setReopenNote(`Couldn't find the ${WRITE_OFF_RECORD[TABLE].noun} it created — delete it from ${WRITE_OFF_RECORD[TABLE].page} if it's still there.`)
+    onUpdated(res.item)
+  }
   const [confirmForgive, setConfirmForgive] = useState(false)
   const [forgiving,      setForgiving]      = useState(false)
 
@@ -774,8 +836,14 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
   const handleReceipt = async (e: React.FormEvent) => {
     e.preventDefault()
     const parsed = parseFloat(payAmount)
-    if (!parsed || parsed <= 0 || parsed > remaining + 0.001) return
+    if (!parsed || parsed <= 0 || parsed > payable + 0.001) return
     setSubmittingPay(true)
+    if (isWrittenOff(item) && remaining <= 0) {
+      const updated = await payAgainstWriteOffRemote(supabase, TABLE, item, parsed, payDate)
+      if (updated) { onUpdated(updated); setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }
+      setSubmittingPay(false)
+      return
+    }
     const newPaid    = Math.min(Number(item.amount), Number(item.amount_paid) + parsed)
     const newHistory: PayRecord[] = [...item.paid_history, { amount: parsed, date: payDate }]
     const { data, error } = await supabase.from("lendings")
@@ -837,7 +905,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {status !== "paid" && (
+          {(status !== "paid" || isWrittenOff(item)) && (
             <button onClick={() => { setIsPaying(true); setIsEditing(false) }}
               className="h-8 px-3.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-sm shadow-emerald-500/30 transition-colors">Got Paid</button>
           )}
@@ -868,10 +936,10 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
             <div className="flex gap-2">
               <div className="flex-1 relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">{currency}</span>
-                <input type="number" step="0.01" min="0.01" max={remaining} value={payAmount}
-                  onChange={e => setPayAmount(e.target.value)} placeholder={`max ${formatMoney(remaining)}`}
+                <input type="number" step="0.01" min="0.01" max={payable} value={payAmount}
+                  onChange={e => setPayAmount(e.target.value)} placeholder={`max ${formatMoney(payable)}`}
                   required autoFocus className={`${CARD_INPUT} pl-11 pr-14`} />
-                <button type="button" onClick={() => setPayAmount(String(Math.round(remaining * 100) / 100))}
+                <button type="button" onClick={() => setPayAmount(String(Math.round(payable * 100) / 100))}
                   className="absolute right-2 top-1/2 -translate-y-1/2 h-7 px-2.5 rounded-full text-[0.6875rem] font-bold bg-gray-100 dark:bg-white/[0.08] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/[0.14] transition-colors">Max</button>
               </div>
               <div className="shrink-0 w-36">
@@ -885,6 +953,15 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
           </form>
         </div>
       )}
+
+      {isWrittenOff(item) && !isPaying && (
+        <ReopenPrompt
+          kind={KIND} amount={`${currency} ${formatMoney(writtenOffAmount(item))}`} dated={fmtDate(item.date)}
+          open={confirmReopen} busy={reopening}
+          onOpen={() => setConfirmReopen(true)} onCancel={() => setConfirmReopen(false)} onConfirm={reopen}
+        />
+      )}
+      {reopenNote && <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">{reopenNote}</p>}
 
       {status !== "paid" && !isPaying && (
         <ForgivePrompt
@@ -912,6 +989,36 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────── ReopenPrompt ────
+
+/** Undo an old write-off: deletes the expense/income it created and opens the loan again */
+function ReopenPrompt({ kind, amount, dated, open, busy, onOpen, onCancel, onConfirm }: {
+  kind: "debt" | "lending"; amount: string; dated: string; open: boolean; busy: boolean
+  onOpen: () => void; onCancel: () => void; onConfirm: () => void
+}) {
+  const record = kind === "lending" ? "expense" : "income"
+  if (!open) {
+    return (
+      <div className="mt-2 flex items-center justify-between gap-3 text-xs">
+        <span className="text-gray-500 dark:text-gray-400">{amount} written off · recorded as an {record} on {dated}</span>
+        <button type="button" onClick={onOpen} className="shrink-0 font-semibold text-gray-500 hover:text-black dark:hover:text-white px-2.5 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">Reopen</button>
+      </div>
+    )
+  }
+  return (
+    <div className="mt-3 p-3 rounded-2xl bg-gray-50 dark:bg-white/[0.04] border border-black/[0.05] dark:border-white/[0.06]">
+      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+        Reopen this {kind}? The {amount} {record} it created will be deleted, and the amount will count as {kind === "lending" ? "owed to you" : "owed"} again.
+        If {kind === "lending" ? "they've" : "you've"} paid some back instead, use {kind === "lending" ? "Got Paid" : "Pay"} — that takes it off the {record}.
+      </p>
+      <div className="flex gap-2">
+        <button type="button" onClick={onConfirm} disabled={busy} className="flex-1 h-10 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl hover:opacity-90 disabled:opacity-40">{busy ? "Saving…" : "Reopen"}</button>
+        <button type="button" onClick={onCancel} className="h-10 px-4 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
+      </div>
     </div>
   )
 }

@@ -2,7 +2,9 @@ import { todayStr } from "./dates"
 
 // Months are "YYYY-MM" keys; DB rows store the first day ("YYYY-MM-01").
 
-export interface PayRecord { amount: number; date: string; written_off?: boolean }
+// written_off: closed by the old write-off, which recorded the amount as an
+// expense (lending) or income (debt); record_id links to that row.
+export interface PayRecord { amount: number; date: string; written_off?: boolean; record_id?: string | null }
 export interface LoanRecord { amount: number; date: string; paid_history: PayRecord[] | null }
 
 export const currentMonth = () => todayStr().slice(0, 7)
@@ -50,13 +52,17 @@ export const overBudgetCount = (limits: Record<string, number>, spent: Record<st
 
 /**
  * Cash moved by loans during the month. Kept separate from income/expenses:
- * borrowing isn't earning and lending isn't spending. Written-off amounts never
- * moved cash, so they're excluded (the write-off itself is recorded as an
- * expense or income instead).
+ * borrowing isn't earning and lending isn't spending. A written-off part is
+ * recorded as an expense (lending) or income (debt) on the loan's date, so it
+ * isn't counted again here — neither as lent/borrowed nor as a repayment.
  */
+const writtenOff = (l: LoanRecord) =>
+  (l.paid_history ?? []).filter(p => p.written_off).reduce((s, p) => s + Number(p.amount), 0)
+
 export function loanFlows(debts: LoanRecord[], lendings: LoanRecord[], month: string) {
   const inMonth = (d: string | null | undefined) => d?.slice(0, 7) === month
-  const created = (list: LoanRecord[]) => list.filter(l => inMonth(l.date)).reduce((s, l) => s + Number(l.amount), 0)
+  // A written-off part is already an expense/income on the loan's date — count only the rest as a loan
+  const created = (list: LoanRecord[]) => list.filter(l => inMonth(l.date)).reduce((s, l) => s + Number(l.amount) - writtenOff(l), 0)
   const paid = (list: LoanRecord[]) => list.reduce((s, l) =>
     s + (l.paid_history ?? []).filter(p => !p.written_off && inMonth(p.date)).reduce((t, p) => t + Number(p.amount), 0), 0)
 

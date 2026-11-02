@@ -255,9 +255,10 @@ export function moneyAnalytics(period: Period, d: MoneyInput) {
   const settleDays  = [...d.debts, ...d.lendings]
     .filter(l => outstanding(l) === 0 && realPayments(l).length > 0 && writtenOff(l) === 0)
     .map(l => Math.max(0, daysBetween(l.date, realPayments(l).map(p => p.date).sort().at(-1)!)))
-  const flowIn  = total(d.debts.filter(l => inRange(l.date, period.start, period.end)), l => Number(l.amount))
+  // Written-off parts are already an expense/income on the loan's date, so they aren't loan flows
+  const flowIn  = total(d.debts.filter(l => inRange(l.date, period.start, period.end)), l => Number(l.amount) - writtenOff(l))
                 + total(d.lendings, l => total(realPayments(l).filter(p => inRange(p.date, period.start, period.end)), p => Number(p.amount)))
-  const flowOut = total(d.lendings.filter(l => inRange(l.date, period.start, period.end)), l => Number(l.amount))
+  const flowOut = total(d.lendings.filter(l => inRange(l.date, period.start, period.end)), l => Number(l.amount) - writtenOff(l))
                 + total(d.debts, l => total(realPayments(l).filter(p => inRange(p.date, period.start, period.end)), p => Number(p.amount)))
 
   const forgivenLend = d.lendings.filter(isForgiven), forgivenDebt = d.debts.filter(isForgiven)
