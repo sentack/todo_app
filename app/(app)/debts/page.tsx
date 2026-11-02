@@ -4,21 +4,24 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import { createPortal } from "react-dom"
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser"
 import { fetchAll } from "@/lib/fetchAll"
-import { todayStr } from "@/lib/dates"
+import { todayStr, dayKey } from "@/lib/dates"
 import FriendCombobox from "@/components/FriendCombobox"
 import { useCurrency } from "@/contexts/CurrencyContext"
 import { triggerUndo } from "@/lib/undoToast"
 import { formatMoney } from "@/lib/formatMoney"
 import type { PayRecord } from "@/lib/budget"
+import { counted, isForgiven, paidAfterForgiving, loanTotals } from "@/lib/loans"
 
 interface DebtItem {
   id: string; amount: number; date: string; deadline: string | null
   person: string; amount_paid: number; paid_history: PayRecord[]; created_at: string
+  forgiven_at?: string | null
 }
 
 interface LendingItem {
   id: string; amount: number; date: string; deadline: string | null
   person: string; amount_paid: number; paid_history: PayRecord[]; created_at: string
+  forgiven_at?: string | null
 }
 
 interface PersonGroup { name: string; debts: DebtItem[]; lendings: LendingItem[] }
@@ -42,7 +45,7 @@ const STATUS_BADGE: Record<string, string> = {
   unpaid:  "bg-rose-100 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300",
 }
 const STATUS_DOT: Record<string, string> = {
-  paid: "bg-emerald-500", partial: "bg-amber-400", unpaid: "bg-rose-500",
+  paid: "bg-emerald-500", partial: "bg-amber-400", unpaid: "bg-rose-500", forgiven: "bg-sky-400",
 }
 
 const CARD_INPUT = "w-full px-4 py-2.5 bg-white dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[0.9375rem]"
@@ -63,38 +66,32 @@ function groupByPerson(debts: DebtItem[], lendings: LendingItem[]): PersonGroup[
   return [...map.values()].sort((a, b) => a.name.localeCompare(b.name))
 }
 
+// Loans closed by the old "write off" (recorded as an expense/income) keep their label
 const isWrittenOff = (item: DebtItem) => item.paid_history.some(p => p.written_off)
 
-// Close out the unpaid part of a loan that will never be repaid. No cash moved,
-// so it becomes a real expense (lending written off) or income (debt forgiven),
-// and the history entry is flagged so the budget's loan flows skip it.
-async function settleRemaining<T extends DebtItem>(
-  supabase: ReturnType<typeof createBrowserSupabaseClient>, table: "debts" | "lendings", item: T, userId: string,
+/** Mark or unmark as forgiven. The loan stays, and later payments are still recorded. */
+async function setForgiven<T extends DebtItem>(
+  supabase: ReturnType<typeof createBrowserSupabaseClient>, table: "debts" | "lendings", item: T, forgiven: boolean,
 ): Promise<T | null> {
-  const remaining = Number(item.amount) - Number(item.amount_paid)
-  const date = todayStr()
-  const [into, row] = table === "lendings"
-    ? ["expenses", { user_id: userId, amount: remaining, date, category: "Other", description: `Written off: loan to ${item.person}` }] as const
-    : ["incomes",  { user_id: userId, amount: remaining, date, source: "Other",   description: `Forgiven: debt to ${item.person}` }] as const
-
-  const { data: created, error } = await supabase.from(into).insert(row).select("id").single()
-  if (error || !created) return null
-
-  const paid_history: PayRecord[] = [...item.paid_history, { amount: remaining, date, written_off: true }]
-  const { data, error: updErr } = await supabase.from(table)
-    .update({ amount_paid: Number(item.amount), paid_history })
-    .eq("id", item.id).select().single()
-  if (updErr || !data) {
-    await supabase.from(into).delete().eq("id", created.id)
-    return null
-  }
-  return { ...item, ...data, paid_history }
+  const forgiven_at = forgiven ? new Date().toISOString() : null
+  const { data, error } = await supabase.from(table).update({ forgiven_at }).eq("id", item.id).select().single()
+  return error || !data ? null : { ...item, ...data }
 }
 
+/** What's still owed between you and this person — forgiven amounts don't count */
 function personNet(g: PersonGroup) {
-  const debt = g.debts.reduce((s, d) => s + Math.max(0, Number(d.amount) - Number(d.amount_paid)), 0)
-  const lent = g.lendings.reduce((s, l) => s + Math.max(0, Number(l.amount) - Number(l.amount_paid)), 0)
-  return lent - debt
+  return g.lendings.reduce((s, l) => s + counted(l), 0) - g.debts.reduce((s, d) => s + counted(d), 0)
+}
+
+const hasForgiven = (g: PersonGroup) => [...g.debts, ...g.lendings].some(isForgiven)
+
+/** "Forgiven, not counted: …" — or null when nothing is forgiven */
+function forgivenNote(t: ReturnType<typeof loanTotals>, currency: string) {
+  const parts = [
+    t.forgivenOwedToYou > 0 && `${currency} ${formatMoney(t.forgivenOwedToYou)} owed to you (${t.forgivenLendCount})`,
+    t.forgivenYouOwe > 0 && `${currency} ${formatMoney(t.forgivenYouOwe)} you owe (${t.forgivenDebtCount})`,
+  ].filter(Boolean)
+  return parts.length ? `Forgiven, not counted: ${parts.join(" · ")}` : null
 }
 
 // ─────────────────────────────────────────────────────────── Page ────
@@ -159,11 +156,8 @@ export default function DebtsPage() {
     return g
   }, [allDebts, allLendings, debSearch, hideSettled])
 
-  const summary = useMemo(() => {
-    const youOwe  = allDebts.reduce((s, d) => s + Math.max(0, Number(d.amount) - Number(d.amount_paid)), 0)
-    const theyOwe = allLendings.reduce((s, l) => s + Math.max(0, Number(l.amount) - Number(l.amount_paid)), 0)
-    return { youOwe, theyOwe, net: theyOwe - youOwe }
-  }, [allDebts, allLendings])
+  const summary = useMemo(() => loanTotals(allDebts, allLendings), [allDebts, allLendings])
+  const summaryForgiven = forgivenNote(summary, currency)
 
   const hasAny = allDebts.length > 0 || allLendings.length > 0
 
@@ -216,7 +210,7 @@ export default function DebtsPage() {
               </div>
               <div>
                 <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Owed to You</p>
-                <p className="font-display text-lg sm:text-2xl font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{currency} {formatMoney(summary.theyOwe)}</p>
+                <p className="font-display text-lg sm:text-2xl font-extrabold tracking-tight leading-tight text-white dark:text-black break-words">{currency} {formatMoney(summary.owedToYou)}</p>
               </div>
               <div>
                 <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-white/60 dark:text-black/60 mb-1.5">Net</p>
@@ -225,6 +219,7 @@ export default function DebtsPage() {
                 </p>
               </div>
             </div>
+            {summaryForgiven && <p className="text-xs font-semibold text-white/60 dark:text-black/60 mt-4">{summaryForgiven}</p>}
           </div>
         )}
 
@@ -328,7 +323,7 @@ function PersonCard({ group, currency, userId, onDebtUpdated, onDebtDelete, onLe
             {/* Last 5 mini chips */}
             <div className="flex flex-wrap gap-1 mt-1.5">
               {recentItems.map((item, i) => {
-                const st = getStatus(item)
+                const st = isForgiven(item) ? "forgiven" : getStatus(item)
                 return (
                   <span key={i} className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] text-gray-700 dark:text-gray-300">
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${item._type === "debt" ? "bg-rose-500" : "bg-emerald-500"}`} />
@@ -347,7 +342,9 @@ function PersonCard({ group, currency, userId, onDebtUpdated, onDebtDelete, onLe
 
           {/* Net */}
           <div className="text-right shrink-0 ml-2">
-            {net === 0 ? (
+            {net === 0 && hasForgiven(group) ? (
+              <span className="text-[0.6875rem] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-400/10 px-2.5 py-1 rounded-full">Forgiven</span>
+            ) : net === 0 ? (
               <span className="text-[0.6875rem] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2.5 py-1 rounded-full">Settled</span>
             ) : (
               <>
@@ -389,8 +386,10 @@ function PersonModal({ group, currency, userId, onClose, onDebtUpdated, onDebtDe
   const [lendPage, setLendPage] = useState(1)
 
   const net          = personNet(group)
-  const youOweTotal  = group.debts.reduce((s, d) => s + Math.max(0, Number(d.amount) - Number(d.amount_paid)), 0)
-  const theyOweTotal = group.lendings.reduce((s, l) => s + Math.max(0, Number(l.amount) - Number(l.amount_paid)), 0)
+  const totals       = loanTotals(group.debts, group.lendings)
+  const youOweTotal  = totals.youOwe
+  const theyOweTotal = totals.owedToYou
+  const modalForgiven = forgivenNote(totals, currency)
 
   const debtPages     = Math.max(1, Math.ceil(group.debts.length / MODAL_PAGE))
   const lendPages     = Math.max(1, Math.ceil(group.lendings.length / MODAL_PAGE))
@@ -451,6 +450,7 @@ function PersonModal({ group, currency, userId, onClose, onDebtUpdated, onDebtDe
             <p className="text-[0.625rem] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">They Owe</p>
             <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{theyOweTotal > 0 ? `${currency} ${formatMoney(theyOweTotal)}` : "—"}</p>
           </div>
+          {modalForgiven && <p className="col-span-3 text-xs text-gray-500 dark:text-gray-400 text-center pt-1">{modalForgiven}</p>}
         </div>
 
         {/* Tabs */}
@@ -541,7 +541,7 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
   const status    = getStatus(item)
   const remaining = Number(item.amount) - Number(item.amount_paid)
   const pct       = Math.min(100, Math.round((Number(item.amount_paid) / Number(item.amount)) * 100))
-  const isOverdue = item.deadline && item.deadline < todayStr() && status !== "paid"
+  const isOverdue = item.deadline && item.deadline < todayStr() && status !== "paid" && !isForgiven(item)
 
   const ensureFriend = async (name: string) => {
     if (!userId || !name.trim()) return
@@ -561,14 +561,15 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
     setSaving(false)
   }
 
-  const [confirmSettle, setConfirmSettle] = useState(false)
-  const [settling,      setSettling]      = useState(false)
+  const KIND = "debt" as const
+  const [confirmForgive, setConfirmForgive] = useState(false)
+  const [forgiving,      setForgiving]      = useState(false)
 
-  const handleForgive = async () => {
-    setSettling(true)
-    const updated = await settleRemaining(supabase, "debts", item, userId)
-    setSettling(false)
-    if (updated) { onUpdated(updated); setIsPaying(false); setConfirmSettle(false) }
+  const toggleForgiven = async (forgiven: boolean) => {
+    setForgiving(true)
+    const updated = await setForgiven(supabase, "debts", item, forgiven)
+    setForgiving(false)
+    if (updated) { onUpdated(updated); setConfirmForgive(false) }
   }
 
   const handlePay = async (e: React.FormEvent) => {
@@ -627,7 +628,9 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
             <span className="font-display text-base font-bold tracking-tight text-black dark:text-white">{currency} {formatMoney(Number(item.amount))}</span>
             <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
             {isOverdue && <span className="text-[0.6875rem] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full">Overdue</span>}
-            {isWrittenOff(item) && <span className="text-[0.6875rem] font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">Forgiven</span>}
+            {isWrittenOff(item) && <span className="text-[0.6875rem] font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">Closed as forgiven</span>}
+            {isForgiven(item) && <span className="text-[0.6875rem] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-400/10 px-2 py-0.5 rounded-full">Forgiven</span>}
+            {!isForgiven(item) && item.forgiven_at && paidAfterForgiving(item) > 0 && <span className="text-[0.6875rem] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2 py-0.5 rounded-full">Repaid after forgiving</span>}
           </div>
           <div className="flex flex-wrap gap-x-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             <span>Borrowed {fmtDate(item.date)}</span>
@@ -668,7 +671,9 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">{currency}</span>
                 <input type="number" step="0.01" min="0.01" max={remaining} value={payAmount}
                   onChange={e => setPayAmount(e.target.value)} placeholder={`max ${formatMoney(remaining)}`}
-                  required autoFocus className={`${CARD_INPUT} pl-11`} />
+                  required autoFocus className={`${CARD_INPUT} pl-11 pr-14`} />
+                <button type="button" onClick={() => setPayAmount(String(Math.round(remaining * 100) / 100))}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 px-2.5 rounded-full text-[0.6875rem] font-bold bg-gray-100 dark:bg-white/[0.08] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/[0.14] transition-colors">Max</button>
               </div>
               <div className="shrink-0 w-36">
                 <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)} className={CARD_INPUT} />
@@ -676,15 +681,19 @@ function DebtRow({ item, currency, userId, onUpdated, onDelete }: {
             </div>
             <div className="flex gap-2">
               <button type="submit" disabled={submittingPay} className="flex-1 h-11 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl shadow-md shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40">{submittingPay ? "Saving…" : "Save Payment"}</button>
-              <button type="button" onClick={() => { setIsPaying(false); setConfirmSettle(false); setPayAmount(""); setPayDate(todayStr()) }} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
+              <button type="button" onClick={() => { setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
             </div>
           </form>
-          <SettlePrompt
-            open={confirmSettle} busy={settling} onOpen={() => setConfirmSettle(true)} onCancel={() => setConfirmSettle(false)} onConfirm={handleForgive}
-            trigger={`${item.person} forgave the rest?`} action="Forgive"
-            message={`Mark the remaining ${currency} ${formatMoney(remaining)} as forgiven? It will be recorded as income today.`}
-          />
         </div>
+      )}
+
+      {status !== "paid" && !isPaying && (
+        <ForgivePrompt
+          kind={KIND} forgivenAt={isForgiven(item) ? item.forgiven_at! : null} remaining={`${currency} ${formatMoney(remaining)}`}
+          open={confirmForgive} busy={forgiving}
+          onOpen={() => setConfirmForgive(true)} onCancel={() => setConfirmForgive(false)}
+          onConfirm={() => toggleForgiven(true)} onUndo={() => toggleForgiven(false)}
+        />
       )}
 
       {item.paid_history.length > 0 && !isPaying && (
@@ -731,7 +740,7 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
   const status    = getStatus(item)
   const remaining = Number(item.amount) - Number(item.amount_paid)
   const pct       = Math.min(100, Math.round((Number(item.amount_paid) / Number(item.amount)) * 100))
-  const isOverdue = item.deadline && item.deadline < todayStr() && status !== "paid"
+  const isOverdue = item.deadline && item.deadline < todayStr() && status !== "paid" && !isForgiven(item)
 
   const ensureFriend = async (name: string) => {
     if (!userId || !name.trim()) return
@@ -751,14 +760,15 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
     setSaving(false)
   }
 
-  const [confirmSettle, setConfirmSettle] = useState(false)
-  const [settling,      setSettling]      = useState(false)
+  const KIND = "lending" as const
+  const [confirmForgive, setConfirmForgive] = useState(false)
+  const [forgiving,      setForgiving]      = useState(false)
 
-  const handleWriteOff = async () => {
-    setSettling(true)
-    const updated = await settleRemaining(supabase, "lendings", item, userId)
-    setSettling(false)
-    if (updated) { onUpdated(updated); setIsPaying(false); setConfirmSettle(false) }
+  const toggleForgiven = async (forgiven: boolean) => {
+    setForgiving(true)
+    const updated = await setForgiven(supabase, "lendings", item, forgiven)
+    setForgiving(false)
+    if (updated) { onUpdated(updated); setConfirmForgive(false) }
   }
 
   const handleReceipt = async (e: React.FormEvent) => {
@@ -818,6 +828,8 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
             <span className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full capitalize ${STATUS_BADGE[status]}`}>{status}</span>
             {isOverdue && <span className="text-[0.6875rem] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-full">Overdue</span>}
             {isWrittenOff(item) && <span className="text-[0.6875rem] font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">Written off</span>}
+            {isForgiven(item) && <span className="text-[0.6875rem] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-400/10 px-2 py-0.5 rounded-full">Forgiven</span>}
+            {!isForgiven(item) && item.forgiven_at && paidAfterForgiving(item) > 0 && <span className="text-[0.6875rem] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-400/10 px-2 py-0.5 rounded-full">Repaid after forgiving</span>}
           </div>
           <div className="flex flex-wrap gap-x-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             <span>Lent {fmtDate(item.date)}</span>
@@ -858,7 +870,9 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">{currency}</span>
                 <input type="number" step="0.01" min="0.01" max={remaining} value={payAmount}
                   onChange={e => setPayAmount(e.target.value)} placeholder={`max ${formatMoney(remaining)}`}
-                  required autoFocus className={`${CARD_INPUT} pl-11`} />
+                  required autoFocus className={`${CARD_INPUT} pl-11 pr-14`} />
+                <button type="button" onClick={() => setPayAmount(String(Math.round(remaining * 100) / 100))}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 px-2.5 rounded-full text-[0.6875rem] font-bold bg-gray-100 dark:bg-white/[0.08] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/[0.14] transition-colors">Max</button>
               </div>
               <div className="shrink-0 w-36">
                 <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)} className={CARD_INPUT} />
@@ -866,15 +880,19 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
             </div>
             <div className="flex gap-2">
               <button type="submit" disabled={submittingPay} className="flex-1 h-11 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl shadow-md shadow-black/10 dark:shadow-volt/20 hover:opacity-90 disabled:opacity-40">{submittingPay ? "Saving…" : "Save Receipt"}</button>
-              <button type="button" onClick={() => { setIsPaying(false); setConfirmSettle(false); setPayAmount(""); setPayDate(todayStr()) }} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
+              <button type="button" onClick={() => { setIsPaying(false); setPayAmount(""); setPayDate(todayStr()) }} className="h-11 px-5 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
             </div>
           </form>
-          <SettlePrompt
-            open={confirmSettle} busy={settling} onOpen={() => setConfirmSettle(true)} onCancel={() => setConfirmSettle(false)} onConfirm={handleWriteOff}
-            trigger="Won't be paid back? Write it off" action="Write off"
-            message={`Write off the remaining ${currency} ${formatMoney(remaining)}? It will be recorded as an expense today.`}
-          />
         </div>
+      )}
+
+      {status !== "paid" && !isPaying && (
+        <ForgivePrompt
+          kind={KIND} forgivenAt={isForgiven(item) ? item.forgiven_at! : null} remaining={`${currency} ${formatMoney(remaining)}`}
+          open={confirmForgive} busy={forgiving}
+          onOpen={() => setConfirmForgive(true)} onCancel={() => setConfirmForgive(false)}
+          onConfirm={() => toggleForgiven(true)} onUndo={() => toggleForgiven(false)}
+        />
       )}
 
       {item.paid_history.length > 0 && !isPaying && (
@@ -898,24 +916,38 @@ function LendingRow({ item, currency, userId, onUpdated, onDelete }: {
   )
 }
 
-// ────────────────────────────────────────────────────── SettlePrompt ────
+// ───────────────────────────────────────────────────── ForgivePrompt ────
 
-function SettlePrompt({ open, busy, trigger, action, message, onOpen, onCancel, onConfirm }: {
-  open: boolean; busy: boolean; trigger: string; action: string; message: string
-  onOpen: () => void; onCancel: () => void; onConfirm: () => void
+/** Mark a loan forgiven (kept on record, out of totals, payments still accepted) or undo it */
+function ForgivePrompt({ kind, forgivenAt, remaining, open, busy, onOpen, onCancel, onConfirm, onUndo }: {
+  kind: "debt" | "lending"; forgivenAt: string | null; remaining: string; open: boolean; busy: boolean
+  onOpen: () => void; onCancel: () => void; onConfirm: () => void; onUndo: () => void
 }) {
+  if (forgivenAt) {
+    return (
+      <div className="mt-2 flex items-center justify-between gap-3 text-xs">
+        <span className="text-gray-500 dark:text-gray-400">Forgiven {fmtDate(dayKey(forgivenAt))} · not counted in totals</span>
+        <button type="button" onClick={onUndo} disabled={busy} className="shrink-0 font-semibold text-gray-500 hover:text-black dark:hover:text-white px-2.5 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] disabled:opacity-40 transition-colors">
+          {busy ? "Saving…" : "Undo"}
+        </button>
+      </div>
+    )
+  }
   if (!open) {
     return (
       <button type="button" onClick={onOpen} className="mt-2 text-xs font-semibold text-gray-500 hover:text-black dark:hover:text-white px-2.5 py-1 -ml-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors">
-        {trigger}
+        {kind === "lending" ? "Not expecting it back? Mark forgiven" : "Lender let it go? Mark forgiven"}
       </button>
     )
   }
   return (
     <div className="mt-3 p-3 rounded-2xl bg-gray-50 dark:bg-white/[0.04] border border-black/[0.05] dark:border-white/[0.06]">
-      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{message}</p>
+      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+        Mark the remaining {remaining} as forgiven? It stays here but won&apos;t count toward what {kind === "lending" ? "you're owed" : "you owe"}.
+        If {kind === "lending" ? "they pay" : "you pay"} later, record it as usual.
+      </p>
       <div className="flex gap-2">
-        <button type="button" onClick={onConfirm} disabled={busy} className="flex-1 h-10 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl hover:opacity-90 disabled:opacity-40">{busy ? "Saving…" : action}</button>
+        <button type="button" onClick={onConfirm} disabled={busy} className="flex-1 h-10 bg-black dark:bg-volt text-white dark:text-black text-sm font-bold rounded-2xl hover:opacity-90 disabled:opacity-40">{busy ? "Saving…" : "Mark forgiven"}</button>
         <button type="button" onClick={onCancel} className="h-10 px-4 bg-white dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-black dark:text-white text-sm font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-white/10 transition-all">Cancel</button>
       </div>
     </div>
