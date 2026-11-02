@@ -59,11 +59,17 @@ export function moneyFixture(): MoneyInput & { expenses: (MoneyInput["expenses"]
     debts: [
       { amount: 5000, amount_paid: 2000, date: "2026-08-10", deadline: "2026-10-20", person: "Abel", paid_history: [{ amount: 2000, date: "2026-10-05" }] },
       { amount: 1200, amount_paid: 1200, date: "2026-05-02", deadline: null, person: "Mimi", paid_history: [{ amount: 1200, date: "2026-05-22" }] },
+      // Forgiven debt you owe, past its deadline
+      { amount: 700, amount_paid: 0, date: "2026-07-01", deadline: "2026-09-01", person: "Kebede", paid_history: [], forgiven_at: "2026-09-15T10:00:00Z" },
     ],
     lendings: [
       { amount: 3000, amount_paid: 0, date: "2026-10-03", deadline: "2026-10-15", person: "Sara", paid_history: [] },
       { amount: 2000, amount_paid: 2000, date: "2026-06-01", deadline: null, person: "Liya", paid_history: [{ amount: 500, date: "2026-07-01" }, { amount: 1500, date: "2026-10-02", written_off: true }] },
       { amount: 800, amount_paid: 800, date: "2026-09-10", deadline: "2026-12-01", person: "abel ", paid_history: [{ amount: 800, date: "2026-09-25" }] },
+      // Forgiven, past deadline, then 300 paid anyway — still forgiven
+      { amount: 1200, amount_paid: 300, date: "2026-08-15", deadline: "2026-09-10", person: "Dawit", paid_history: [{ amount: 300, date: "2026-10-10" }], forgiven_at: "2026-09-20T08:00:00Z" },
+      // Forgiven, then repaid in full — no longer forgiven
+      { amount: 400, amount_paid: 400, date: "2026-07-05", deadline: null, person: "Hana", paid_history: [{ amount: 400, date: "2026-10-12" }], forgiven_at: "2026-08-01T08:00:00Z" },
     ],
   }
 }

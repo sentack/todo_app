@@ -28,8 +28,9 @@ export async function loadMoneyInput(supabase: ReturnType<typeof createBrowserSu
     all<MoneyInput["defaults"][number]>("expense_budgets", "category, monthly_limit", "category"),
     all<MoneyInput["overrides"][number]>("month_budgets", "month, category, amount", "month"),
     all<MoneyInput["plans"][number]>("month_plans", "month, expected_income", "month"),
-    all<MoneyInput["debts"][number]>("debts", "amount, amount_paid, date, deadline, person, paid_history", "date"),
-    all<MoneyInput["lendings"][number]>("lendings", "amount, amount_paid, date, deadline, person, paid_history", "date"),
+    // "*" so this works both before and after forgiven_at is migrated
+    all<MoneyInput["debts"][number]>("debts", "*", "date"),
+    all<MoneyInput["lendings"][number]>("lendings", "*", "date"),
   ])
   return {
     expenses: exp.data, incomes: inc.data, defaults: def.data, overrides: ovr.data,
@@ -80,8 +81,9 @@ export function MoneyView({ data, period: basePeriod, currency, loading = false 
   const period = useMemo(() => periodForData(basePeriod, [...data.expenses.map(e => e.date), ...data.incomes.map(i => i.date)]), [basePeriod, data])
   const a = useMemo(() => moneyAnalytics(period, data), [data, period])
   const insights = useMemo(() => moneyInsights(a, period, money), [a, period]) // eslint-disable-line react-hooks/exhaustive-deps
+  const f = a.loans.forgiven
 
-  if (a.spent === 0 && a.earned === 0 && a.loans.owedToYou === 0 && a.loans.youOwe === 0) {
+  if (a.spent === 0 && a.earned === 0 && a.loans.owedToYou === 0 && a.loans.youOwe === 0 && f.lendCount + f.debtCount === 0) {
     return (
       <EmptyState action={<div className="flex gap-2 justify-center"><QuickAddButton type="expense">Add expense</QuickAddButton><QuickAddButton type="income">Add income</QuickAddButton></div>}>
         No money activity {period.key === "all" ? "yet" : period.label.toLowerCase().startsWith("last") ? `in the ${period.label.toLowerCase()}` : `in ${period.label}`}. Add an expense or income to start seeing insights.
@@ -129,7 +131,7 @@ export function MoneyView({ data, period: basePeriod, currency, loading = false 
           value={a.budget.total > 0 ? `${a.budget.kept}/${a.budget.total}` : "—"}
           sub={a.budget.total > 0 ? (period.months.length > 1 ? "category-months within limit" : "categories within limit") : "No budgets set yet"} />
         <StatTile label="Net loans" href="/debts" value={signed(a.loans.net)}
-          sub={`${money(a.loans.owedToYou)} owed to you · ${money(a.loans.youOwe)} you owe`} />
+          sub={`${money(a.loans.owedToYou)} owed to you · ${money(a.loans.youOwe)} you owe${a.loans.forgiven.lendCount + a.loans.forgiven.debtCount > 0 ? " · forgiven not counted" : ""}`} />
       </div>
 
       {/* Cash flow */}
@@ -195,18 +197,30 @@ export function MoneyView({ data, period: basePeriod, currency, loading = false 
       </div>
 
       {/* Loans & people */}
-      {(a.loans.owedToYou > 0 || a.loans.youOwe > 0 || a.loans.flowIn > 0 || a.loans.flowOut > 0) && (
+      {(a.loans.owedToYou > 0 || a.loans.youOwe > 0 || a.loans.flowIn > 0 || a.loans.flowOut > 0 || f.lendCount > 0 || f.debtCount > 0 || f.recovered > 0) && (
         <div>
           <SectionTitle action={<Link href="/debts" className="text-xs font-bold text-gray-500 hover:text-black dark:hover:text-white">Finances →</Link>}>Loans &amp; people</SectionTitle>
           <div className={`${CARD} overflow-hidden`}>
             <div className="grid grid-cols-3 divide-x divide-black/[0.05] dark:divide-white/[0.05] border-b border-black/[0.05] dark:border-white/[0.05]">
               {[["Owed to you", money(a.loans.owedToYou)], ["You owe", money(a.loans.youOwe)], ["Net", signed(a.loans.net)]].map(([l, v]) => (
-                <div key={l} className="p-4 min-w-0">
+                <div key={l} className="p-4 min-w-0" data-stat={`Loans ${l}`}>
                   <p className="text-[0.625rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-1">{l}</p>
-                  <p className="font-sans text-sm sm:text-base font-extrabold tracking-tight text-black dark:text-white break-words">{v}</p>
+                  <p data-value className="font-sans text-sm sm:text-base font-extrabold tracking-tight text-black dark:text-white break-words">{v}</p>
                 </div>
               ))}
             </div>
+            {/* Forgiven: kept on record but left out of the numbers above */}
+            {(f.lendCount > 0 || f.debtCount > 0 || f.recovered > 0 || f.paidAnyway > 0) && (
+              <div className="px-5 py-4 border-b border-black/[0.05] dark:border-white/[0.05] bg-sky-50/60 dark:bg-sky-400/[0.04]">
+                <p className="text-[0.625rem] font-bold uppercase tracking-[0.12em] text-sky-700 dark:text-sky-300 mb-2">Forgiven · not counted above</p>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <MiniStat label={`Owed to you · ${f.lendCount} loan${f.lendCount === 1 ? "" : "s"}`} value={money(f.owedToYou)} />
+                  <MiniStat label={`You owe · ${f.debtCount} debt${f.debtCount === 1 ? "" : "s"}`} value={money(f.youOwe)} />
+                  <MiniStat label="Came back after forgiving" value={money(f.recovered)} />
+                  <MiniStat label="You paid after it was forgiven" value={money(f.paidAnyway)} />
+                </div>
+              </div>
+            )}
             {a.loans.people.length > 0 && (
               <div className="divide-y divide-black/[0.05] dark:divide-white/[0.05]">
                 {a.loans.people.slice(0, 5).map(p => (
@@ -224,7 +238,7 @@ export function MoneyView({ data, period: basePeriod, currency, loading = false 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 px-5 py-4 bg-black/[0.015] dark:bg-white/[0.02] border-t border-black/[0.05] dark:border-white/[0.05] text-xs">
               <MiniStat label="Paid back to you" value={a.loans.repaymentRate !== null ? `${Math.round(a.loans.repaymentRate)}%` : "—"} />
               <MiniStat label="Avg days to settle" value={a.loans.avgSettleDays !== null ? `${Math.round(a.loans.avgSettleDays)}d` : "—"} />
-              <MiniStat label="Written off" value={a.loans.lossRate !== null ? `${Math.round(a.loans.lossRate)}% of lent` : "—"} />
+              <MiniStat label="Not expected back" value={f.share !== null ? `${Math.round(f.share)}% of lent` : "—"} />
               <MiniStat label="This period" value={`+${formatMoney(a.loans.flowIn)} / −${formatMoney(a.loans.flowOut)}`} />
             </div>
           </div>
@@ -267,9 +281,9 @@ export function MoneyView({ data, period: basePeriod, currency, loading = false 
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-0">
+    <div className="min-w-0" data-stat={label}>
       <p className="text-gray-500 dark:text-gray-400 mb-0.5">{label}</p>
-      <p className="font-bold text-black dark:text-white break-words">{value}</p>
+      <p data-value className="font-bold text-black dark:text-white break-words">{value}</p>
     </div>
   )
 }

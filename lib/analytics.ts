@@ -4,6 +4,7 @@
 
 import { todayStr, addDays, dayKey } from "./dates"
 import { currentMonth, shiftMonth, monthLabel, effectiveLimits, spentByCategory, type LoanRecord, type PayRecord } from "./budget"
+import { outstanding, counted, isForgiven, paidAfterForgiving } from "./loans"
 
 const DAY_MS = 86400000
 
@@ -166,7 +167,7 @@ function streaks(days: Set<string>) {
 
 export interface ExpenseRow { amount: number; category: string; date: string; description: string | null }
 export interface IncomeRow  { amount: number; source: string; date: string }
-export interface LoanRow extends LoanRecord { amount_paid: number; deadline: string | null; person: string }
+export interface LoanRow extends LoanRecord { amount_paid: number; deadline: string | null; person: string; forgiven_at?: string | null }
 
 export interface MoneyInput {
   expenses: ExpenseRow[]
@@ -178,7 +179,6 @@ export interface MoneyInput {
   lendings: LoanRow[]
 }
 
-const outstanding = (l: LoanRow) => Math.max(0, Number(l.amount) - Number(l.amount_paid))
 const realPayments = (l: LoanRow) => (l.paid_history ?? []).filter((p: PayRecord) => !p.written_off)
 const writtenOff = (l: LoanRow) => total((l.paid_history ?? []).filter((p: PayRecord) => p.written_off), p => Number(p.amount))
 
@@ -245,9 +245,10 @@ export function moneyAnalytics(period: Period, d: MoneyInput) {
   })
 
   // Loans: position is "now", flows are within the period
-  const owedToYou = total(d.lendings, outstanding), youOwe = total(d.debts, outstanding)
-  const overdueLend = d.lendings.filter(l => outstanding(l) > 0 && l.deadline && l.deadline < today)
-  const overdueDebt = d.debts.filter(l => outstanding(l) > 0 && l.deadline && l.deadline < today)
+  // Forgiven loans stay on record but are left out of what's owed and overdue
+  const owedToYou = total(d.lendings, counted), youOwe = total(d.debts, counted)
+  const overdueLend = d.lendings.filter(l => counted(l) > 0 && l.deadline && l.deadline < today)
+  const overdueDebt = d.debts.filter(l => counted(l) > 0 && l.deadline && l.deadline < today)
   const lentTotal   = total(d.lendings, l => Number(l.amount))
   const collected   = total(d.lendings, l => total(realPayments(l), p => Number(p.amount)))
   const lost        = total(d.lendings, writtenOff)
@@ -259,13 +260,19 @@ export function moneyAnalytics(period: Period, d: MoneyInput) {
   const flowOut = total(d.lendings.filter(l => inRange(l.date, period.start, period.end)), l => Number(l.amount))
                 + total(d.debts, l => total(realPayments(l).filter(p => inRange(p.date, period.start, period.end)), p => Number(p.amount)))
 
+  const forgivenLend = d.lendings.filter(isForgiven), forgivenDebt = d.debts.filter(isForgiven)
+  // Payments that arrived after the loan was marked forgiven
+  const afterForgivingIn = (l: LoanRow) => !l.forgiven_at ? 0 : total(
+    realPayments(l).filter(p => p.date >= dayKey(l.forgiven_at!) && inRange(p.date, period.start, period.end)), p => Number(p.amount))
+  const forgivenOwedToYou = total(forgivenLend, outstanding)
+
   const personMap = new Map<string, { name: string; net: number }>()
   // Debts first, like the Finances page, so the same spelling of a name is shown
   for (const [list, sign] of [[d.debts, -1], [d.lendings, 1]] as const) {
     for (const l of list) {
       const k = l.person.trim().toLowerCase()
       const e = personMap.get(k) ?? { name: l.person.trim(), net: 0 }
-      e.net += sign * outstanding(l)
+      e.net += sign * counted(l)
       personMap.set(k, e)
     }
   }
@@ -300,6 +307,15 @@ export function moneyAnalytics(period: Period, d: MoneyInput) {
       overdueDebtAmount: total(overdueDebt, outstanding), overdueDebtCount: overdueDebt.length,
       repaymentRate: lentTotal - lost > 0 ? (collected / (lentTotal - lost)) * 100 : null,
       lossRate: lentTotal > 0 ? (lost / lentTotal) * 100 : null,
+      forgiven: {
+        owedToYou: forgivenOwedToYou, lendCount: forgivenLend.length,
+        youOwe: total(forgivenDebt, outstanding), debtCount: forgivenDebt.length,
+        recovered: total(d.lendings, paidAfterForgiving),       // came back after you forgave it
+        recoveredInPeriod: total(d.lendings, afterForgivingIn),
+        paidAnyway: total(d.debts, paidAfterForgiving),          // you paid after it was forgiven
+        // Share of everything you lent that you don't expect back (incl. old write-offs)
+        share: lentTotal > 0 ? ((forgivenOwedToYou + lost) / lentTotal) * 100 : null,
+      },
       avgSettleDays: settleDays.length ? total(settleDays, x => x) / settleDays.length : null,
       flowIn, flowOut, people,
     },
@@ -332,6 +348,9 @@ export function moneyInsights(a: MoneyAnalytics, period: Period, money: (v: numb
   }
   if (a.loans.overdueLendCount > 0) {
     out.push({ rank: 2, tone: "warn", href: "/debts", text: `${a.loans.overdueLendCount} loan${a.loans.overdueLendCount === 1 ? " is" : "s are"} overdue — ${money(a.loans.overdueLendAmount)} owed to you.` })
+  }
+  if (a.loans.forgiven.recoveredInPeriod > 0) {
+    out.push({ rank: 2, tone: "good", href: "/debts", text: `${money(a.loans.forgiven.recoveredInPeriod)} came back from loans you'd forgiven.` })
   }
   if (a.loans.overdueDebtCount > 0) {
     out.push({ rank: 2, tone: "warn", href: "/debts", text: `You're overdue on ${money(a.loans.overdueDebtAmount)} across ${a.loans.overdueDebtCount} debt${a.loans.overdueDebtCount === 1 ? "" : "s"}.` })

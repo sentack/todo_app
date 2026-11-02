@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { setUserTimeZone } from "@/lib/dates"
 import { formatMoney } from "@/lib/formatMoney"
 import {
-  resolvePeriod, periodForData, moneyAnalytics, todoAnalytics, shoppingAnalytics,
+  resolvePeriod, periodForData, moneyAnalytics, moneyInsights, todoAnalytics, shoppingAnalytics,
   type PeriodKey, type MoneyInput,
 } from "@/lib/analytics"
 import { MoneyView, loadMoneyInput } from "@/components/stats/MoneyTab"
@@ -138,16 +138,47 @@ describe("money", () => {
 
   it("loans: position, overdue, repayment, write-offs, flows, people", () => {
     const a = moneyAnalytics(resolvePeriod("month"), D).loans
-    expect(a.owedToYou).toBe(3000)            // Sara
-    expect(a.youOwe).toBe(3000)               // Abel 5000 − 2000 paid
-    expect(a.overdueLendAmount).toBe(3000)
-    expect(a.overdueDebtAmount).toBe(3000)
-    expect(a.repaymentRate!).toBeCloseTo((1300 / (5800 - 1500)) * 100, 6)   // written-off part excluded
-    expect(a.lossRate!).toBeCloseTo((1500 / 5800) * 100, 6)
-    expect(a.avgSettleDays).toBe(17.5)        // Mimi 20d, abel 15d; Liya's write-off doesn't count
-    expect(a.flowIn).toBe(0)                  // Liya's October entry is a write-off, not cash
+    expect(a.owedToYou).toBe(3000)            // Sara — Dawit's forgiven 900 isn't counted
+    expect(a.youOwe).toBe(3000)               // Abel 5000 − 2000 paid — Kebede's forgiven 700 isn't
+    expect(a.net).toBe(0)
+    expect(a.overdueLendAmount).toBe(3000)    // Dawit is past due but forgiven
+    expect(a.overdueLendCount).toBe(1)
+    expect(a.overdueDebtAmount).toBe(3000)    // Kebede is past due but forgiven
+    expect(a.overdueDebtCount).toBe(1)
+    // Lent 7,400 in all; 1,500 written off the old way; 2,000 actually came back
+    expect(a.repaymentRate!).toBeCloseTo((2000 / (7400 - 1500)) * 100, 6)
+    expect(a.lossRate!).toBeCloseTo((1500 / 7400) * 100, 6)
+    expect(a.avgSettleDays!).toBeCloseTo((20 + 15 + 99) / 3, 6)   // Mimi, abel, Hana; Liya's write-off doesn't count
+    expect(a.flowIn).toBe(300 + 400)          // Dawit + Hana paid in October; Liya's entry is a write-off
     expect(a.flowOut).toBe(3000 + 2000)       // lent to Sara + repaid Abel
-    expect(a.people).toEqual([{ name: "Abel", net: -3000 }, { name: "Sara", net: 3000 }])   // "abel " merged
+    expect(a.people).toEqual([{ name: "Abel", net: -3000 }, { name: "Sara", net: 3000 }])   // "abel " merged, forgiven left out
+  })
+
+  it("forgiven loans: kept on record, reported separately, payments still count", () => {
+    const f = moneyAnalytics(resolvePeriod("month"), D).loans.forgiven
+    expect(f).toMatchObject({ owedToYou: 900, lendCount: 1, youOwe: 700, debtCount: 1 })
+    expect(f.recovered).toBe(300 + 400)       // Dawit after forgiving, and Hana who then paid in full
+    expect(f.recoveredInPeriod).toBe(700)
+    expect(f.paidAnyway).toBe(0)
+    expect(f.share!).toBeCloseTo(((900 + 1500) / 7400) * 100, 6)
+    // Recoveries outside the period aren't "in period"
+    expect(moneyAnalytics(resolvePeriod("last-month"), D).loans.forgiven.recoveredInPeriod).toBe(0)
+  })
+
+  it("forgiven money coming back produces an insight", () => {
+    const quiet: MoneyInput = { ...D, expenses: [], defaults: [], debts: [] }
+    const ins = moneyInsights(moneyAnalytics(resolvePeriod("month"), quiet), resolvePeriod("month"), money)
+    expect(ins.map(i => i.text)).toContain(`${money(700)} came back from loans you'd forgiven.`)
+  })
+
+  it("the loans card shows the forgiven numbers", () => {
+    const c = cards(renderToStaticMarkup(<MoneyView data={D} period={resolvePeriod("month")} currency="ETB" />))
+    expect(c["Loans Owed to you"]).toBe(money(3000))
+    expect(c["Loans You owe"]).toBe(money(3000))
+    expect(c["Owed to you · 1 loan"]).toBe(money(900))
+    expect(c["You owe · 1 debt"]).toBe(money(700))
+    expect(c["Came back after forgiving"]).toBe(money(700))
+    expect(c["Not expected back"]).toBe(`${Math.round(((900 + 1500) / 7400) * 100)}% of lent`)
   })
 
   it("loads every row through the paged loader (>1,000 expenses)", async () => {
