@@ -6,6 +6,8 @@ import { todayStr } from "@/lib/dates"
 import Modal from "./Modal"
 import FriendCombobox from "./FriendCombobox"
 import { CATEGORIES, INCOME_SOURCES } from "@/lib/constants"
+import { parseWeight, invalidWeightIndexes } from "@/lib/subtasks"
+import WeightStepper from "./WeightStepper"
 import { useCurrency } from "@/contexts/CurrencyContext"
 
 type ModalType = "todo" | "expense" | "income" | "to-buy" | "debt" | "lending" | "friend"
@@ -34,7 +36,8 @@ function AddTodoForm({ onDone }: { onDone: () => void }) {
   const [notes, setNotes]       = useState("")
   const [statusId, setStatusId] = useState(1)
   const [dueDate, setDueDate]   = useState("")
-  const [subtasks, setSubtasks] = useState<{ title: string; weight: number }[]>([])
+  const [subtasks, setSubtasks] = useState<{ title: string; weight: string }[]>([])
+  const [weightErrors, setWeightErrors] = useState(false)
   const [loading, setLoading]   = useState(false)
 
   const supabase = useMemo(() => createBrowserSupabaseClient(), [])
@@ -42,6 +45,8 @@ function AddTodoForm({ onDone }: { onDone: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
+    // Weights are typed freely; only 1–5 can be saved
+    if (invalidWeightIndexes(subtasks).length > 0) { setWeightErrors(true); return }
     setLoading(true)
 
     const { data: { user } } = await supabase.auth.getUser()
@@ -62,7 +67,7 @@ function AddTodoForm({ onDone }: { onDone: () => void }) {
       const valid = subtasks.filter(s => s.title.trim())
       if (valid.length > 0) {
         await supabase.from("subtasks").insert(
-          valid.map(s => ({ todo_id: todo.id, title: s.title.trim(), weight: s.weight, completed: false }))
+          valid.map(s => ({ todo_id: todo.id, title: s.title.trim(), weight: parseWeight(s.weight)!, completed: false }))
         )
       }
       onDone()
@@ -81,7 +86,7 @@ function AddTodoForm({ onDone }: { onDone: () => void }) {
         <input type="text" value={desc} onChange={e => setDesc(e.target.value)} placeholder="Brief description (optional)" className={INPUT} />
       </div>
       <div>
-        <label className={LABEL}>Subtasks ({subtasks.length})</label>
+        <label className={LABEL}>Subtasks ({subtasks.length}) · weight 1–5</label>
         <div className="space-y-2 mb-2">
           {subtasks.map((s, i) => (
             <div key={i} className="flex gap-2 items-center">
@@ -93,13 +98,16 @@ function AddTodoForm({ onDone }: { onDone: () => void }) {
                   setSubtasks(next)
                 }} placeholder="Subtask name" className={INPUT} />
               </div>
-              <input type="number" min="1" max="5" value={s.weight} onChange={e => {
-                const next = [...subtasks]; next[i] = { ...next[i], weight: parseInt(e.target.value) || 1 }; setSubtasks(next)
-              }} className="w-14 shrink-0 px-2 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white text-center font-semibold focus:outline-none focus:border-black dark:focus:border-volt focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 transition-all text-[0.9375rem]" />
+              <WeightStepper value={s.weight} invalid={weightErrors && invalidWeightIndexes(subtasks).includes(i)} onChange={w => {
+                const next = [...subtasks]; next[i] = { ...next[i], weight: w }; setSubtasks(next)
+              }} />
             </div>
           ))}
         </div>
-        <button type="button" onClick={() => setSubtasks(prev => [...prev, { title: "", weight: 1 }])} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-volt-800 dark:text-volt bg-volt-100 dark:bg-volt/10 hover:bg-volt-200 dark:hover:bg-volt/20 transition-colors">
+        {weightErrors && invalidWeightIndexes(subtasks).length > 0 && (
+          <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400 mb-2">Each subtask weight must be a whole number from 1 to 5.</p>
+        )}
+        <button type="button" onClick={() => setSubtasks(prev => [...prev, { title: "", weight: "1" }])} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-volt-800 dark:text-volt bg-volt-100 dark:bg-volt/10 hover:bg-volt-200 dark:hover:bg-volt/20 transition-colors">
           + Add subtask
         </button>
       </div>
