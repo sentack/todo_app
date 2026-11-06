@@ -229,7 +229,7 @@ export default function Sidebar({ isOpen, onClose, userId }: SidebarProps) {
           </nav>
 
           <div className="p-4">
-            <div className="rounded-2xl px-4 py-3 bg-black/[0.03] dark:bg-white/[0.04] text-xs text-gray-500 dark:text-gray-400 text-center">Made with ❤️ by <span className="font-bold text-black dark:text-white">SENTACK</span></div>
+            <div className="rounded-2xl px-4 py-3 bg-black/[0.03] dark:bg-white/[0.04] text-xs text-gray-500 dark:text-gray-400 text-center">Made with ❤️ by <a href="https://sentack.dev" target="_blank" rel="noopener noreferrer" className="font-bold text-black dark:text-white underline decoration-volt decoration-2 underline-offset-4 hover:decoration-[3px]">SENTACK</a></div>
           </div>
         </div>
       </div>

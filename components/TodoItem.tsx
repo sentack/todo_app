@@ -3,6 +3,8 @@
 import { useState, useMemo } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabaseBrowser";
 import { todayStr, formatInstant } from "@/lib/dates";
+import { parseWeight, invalidWeightIndexes } from "@/lib/subtasks";
+import WeightStepper from "./WeightStepper";
 
 interface Subtask {
   id: string;
@@ -46,7 +48,8 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
   const [editNotes, setEditNotes]         = useState("");
   const [editStatusId, setEditStatusId]   = useState(1);
   const [editDueDate, setEditDueDate]     = useState("");
-  const [editSubtasks, setEditSubtasks]   = useState<{ id?: string; title: string; weight: number; completed?: boolean }[]>([]);
+  const [editSubtasks, setEditSubtasks]   = useState<{ id?: string; title: string; weight: string; completed?: boolean }[]>([]);
+  const [weightErrors, setWeightErrors]   = useState(false);
   const [saving, setSaving]               = useState(false);
 
   const startEdit = () => {
@@ -55,13 +58,16 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
     setEditNotes(todo.notes ?? "");
     setEditStatusId(todo.status_id);
     setEditDueDate(todo.due_date ?? "");
-    setEditSubtasks(todo.subtasks?.map(s => ({ id: s.id, title: s.title, weight: s.weight, completed: s.completed })) ?? []);
+    setEditSubtasks(todo.subtasks?.map(s => ({ id: s.id, title: s.title, weight: String(s.weight), completed: s.completed })) ?? []);
+    setWeightErrors(false);
     setIsEditing(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editTitle.trim()) return;
+    // Check weights before anything is saved — subtasks are replaced below
+    if (invalidWeightIndexes(editSubtasks).length > 0) { setWeightErrors(true); return; }
     setSaving(true);
 
     const { error } = await supabase.from("todos").update({
@@ -80,7 +86,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
       const valid = editSubtasks.filter(s => s.title.trim());
       if (valid.length > 0) {
         await supabase.from("subtasks").insert(
-          valid.map(s => ({ todo_id: todo.id, title: s.title.trim(), weight: s.weight, completed: s.completed ?? false }))
+          valid.map(s => ({ todo_id: todo.id, title: s.title.trim(), weight: parseWeight(s.weight)!, completed: s.completed ?? false }))
         );
       }
       setIsEditing(false);
@@ -192,7 +198,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           </div>
 
           <div>
-            <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Subtasks ({editSubtasks.length})</label>
+            <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Subtasks ({editSubtasks.length}) · weight 1–5</label>
             <div className="space-y-2 mb-2">
               {editSubtasks.map((s, i) => (
                 <div key={i} className="flex gap-2 items-center">
@@ -204,16 +210,19 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
                       setEditSubtasks(next);
                     }} placeholder="Subtask name" className={INPUT} />
                   </div>
-                  <input type="number" min="1" max="5" value={s.weight} onChange={e => {
-                    const next = [...editSubtasks]; next[i] = { ...next[i], weight: parseInt(e.target.value) || 1 }; setEditSubtasks(next);
-                  }} className="w-14 shrink-0 px-2 py-3 bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] rounded-2xl text-black dark:text-white text-center font-semibold focus:outline-none focus:ring-4 focus:ring-black/5 dark:focus:ring-volt/15 focus:border-black dark:focus:border-volt transition-all text-sm" />
+                  <WeightStepper value={s.weight} invalid={weightErrors && invalidWeightIndexes(editSubtasks).includes(i)} onChange={w => {
+                    const next = [...editSubtasks]; next[i] = { ...next[i], weight: w }; setEditSubtasks(next);
+                  }} />
                   <button type="button" onClick={() => setEditSubtasks(prev => prev.filter((_, idx) => idx !== i))} className="shrink-0 w-9 h-9 grid place-items-center rounded-full text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                   </button>
                 </div>
               ))}
             </div>
-            <button type="button" onClick={() => setEditSubtasks(prev => [...prev, { title: "", weight: 1 }])} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-volt-800 dark:text-volt bg-volt-100 dark:bg-volt/10 hover:bg-volt-200 dark:hover:bg-volt/20 transition-colors">
+            {weightErrors && invalidWeightIndexes(editSubtasks).length > 0 && (
+              <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400 mb-2">Each subtask weight must be a whole number from 1 to 5.</p>
+            )}
+            <button type="button" onClick={() => setEditSubtasks(prev => [...prev, { title: "", weight: "1" }])} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-volt-800 dark:text-volt bg-volt-100 dark:bg-volt/10 hover:bg-volt-200 dark:hover:bg-volt/20 transition-colors">
               + Add subtask
             </button>
           </div>
@@ -223,12 +232,12 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
             <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={2} placeholder="Additional notes" className={`${INPUT} resize-none`} />
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="min-w-0">
               <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Due date</label>
-              <input type="date" value={editDueDate} onChange={e => setEditDueDate(e.target.value)} className={INPUT} />
+              <input type="date" value={editDueDate} onChange={e => setEditDueDate(e.target.value)} className={`${INPUT} min-w-0`} />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0">
               <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Status</label>
               <select value={editStatusId} onChange={e => setEditStatusId(Number(e.target.value))} className={INPUT}>
                 <option value={1}>📋 Pending</option>

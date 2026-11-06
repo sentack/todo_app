@@ -11,10 +11,12 @@ import {
   moneyAnalytics, moneyInsights, deltaOf, periodForData, fmtPct,
 } from "@/lib/analytics"
 import {
-  CARD, IN_BAR, OUT_BAR, SectionTitle, Hero, HeroStat, StatTile, InsightList, ColumnChart,
-  BarList, ChangeNote, Collapsible, EmptyState, QuickAddButton,
+  CARD, IN_BAR, OUT_BAR, DIM_BAR, SectionTitle, Hero, HeroStat, StatTile, InsightList, ColumnChart,
+  LineChart, BarList, ChangeNote, Collapsible, EmptyState, QuickAddButton,
 } from "./ui"
+import SpendingSearch from "./SpendingSearch"
 
+const shortDay = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })
 const fmtDay = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
 
 /** Every money row the tab needs. All rows — the analytics filter by period. */
@@ -101,6 +103,10 @@ export function MoneyView({ data, period: basePeriod, currency, loading = false 
     : undefined
 
   const cats = showAllCats ? a.categories : a.categories.slice(0, 6)
+  const p = a.patterns
+  // Names for the pace lines
+  const [paceNow, pacePrev] = period.key === "month" ? ["This month", "Last month"]
+    : period.key === "last-month" ? ["Last month", "Month before"] : ["This period", "Previous period"]
 
   return (
     // Refetch keeps the previous render, dimmed, instead of flashing a skeleton
@@ -117,6 +123,11 @@ export function MoneyView({ data, period: basePeriod, currency, loading = false 
           <HeroStat label="Spent" value={money(a.spent)} />
           <HeroStat label="Net" value={signed(a.net)} />
         </div>
+        {p.coverDays !== null && p.coverDays >= 1 && (
+          <p className="text-xs font-semibold text-white/70 dark:text-black/70 mt-4">
+            What you saved covers about {Math.round(p.coverDays)} day{Math.round(p.coverDays) === 1 ? "" : "s"} of spending
+          </p>
+        )}
       </Hero>
 
       <InsightList insights={insights} />
@@ -134,6 +145,8 @@ export function MoneyView({ data, period: basePeriod, currency, loading = false 
           sub={`${money(a.loans.owedToYou)} owed to you · ${money(a.loans.youOwe)} you owe${a.loans.forgiven.lendCount + a.loans.forgiven.debtCount > 0 ? " · forgiven not counted" : ""}`} />
       </div>
 
+      <SpendingSearch expenses={data.expenses} period={period} currency={currency} />
+
       {/* Cash flow */}
       <div>
         <SectionTitle>Cash flow</SectionTitle>
@@ -145,6 +158,26 @@ export function MoneyView({ data, period: basePeriod, currency, loading = false 
         />
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 px-1">Faded months are outside the selected period. Loans aren&apos;t counted here.</p>
       </div>
+
+      {/* Spending pace: running total, day by day, against the previous period */}
+      {a.spent > 0 && (
+        <div>
+          <SectionTitle>Spending pace</SectionTitle>
+          <LineChart
+            title="Running total"
+            series={period.hasComparison
+              ? [{ name: paceNow, stroke: "stroke-rose-500", dot: OUT_BAR }, { name: pacePrev, stroke: "stroke-gray-300 dark:stroke-gray-600", dot: DIM_BAR }]
+              : [{ name: "Running total", stroke: "stroke-rose-500", dot: OUT_BAR }]}
+            points={a.pace.map(d => ({ label: shortDay(d.day), values: period.hasComparison ? [d.current, d.previous] : [d.current] }))}
+            format={money}
+          />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 px-1">
+            {period.hasComparison
+              ? `The grey line is ${period.key === "month" ? "last month" : period.key === "last-month" ? "the month before" : "the previous period"}, matched day by day.`
+              : "Total spent so far, day by day."}
+          </p>
+        </div>
+      )}
 
       {/* Where it went */}
       <div>
@@ -166,6 +199,40 @@ export function MoneyView({ data, period: basePeriod, currency, loading = false 
           </div>
         )}
       </div>
+
+      {/* Patterns */}
+      {a.spent > 0 && (
+        <div>
+          <SectionTitle>Patterns</SectionTitle>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <StatTile label="Weekday average" value={p.weekdayAvg !== null ? money(p.weekdayAvg) : "—"} sub="per day, Mon–Fri" />
+            <StatTile label="Weekend average" value={p.weekendAvg !== null ? money(p.weekendAvg) : "—"}
+              sub={p.weekendAvg !== null && p.weekdayAvg ? `per day, Sat–Sun · ${(p.weekendAvg / p.weekdayAvg).toFixed(1)}× weekdays` : "per day, Sat–Sun"} />
+            <StatTile label="Big purchases" value={p.big.count > 0 ? String(p.big.count) : "None"}
+              sub={p.big.count > 0 && p.big.share !== null
+                ? `${fmtPct(p.big.share)} of spending · ${money(p.big.threshold)}+ each`
+                : "nothing over 3× your typical expense"} />
+            <StatTile label="Savings cover" value={p.coverDays !== null ? `${Math.round(p.coverDays)} days` : "—"}
+              sub={p.coverDays !== null ? "of spending at your daily average" : "no savings in this period"} />
+          </div>
+        </div>
+      )}
+
+      {/* Regular expenses */}
+      {a.regulars.length > 0 && (
+        <div>
+          <SectionTitle>Regular expenses</SectionTitle>
+          <div className={`${CARD} p-5 sm:p-6`}>
+            <BarList bar={OUT_BAR} rows={a.regulars.slice(0, 6).map(r => ({
+              key: r.label, label: r.label, value: r.perMonth, valueText: `${money(r.perMonth)}/mo`,
+              note: <span className="text-gray-500 dark:text-gray-400">{r.months} of 6 months</span>,
+            }))} />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+              Reasons that came up in at least 3 of the last 6 months — about {money(a.regulars.reduce((s, r) => s + r.perMonth, 0))} a month in all.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Where it came from */}
       <div>
@@ -192,6 +259,11 @@ export function MoneyView({ data, period: basePeriod, currency, loading = false 
               key: s.source, label: s.source, value: s.total, valueText: money(s.total),
               note: <span className="text-gray-500 dark:text-gray-400">{Math.round((s.total / a.earned) * 100)}%</span>,
             }))} />
+            {a.income.of > 1 && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-4" data-stat="Income per month">
+                Average <span data-value className="font-semibold text-black dark:text-white">{money(a.income.avgPerMonth)}</span> a month · income in {a.income.months} of {a.income.of} months
+              </p>
+            )}
           </div>
         )}
       </div>
