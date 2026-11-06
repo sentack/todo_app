@@ -14,6 +14,7 @@ import {
   CARD, IN_BAR, OUT_BAR, SectionTitle, Hero, HeroStat, StatTile, InsightList, ColumnChart,
   BarList, ChangeNote, Collapsible, EmptyState, QuickAddButton,
 } from "./ui"
+import SpendingSearch from "./SpendingSearch"
 
 const fmtDay = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
 
@@ -133,6 +134,8 @@ export function MoneyView({ data, period: basePeriod, currency, loading = false 
         <StatTile label="Net loans" href="/debts" value={signed(a.loans.net)}
           sub={`${money(a.loans.owedToYou)} owed to you · ${money(a.loans.youOwe)} you owe${a.loans.forgiven.lendCount + a.loans.forgiven.debtCount > 0 ? " · forgiven not counted" : ""}`} />
       </div>
+
+      <SpendingSearch expenses={data.expenses} period={period} currency={currency} />
 
       {/* Cash flow */}
       <div>

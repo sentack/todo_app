@@ -369,6 +369,57 @@ export function moneyInsights(a: MoneyAnalytics, period: Period, money: (v: numb
   return out.sort((x, y) => x.rank - y.rank).slice(0, 3).map(({ tone, text, href }) => ({ tone, text, href }))
 }
 
+// ─── Expense search ──────────────────────────────────────────────────
+
+export interface ExpenseFilter { query: string; category: string | null }
+
+export const filterActive = (f: ExpenseFilter) => f.query.trim() !== "" || f.category !== null
+
+/** Matches the reason/description or the category name, optionally within one category */
+function expenseMatcher(f: ExpenseFilter) {
+  const q = f.query.trim().toLowerCase()
+  return (e: ExpenseRow) =>
+    (!q || (e.description ?? "").toLowerCase().includes(q) || e.category.toLowerCase().includes(q)) &&
+    (!f.category || e.category === f.category)
+}
+
+/** Stats for the expenses matching a search, within the period */
+export function searchExpenses(period: Period, expenses: ExpenseRow[], f: ExpenseFilter) {
+  const match = expenseMatcher(f)
+  const inPeriod = expenses.filter(e => inRange(e.date, period.start, period.end))
+  const matches = inPeriod.filter(match)
+    .sort((a, b) => b.date.localeCompare(a.date) || Number(b.amount) - Number(a.amount))
+  const amounts = matches.map(e => Number(e.amount))
+  const sum = total(matches, e => Number(e.amount))
+  const periodSpent = total(inPeriod, e => Number(e.amount))
+  const days = [...new Set(matches.map(e => e.date))].sort()
+
+  const byCat: Record<string, number> = {}
+  for (const e of matches) byCat[e.category] = (byCat[e.category] ?? 0) + Number(e.amount)
+
+  return {
+    count: matches.length,
+    total: sum,
+    prevTotal: total(expenses.filter(e => inRange(e.date, period.prevStart, period.prevEnd) && match(e)), e => Number(e.amount)),
+    avg: matches.length ? sum / matches.length : 0,
+    median: median(amounts) ?? 0,
+    min: amounts.length ? Math.min(...amounts) : 0,
+    max: amounts.length ? Math.max(...amounts) : 0,
+    share: periodSpent > 0 ? (sum / periodSpent) * 100 : null,
+    first: days[0] ?? null,
+    last: days[days.length - 1] ?? null,
+    // Average gap between the days it happened
+    everyDays: days.length >= 2 ? daysBetween(days[0], days[days.length - 1]) / (days.length - 1) : null,
+    byCategory: Object.entries(byCat).map(([category, t]) => ({ category, total: t })).sort((a, b) => b.total - a.total),
+    byMonth: period.months.map(m => ({ key: m, label: shortMon(m), total: total(matches.filter(e => e.date.startsWith(m)), e => Number(e.amount)) })),
+    matches,
+    // Matches outside the selected period, so an empty result can point to them
+    elsewhere: expenses.filter(match).length - matches.length,
+  }
+}
+
+export type ExpenseSearch = ReturnType<typeof searchExpenses>
+
 // ─── Todos ───────────────────────────────────────────────────────────
 
 export interface TodoRow {
