@@ -115,12 +115,12 @@ function AddTodoForm({ onDone }: { onDone: () => void }) {
         <label className={LABEL}>Notes</label>
         <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Additional notes (optional)" rows={2} className={`${INPUT} resize-none`} />
       </div>
-      <div className="flex gap-3">
-        <div className="flex-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="min-w-0">
           <label className={LABEL}>Due date</label>
-          <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className={INPUT} />
+          <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className={`${INPUT} min-w-0`} />
         </div>
-        <div className="flex-1">
+        <div className="min-w-0">
           <label className={LABEL}>Status</label>
           <select value={statusId} onChange={e => setStatusId(Number(e.target.value))} className={INPUT}>
             <option value={1}>📋 Pending</option>

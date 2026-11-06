@@ -232,12 +232,12 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
             <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={2} placeholder="Additional notes" className={`${INPUT} resize-none`} />
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="min-w-0">
               <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Due date</label>
-              <input type="date" value={editDueDate} onChange={e => setEditDueDate(e.target.value)} className={INPUT} />
+              <input type="date" value={editDueDate} onChange={e => setEditDueDate(e.target.value)} className={`${INPUT} min-w-0`} />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0">
               <label className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mb-2">Status</label>
               <select value={editStatusId} onChange={e => setEditStatusId(Number(e.target.value))} className={INPUT}>
                 <option value={1}>📋 Pending</option>
