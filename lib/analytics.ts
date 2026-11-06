@@ -131,6 +131,12 @@ const weekStart = (k: string) => {
 }
 
 const shortDay  = (k: string) => new Date(k + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })
+/** Saturday or Sunday */
+const isWeekend = (k: string) => {
+  const [y, m, d] = k.split("-").map(Number)
+  return [0, 6].includes(new Date(Date.UTC(y, m - 1, d)).getUTCDay())
+}
+
 const shortMon  = (m: string) => new Date(`${m}-01T00:00:00`).toLocaleDateString("en-US", { month: "short" })
 export const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -295,6 +301,49 @@ export function moneyAnalytics(period: Period, d: MoneyInput) {
   }
   const lastSpend = d.expenses.reduce((mx, e) => e.date <= today && e.date > mx ? e.date : mx, "")
 
+  // Weekday vs weekend: average spent per day over the days elapsed so far
+  const elapsedEnd = period.toDate ? addDays(today, 1) : period.end
+  const dayTotals = { weekday: { days: 0, spent: 0 }, weekend: { days: 0, spent: 0 } }
+  for (let day = period.start; day < elapsedEnd && day < period.end; day = addDays(day, 1)) {
+    const t = dayTotals[isWeekend(day) ? "weekend" : "weekday"]
+    t.days++; t.spent += byDay.get(day) ?? 0
+  }
+
+  // Big purchases: at least 3× the typical (median) expense
+  const typical = median(exp.map(e => Number(e.amount))) ?? 0
+  const big = exp.length >= 5 ? exp.filter(e => Number(e.amount) >= typical * 3) : []
+  const bigTotal = total(big, e => Number(e.amount))
+
+  // Regular expenses: reasons that come back in at least 3 of the 6 months ending with the period
+  const lastPeriodMonth = period.months[period.months.length - 1]
+  const regWindow = Array.from({ length: 6 }, (_, i) => shiftMonth(lastPeriodMonth, i - 5))
+  const regMap = new Map<string, { label: string; months: Set<string>; total: number }>()
+  for (const e of d.expenses) {
+    const m = e.date.slice(0, 7), label = e.description?.trim()
+    if (!label || !regWindow.includes(m)) continue
+    const r = regMap.get(label.toLowerCase()) ?? { label, months: new Set<string>(), total: 0 }
+    r.months.add(m); r.total += Number(e.amount)
+    regMap.set(label.toLowerCase(), r)
+  }
+  const regulars = [...regMap.values()].filter(r => r.months.size >= 3)
+    .map(r => ({ label: r.label, months: r.months.size, perMonth: r.total / r.months.size, total: r.total }))
+    .sort((a, b) => b.perMonth - a.perMonth)
+
+  // Spending pace: running total by day, against the whole previous period
+  const prevByDay = new Map<string, number>()
+  if (period.hasComparison) {
+    for (const e of d.expenses) if (inRange(e.date, period.prevStart, period.start)) prevByDay.set(e.date, (prevByDay.get(e.date) ?? 0) + Number(e.amount))
+  }
+  const curLen = daysBetween(period.start, period.end)
+  const prevLen = period.hasComparison ? daysBetween(period.prevStart, period.start) : 0
+  let runCur = 0, runPrev = 0
+  const pace = Array.from({ length: Math.max(curLen, prevLen) }, (_, i) => {
+    const day = addDays(period.start, i)
+    if (i < curLen) runCur += byDay.get(day) ?? 0
+    if (i < prevLen) runPrev += prevByDay.get(addDays(period.prevStart, i)) ?? 0
+    return { day, current: i < curLen && day <= today ? runCur : null, previous: i < prevLen ? runPrev : null }
+  })
+
   return {
     earned, earnedPrev, spent, spentPrev, net, savingsRate, savingsRatePrev,
     avgPerDay: period.days > 0 ? spent / period.days : 0,
@@ -328,6 +377,22 @@ export function moneyAnalytics(period: Period, d: MoneyInput) {
       biggest: [...exp].sort((a, b) => Number(b.amount) - Number(a.amount))[0] ?? null,
       biggestDay: biggestDay ? { date: biggestDay[0], total: biggestDay[1] } : null,
       topDescriptions: [...descMap.values()].sort((a, b) => b.total - a.total).slice(0, 5),
+    },
+    patterns: {
+      weekdayAvg: dayTotals.weekday.days ? dayTotals.weekday.spent / dayTotals.weekday.days : null,
+      weekdayDays: dayTotals.weekday.days,
+      weekendAvg: dayTotals.weekend.days ? dayTotals.weekend.spent / dayTotals.weekend.days : null,
+      weekendDays: dayTotals.weekend.days,
+      big: { count: big.length, total: bigTotal, share: spent > 0 && big.length ? (bigTotal / spent) * 100 : null, threshold: typical * 3 },
+      // Days of spending your savings would cover at this period's daily average
+      coverDays: net > 0 && spent > 0 && period.days > 0 ? net / (spent / period.days) : null,
+    },
+    regulars,
+    pace,
+    income: {
+      avgPerMonth: earned / period.months.length,
+      months: period.months.filter(m => inc.some(i => i.date.startsWith(m))).length,
+      of: period.months.length,
     },
   }
 }
@@ -364,9 +429,23 @@ export function moneyInsights(a: MoneyAnalytics, period: Period, money: (v: numb
     out.push({ rank: 4, tone: diff > 0 ? "good" : "warn", text: `Your savings rate is ${diff > 0 ? "up" : "down"} ${Math.abs(diff)} points from ${prevWord}.` })
   }
   if (down) out.push({ rank: 5, tone: "good", text: `${down.cat} spending is down ${Math.abs(Math.round(down.change!))}% from ${prevWord}.` })
+  const p = a.patterns
+  if (p.weekendAvg !== null && p.weekdayAvg && p.weekendDays >= 2 && p.weekendAvg >= 1.5 * p.weekdayAvg) {
+    out.push({ rank: 5, tone: "info", text: `You spend ${(p.weekendAvg / p.weekdayAvg).toFixed(1)}× more per day on weekends than on weekdays.` })
+  }
+  if (p.big.count >= 2 && p.big.share !== null && p.big.share >= 40) {
+    out.push({ rank: 5, tone: "info", text: `${p.big.count} big purchases made up ${Math.round(p.big.share)}% of your spending.` })
+  }
+  if (p.coverDays !== null && p.coverDays >= 7) {
+    out.push({ rank: 6, tone: "good", text: `What you saved covers about ${Math.round(p.coverDays)} days of spending.` })
+  }
+  if (a.regulars.length > 0) {
+    const perMonth = total(a.regulars, r => r.perMonth)
+    out.push({ rank: 7, tone: "info", text: `${a.regulars.length} regular expense${a.regulars.length === 1 ? "" : "s"} (like ${a.regulars[0].label}) cost about ${money(perMonth)} a month.` })
+  }
   if (a.earned === 0 && a.spent > 0) out.push({ rank: 6, tone: "info", text: "No income recorded for this period — add it to see your savings rate." })
 
-  return out.sort((x, y) => x.rank - y.rank).slice(0, 3).map(({ tone, text, href }) => ({ tone, text, href }))
+  return out.sort((x, y) => x.rank - y.rank).slice(0, 5).map(({ tone, text, href }) => ({ tone, text, href }))
 }
 
 // ─── Expense search ──────────────────────────────────────────────────

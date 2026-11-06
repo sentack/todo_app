@@ -264,6 +264,145 @@ export function ColumnChart({ title, series, data, format, height = 176 }: {
   )
 }
 
+// ─── Line chart ──────────────────────────────────────────────────────
+
+/**
+ * Running totals over time for 1–2 series. A crosshair snaps to the nearest
+ * point (pointer or arrow keys) and one tooltip lists every series; a table
+ * view carries the same values. Lines are drawn in a stretched 100×100 SVG
+ * with non-scaling strokes; dots and labels are HTML so they stay round.
+ */
+export function LineChart({ title, series, points, format, height = 176 }: {
+  title: string
+  series: { name: string; stroke: string; dot: string }[]
+  points: { label: string; values: (number | null)[] }[]
+  format: (v: number) => string
+  height?: number
+}) {
+  const [hover, setHover] = useState<number | null>(null)
+  const [table, setTable] = useState(false)
+  const n = points.length
+  const max = niceMax(Math.max(0, ...points.flatMap(p => p.values.filter((v): v is number => v !== null))))
+  const ticks = [max, max / 2, 0]
+  const plotH = height - 24
+  const x = (i: number) => (n <= 1 ? 0.5 : i / (n - 1)) * 100
+  const y = (v: number) => (1 - v / max) * 100
+  const lastIdx = (j: number) => { for (let i = n - 1; i >= 0; i--) if (points[i].values[j] !== null) return i; return -1 }
+  const path = (j: number) => points.reduce((d, p, i) => {
+    const v = p.values[j]
+    if (v === null) return d
+    return d + `${d && points[i - 1]?.values[j] !== null ? "L" : "M"}${x(i)},${y(v)} `
+  }, "")
+  const step = Math.max(1, Math.ceil(n / 6))
+  // Every step-th label plus the last; skip one that would crowd the last label
+  const showLabel = (i: number) => i === n - 1 || (i % step === 0 && n - 1 - i >= step)
+  const pick = (clientX: number, el: HTMLElement) => {
+    const r = el.getBoundingClientRect()
+    setHover(Math.max(0, Math.min(n - 1, Math.round(((clientX - r.left) / r.width) * (n - 1)))))
+  }
+
+  return (
+    <div className={`${CARD} p-5 sm:p-6`}>
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold text-gray-600 dark:text-gray-400">
+          {series.length > 1
+            ? series.map(s => <span key={s.name} className="inline-flex items-center gap-1.5"><span className={`w-3 h-[2px] rounded-full ${s.dot}`} aria-hidden />{s.name}</span>)
+            : <span>{title}</span>}
+        </div>
+        <button onClick={() => setTable(t => !t)} aria-pressed={table}
+          className="h-8 px-3 shrink-0 rounded-full text-xs font-bold bg-gray-100 dark:bg-white/[0.06] text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors">
+          {table ? "Chart" : "Table"}
+        </button>
+      </div>
+
+      {table ? (
+        <div className="max-h-72 overflow-y-auto -mx-1">
+          <table className="w-full text-sm tabular-nums">
+            <thead className="sticky top-0 bg-white dark:bg-black">
+              <tr className="text-left text-[0.6875rem] uppercase tracking-[0.1em] text-gray-500 dark:text-gray-400">
+                <th className="font-bold py-2 px-1">{title}</th>
+                {series.map(s => <th key={s.name} className="font-bold py-2 px-1 text-right">{s.name}</th>)}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-black/[0.05] dark:divide-white/[0.05]">
+              {points.map((p, i) => (
+                <tr key={i} className="text-black dark:text-white">
+                  <td className="py-2 px-1 font-semibold">{p.label}</td>
+                  {p.values.map((v, j) => <td key={j} className="py-2 px-1 text-right">{v === null ? "—" : format(v)}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <div className="flex flex-col justify-between text-[0.625rem] font-semibold tabular-nums text-gray-400 dark:text-gray-500 text-right shrink-0 pb-6" style={{ height }}>
+            {ticks.map(t => <span key={t} className="leading-none -translate-y-1/2 first:translate-y-0 last:translate-y-0">{compact(t)}</span>)}
+          </div>
+          <div className="relative flex-1 min-w-0" style={{ height }}>
+            <div className="absolute inset-x-0 top-0 flex flex-col justify-between pointer-events-none" style={{ height: plotH }} aria-hidden>
+              {ticks.map(t => <div key={t} className="h-px bg-black/[0.06] dark:bg-white/[0.08]" />)}
+            </div>
+            <div className="absolute inset-x-0 top-0" style={{ height: plotH }}>
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible" aria-hidden>
+                {/* Draw the comparison first so the main series sits on top */}
+                {[...series.keys()].reverse().map(j => (
+                  <path key={j} d={path(j)} fill="none" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" className={series[j].stroke} />
+                ))}
+              </svg>
+              {/* End dots with a surface ring */}
+              {series.map((s, j) => {
+                const i = lastIdx(j)
+                return i < 0 ? null : <span key={s.name} aria-hidden className={`absolute w-2.5 h-2.5 -ml-[5px] -mt-[5px] rounded-full ring-2 ring-white dark:ring-black ${s.dot}`} style={{ left: `${x(i)}%`, top: `${y(points[i].values[j]!)}%` }} />
+              })}
+              {hover !== null && (
+                <>
+                  <div className="absolute top-0 bottom-0 w-px bg-black/20 dark:bg-white/25 pointer-events-none" style={{ left: `${x(hover)}%` }} aria-hidden />
+                  {series.map((s, j) => {
+                    const v = points[hover].values[j]
+                    return v === null ? null : <span key={s.name} aria-hidden className={`absolute w-2.5 h-2.5 -ml-[5px] -mt-[5px] rounded-full ring-2 ring-white dark:ring-black pointer-events-none ${s.dot}`} style={{ left: `${x(hover)}%`, top: `${y(v)}%` }} />
+                  })}
+                  <div className="absolute top-0 z-10 pointer-events-none whitespace-nowrap px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-black/[0.08] dark:border-white/[0.1] shadow-lg"
+                    style={{ left: `${x(hover)}%`, transform: `translateX(${x(hover) < 15 ? "8px" : x(hover) > 85 ? "calc(-100% - 8px)" : "-50%"})` }}>
+                    <p className="text-[0.6875rem] font-bold text-gray-500 dark:text-gray-400 mb-1">{points[hover].label}</p>
+                    {series.map((s, j) => {
+                      const v = points[hover].values[j]
+                      return v === null ? null : (
+                        <div key={s.name} className="flex items-center gap-2 text-xs">
+                          <span className={`w-3 h-[2px] rounded-full ${s.dot}`} aria-hidden />
+                          <span className="font-bold tabular-nums text-black dark:text-white">{format(v)}</span>
+                          <span className="text-gray-500 dark:text-gray-400">{s.name}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
+              {/* Hit area: the whole plot, so the pointer only has to be near a day */}
+              <div tabIndex={0} role="img" aria-label={`${title}. Use the arrow keys to move between days, or the Table view.`}
+                className="absolute inset-0 cursor-crosshair focus:outline-none focus-visible:ring-2 focus-visible:ring-black/20 dark:focus-visible:ring-white/30 rounded-lg"
+                onPointerMove={e => pick(e.clientX, e.currentTarget)} onPointerDown={e => pick(e.clientX, e.currentTarget)}
+                onPointerLeave={() => setHover(null)} onBlur={() => setHover(null)}
+                onKeyDown={e => {
+                  if (e.key === "ArrowRight") { e.preventDefault(); setHover(h => Math.min(n - 1, (h ?? -1) + 1)) }
+                  if (e.key === "ArrowLeft") { e.preventDefault(); setHover(h => Math.max(0, (h ?? n) - 1)) }
+                  if (e.key === "Escape") setHover(null)
+                }} />
+            </div>
+            {/* X labels, thinned so they never collide */}
+            <div className="absolute inset-x-0 bottom-0 h-6" aria-hidden>
+              {points.map((p, i) => showLabel(i) && (
+                <span key={i} className="absolute top-1.5 text-[0.625rem] font-semibold leading-none text-gray-500 dark:text-gray-400 whitespace-nowrap"
+                  style={{ left: `${x(i)}%`, transform: `translateX(${i === 0 ? "0" : i === n - 1 ? "-100%" : "-50%"})` }}>{p.label}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Horizontal bar list ─────────────────────────────────────────────
 
 /** Ranked magnitudes in one hue; the value is labeled at each bar's end */
